@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="PlatformFeatures\Commands\SubUserCommands\" />
+    <Folder Include="PlatformFeatures\Queries\MainUserQuery\" />
+    <Folder Include="PlatformFeatures\Queries\SubUserQuery\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PersonalAudioAssistant.Domain\PersonalAudioAssistant.Domain.csproj" />
+	<ProjectReference Include="..\PersonalAudioAssistant.Contracts\PersonalAudioAssistant.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

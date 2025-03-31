@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant", "PersonalAudioAssistant\PersonalAudioAssistant.csproj", "{87CD17CC-7ED8-4943-A89B-424830A6387E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Persistence", "PersonalAudioAssistant.Persistence\PersonalAudioAssistant.Persistence.csproj", "{F36D386C-F702-412C-85A0-D0BC65F47382}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Domain", "PersonalAudioAssistant.Domain\PersonalAudioAssistant.Domain.csproj", "{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Contracts", "PersonalAudioAssistant.Contracts\PersonalAudioAssistant.Contracts.csproj", "{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Application", "PersonalAudioAssistant.Application\PersonalAudioAssistant.Application.csproj", "{94857CB3-171A-4DFE-9CBB-C45CC6DF8FC6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{F36D386C-F702-412C-85A0-D0BC65F47382}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36D386C-F702-412C-85A0-D0BC65F47382}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36D386C-F702-412C-85A0-D0BC65F47382}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36D386C-F702-412C-85A0-D0BC65F47382}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94857CB3-171A-4DFE-9CBB-C45CC6DF8FC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94857CB3-171A-4DFE-9CBB-C45CC6DF8FC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94857CB3-171A-4DFE-9CBB-C45CC6DF8FC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94857CB3-171A-4DFE-9CBB-C45CC6DF8FC6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2B662A3C-7175-4FF7-BCA4-F2B9F1FB4986}
+	EndGlobalSection
+EndGlobal
