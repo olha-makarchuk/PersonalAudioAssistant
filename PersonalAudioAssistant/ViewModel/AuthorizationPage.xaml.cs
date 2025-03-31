@@ -4,48 +4,70 @@ namespace PersonalAudioAssistant.ViewModel;
 
 public partial class AuthorizationPage : ContentPage
 {
-	public AuthorizationPage()
-	{
-		InitializeComponent();
-	}
+    private readonly GoogleDriveService _googleDriveService = new();
 
-    readonly GoogleDriveService _googleDriveService = new();
+    public AuthorizationPage()
+    {
+        InitializeComponent();
+    }
 
     private async void ContentPage_Loaded(object sender, EventArgs e)
     {
         await _googleDriveService.Init();
-        UpdateButtonAsync();
+        await UpdateButtonAsync();
     }
 
-    private async void SignIn_Clicked(object sender, EventArgs e)
+    private async void SignInGoogle_Clicked(object sender, EventArgs e)
     {
-        if (SignInButton.Text == "Sign In")
+        LoadingIndicator.IsRunning = true;
+        LoadingIndicator.IsVisible = true;
+        SignInGoogleButton.IsEnabled = false;
+
+        if (SignInGoogleButton.Text == "Sign In")
         {
             await _googleDriveService.SignIn();
         }
         else
         {
             await _googleDriveService.SignOut();
-
         }
-        UpdateButtonAsync();
+
+        await UpdateButtonAsync();
+
+        LoadingIndicator.IsRunning = false;
+        LoadingIndicator.IsVisible = false;
+        SignInGoogleButton.IsEnabled = true;
     }
 
-    private async void NavigateToMain()
+    private async void SignIn_Clicked(object sender, EventArgs e)
     {
-        Microsoft.Maui.Controls.Application.Current.MainPage = new MainPage();
+
+        // TODO: Додати логіку реєстрації
+    }
+
+    private async void SignUp_Clicked(object sender, EventArgs e)
+    {
+        string email = EmailEntry.Text;
+        string password = PasswordEntry.Text;
+
+        // TODO: Додати логіку реєстрації
     }
 
     private async Task UpdateButtonAsync()
     {
         if (_googleDriveService.IsSignedIn)
         {
-            SignInButton.Text = $"Sign Out ({_googleDriveService.Email})";
+            SignInGoogleButton.Text = $"Sign Out ({_googleDriveService.Email})";
             NavigateToMain();
         }
         else
         {
-            SignInButton.Text = "Sign In";
+            SignInGoogleButton.Text = "Sign In";
         }
+    }
+
+    private void NavigateToMain()
+    {
+        Microsoft.Maui.Controls.Application.Current.MainPage = new MainPage();
     }
 }

@@ -2,17 +2,89 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.ViewModel.AuthorizationPage"
-             Title="AuthorizationPage"
-             Loaded="ContentPage_Loaded">
-
+             Title="Авторизація"
+             BackgroundColor="{AppThemeBinding Light={StaticResource LightBackgroundColor}, Dark={StaticResource DarkBackgroundColor}}">
     <ScrollView>
-        <VerticalStackLayout Padding="30,0" Spacing="25">
-            <Button
-                x:Name="SignInButton"
-                Text="Sign In" 
-                Clicked="SignIn_Clicked"
-                HorizontalOptions="Fill" />
-        
+        <VerticalStackLayout Padding="30" Spacing="25" VerticalOptions="Center" HorizontalOptions="Center">
+
+            <Label Text="Вітаємо!"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+
+            <Label Text="Увійдіть у свій обліковий запис"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+
+            <Frame Padding="20"
+                   CornerRadius="15"
+                   BackgroundColor="{AppThemeBinding Light={StaticResource LightEntryBackgroundColor}, Dark={StaticResource DarkEntryBackgroundColor}}">
+                <VerticalStackLayout Spacing="20">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Електронна пошта"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Entry x:Name="EmailEntry"
+                               Placeholder="Введіть електронну пошту"
+                               Keyboard="Email"
+                               BackgroundColor="Transparent"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Пароль"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Entry x:Name="PasswordEntry"
+                               Placeholder="Введіть пароль"
+                               IsPassword="True"
+                               BackgroundColor="Transparent"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button x:Name="SignInButton"
+                    Text="Увійти"
+                    Clicked="SignIn_Clicked"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    CornerRadius="25"
+                    HeightRequest="50"
+                    FontSize="18" />
+
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
+                <BoxView WidthRequest="50" HeightRequest="1" BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}" VerticalOptions="Center" />
+                <Label Text="Або" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                <BoxView WidthRequest="50" HeightRequest="1" BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}" VerticalOptions="Center" />
+            </StackLayout>
+
+            <Button x:Name="SignInGoogleButton"
+                    Text="Увійти через Google"
+                    Clicked="SignInGoogle_Clicked"
+                    BackgroundColor="#DB4437"
+                    TextColor="White"
+                    CornerRadius="25"
+                    HeightRequest="50"
+                    FontSize="18"
+                    ImageSource="google_logo.png"
+                    ContentLayout="Left,15" />
+
+            <Button x:Name="SignUpButton"
+                    Text="Зареєструватися"
+                    Clicked="SignUp_Clicked"
+                    BackgroundColor="{StaticResource Secondary}"
+                    TextColor="White"
+                    CornerRadius="25"
+                    HeightRequest="50"
+                    FontSize="18" />
+
+            <ActivityIndicator x:Name="LoadingIndicator"
+                               IsRunning="False"
+                               IsVisible="False"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Color="{StaticResource Primary}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
