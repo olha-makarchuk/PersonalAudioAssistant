@@ -12,9 +12,8 @@ namespace PersonalAudioAssistant.Services
 {
     public class GoogleDriveService
     {
-        readonly string _windowsClientId = "745633619579-s3kbqo3gqmj0kna5ksbrhv2s6tvqa3r2.apps.googleusercontent.com";      // UWP client
-        readonly string _androidClientId = "745633619579-f0utdblmj8fac1110o6isgav0km4kc8g.apps.googleusercontent.com";  // Android client
-
+        private readonly string _windowsClientId = "745633619579-s3kbqo3gqmj0kna5ksbrhv2s6tvqa3r2.apps.googleusercontent.com";
+        private readonly string _androidClientId = "745633619579-f0utdblmj8fac1110o6isgav0km4kc8g.apps.googleusercontent.com";
         readonly string _androidRedirectScheme = AppInfo.Current.PackageName;
 
         Oauth2Service? _oauth2Service;

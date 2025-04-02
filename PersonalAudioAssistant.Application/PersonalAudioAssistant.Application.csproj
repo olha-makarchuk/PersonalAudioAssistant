@@ -7,15 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="PlatformFeatures\Commands\MainUserCommands\" />
     <Folder Include="PlatformFeatures\Commands\SubUserCommands\" />
-    <Folder Include="PlatformFeatures\Queries\MainUserQuery\" />
     <Folder Include="PlatformFeatures\Queries\SubUserQuery\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.69.0.3703" />
+    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.68.0.1869" />
     <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,22 +1,41 @@
-﻿using PersonalAudioAssistant.Services;
-using PersonalAudioAssistant.ViewModel;
-using static AndroidX.ConstraintLayout.Core.Motion.Utils.HyperSpline;
+﻿using MediatR;
+using PersonalAudioAssistant.Services;
 
 namespace PersonalAudioAssistant
 {
-    public  partial class MainPage : ContentPage
+    public partial class MainPage : ContentPage
     {
-        private readonly GoogleDriveService _googleDriveService = new();
-
-        public MainPage()
+        private AuthTokenManager _authTokenManager;
+        public MainPage(IMediator mediator, GoogleUserService googleUserService)
         {
             InitializeComponent();
+            _authTokenManager = new AuthTokenManager(googleUserService, mediator);
         }
 
-        private async void SignOut_Clicked(object sender, EventArgs e)
+        protected override async void OnAppearing()
         {
-            await _googleDriveService.SignOut();
-            Microsoft.Maui.Controls.Application.Current.MainPage = new AuthorizationPage();
+            base.OnAppearing();
+            await InitializeApp();
+        }
+
+        private async Task InitializeApp()
+        {
+            if (_authTokenManager == null)
+            {
+                Console.WriteLine("Error: _authTokenManager is null.");
+                return;
+            }
+
+            await _authTokenManager.InitializeAsync();
+
+            if (_authTokenManager.IsSignedIn)
+            {
+                Shell.Current?.GoToAsync("//ProgramPage");
+            }
+            else
+            {
+                Shell.Current?.GoToAsync("//AuthorizationPage");
+            }
         }
     }
 }

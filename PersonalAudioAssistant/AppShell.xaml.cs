@@ -1,30 +1,18 @@
-﻿using PersonalAudioAssistant.Services;
-using PersonalAudioAssistant.ViewModel;
+﻿using MediatR;
+using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.View;
+using System;
 
 namespace PersonalAudioAssistant
 {
     public partial class AppShell : Shell
     {
-        private readonly GoogleDriveService _googleDriveService;
-
         public AppShell()
         {
             InitializeComponent();
-            _googleDriveService = new GoogleDriveService();
-            InitializeApp();
-        }
-
-        private async void InitializeApp()
-        {
-            await _googleDriveService.Init();
-            if (_googleDriveService.IsSignedIn)
-            {
-                await Shell.Current.GoToAsync("//MainPage");
-            }
-            else
-            {
-                await Shell.Current.GoToAsync("//AuthorizationPage");
-            }
+            Routing.RegisterRoute(nameof(AuthorizationPage), typeof(AuthorizationPage));
+            Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
+            Routing.RegisterRoute(nameof(ProgramPage), typeof(ProgramPage));
         }
     }
 }

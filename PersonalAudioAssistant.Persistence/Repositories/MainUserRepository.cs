@@ -1,38 +1,47 @@
-﻿using PersonalAudioAssistant.Application.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Persistence.Context;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.Persistence.Repositories
 {
-    class MainUserRepository : IMainUserRepository
+    public class MainUserRepository : IMainUserRepository
     {
-        public Task<MainUser> CreateUser(MainUser user, CancellationToken cancellationToken)
+        private readonly CosmosDbContext _context;
+
+        public MainUserRepository(CosmosDbContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task DeleteUser(int id, CancellationToken cancellationToken)
+        public async Task CreateUser(MainUser user, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            await _context.MainUsers.AddAsync(user, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public Task<List<MainUser>> GetAllUsers(CancellationToken cancellationToken)
+        public async Task<List<MainUser>> GetAllUsers(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return await _context.MainUsers.ToListAsync(cancellationToken);
         }
 
-        public Task<MainUser> GetUserByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<MainUser?> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return await _context.MainUsers.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
         }
 
-        public Task<MainUser> GetUserByNameAsync(string name, CancellationToken cancellationToken)
+        public async Task<MainUser?> GetUserByIdAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return await _context.MainUsers.FindAsync(new object[] { id }, cancellationToken);
         }
 
-        public Task<MainUser> UpdateUser(MainUser user, CancellationToken cancellationToken)
+        public async Task UpdateUser(MainUser user, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            _context.MainUsers.Update(user);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

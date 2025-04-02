@@ -4,20 +4,8 @@
              x:Class="PersonalAudioAssistant.MainPage"
              Title="Home">
 
-    <VerticalStackLayout Padding="20" Spacing="10">
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            FontSize="24"
-            FontAttributes="Bold"
-            TextColor="Black"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-
-        <Button 
-            Text="Sign Out"
-            HorizontalOptions="Center"
-            Padding="10,5"
-            Clicked="SignOut_Clicked"/>
-
-    </VerticalStackLayout>
+    <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+        <ActivityIndicator IsRunning="True" Color="Blue" WidthRequest="50" HeightRequest="50"/>
+        <Label Text="Завантаження..." FontSize="18" HorizontalOptions="Center"/>
+    </StackLayout>
 </ContentPage>

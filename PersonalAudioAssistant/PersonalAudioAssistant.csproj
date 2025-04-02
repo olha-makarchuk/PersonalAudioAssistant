@@ -59,6 +59,7 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
 		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="4.1.2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Google.Apis" Version="1.69.0" />
 		<PackageReference Include="Google.Apis.Auth" Version="1.69.0" />
 		<PackageReference Include="Google.Apis.Drive.v3" Version="1.69.0.3703" />
@@ -78,13 +79,13 @@
 		<ProjectReference Include="..\PersonalAudioAssistant.Persistence\PersonalAudioAssistant.Persistence.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Views\" />
-	</ItemGroup>
-	<ItemGroup>
-	  <MauiXaml Update="ViewModel\AuthorizationPage.xaml">
+	  <MauiXaml Update="Views\AuthorizationPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="ViewModel\RegistrationPage.xaml">
+	  <MauiXaml Update="Views\ProgramPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\RegistrationPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
