@@ -9,19 +9,25 @@
     Title="PersonalAudioAssistant">
 
     <ShellContent
+        Title="MainPage"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
-    <ShellContent
+    <Tab IsVisible="{Binding IsLogged}">
+        <ShellContent
+        Title="AuthorizationPage"
         ContentTemplate="{DataTemplate view:AuthorizationPage}"
         Route="AuthorizationPage"/>
-
-    <ShellContent
+    </Tab>
+    <Tab IsVisible="{Binding IsLogged}">
+        <ShellContent
+        Title="RegistrationPage"
         ContentTemplate="{DataTemplate view:RegistrationPage}"
         Route="RegistrationPage"/>
-
+    </Tab>
 
     <ShellContent
+        Title="ProgramPage"
         ContentTemplate="{DataTemplate view:ProgramPage}"
         Route="ProgramPage"/>
 

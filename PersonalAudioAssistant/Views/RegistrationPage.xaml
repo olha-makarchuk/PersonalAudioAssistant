@@ -49,7 +49,7 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <Button Text="Увійти"
+            <Button Text="Зареєструватися"
                  Command="{Binding SignUpCommand}"
                  BackgroundColor="{StaticResource Primary}"
                  TextColor="White"
@@ -72,7 +72,7 @@
                       VerticalOptions="Center" />
             </StackLayout>
 
-            <Button Text="Увійти через Google"
+            <Button Text="Зареєструватися через Google"
                  Command="{Binding SignUpGoogleCommand}"
                  BackgroundColor="#FFFFFF"
                  TextColor="Black"

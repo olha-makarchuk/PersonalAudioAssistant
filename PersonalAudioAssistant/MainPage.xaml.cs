@@ -28,7 +28,7 @@ namespace PersonalAudioAssistant
 
             await _authTokenManager.InitializeAsync();
 
-            if (_authTokenManager.IsSignedIn)
+            if (await _authTokenManager.IsSignedInAsync())
             {
                 Shell.Current?.GoToAsync("//ProgramPage");
             }

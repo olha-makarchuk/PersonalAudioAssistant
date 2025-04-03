@@ -15,6 +15,7 @@ namespace PersonalAudioAssistant.View
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            Shell.Current.FlyoutBehavior = FlyoutBehavior.Disabled;
 
             if (ViewModel != null)
             {

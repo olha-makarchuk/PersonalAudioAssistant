@@ -1,17 +1,22 @@
-﻿using Microsoft.Maui.Controls;
-using Microsoft.Extensions.DependencyInjection;
-using PersonalAudioAssistant.Services;
-using MediatR;
+﻿using PersonalAudioAssistant.Services;
 
 namespace PersonalAudioAssistant
 {
     public partial class App : Microsoft.Maui.Controls.Application
     {
-        public App(IServiceProvider serviceProvider)
+        public static IServiceProvider Services { get; private set; }
+
+        public App(IServiceProvider services)
         {
             InitializeComponent();
+            Services = services;
 
-            MainPage = new AppShell();
+            // Ручне створення AppShell з отриманням AuthTokenManager з DI
+            var authTokenManager = Services.GetService<AuthTokenManager>();
+            MainPage = new AppShell(authTokenManager);
         }
+
+
     }
+
 }

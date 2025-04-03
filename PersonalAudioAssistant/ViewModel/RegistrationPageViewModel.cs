@@ -31,6 +31,8 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         private async Task SignUpAsync()
         {
+            IsBusy = true;
+
             if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {
                 await App.Current.MainPage.DisplayAlert("Помилка", "Будь ласка, введіть email та пароль.", "ОК");
@@ -39,7 +41,6 @@ namespace PersonalAudioAssistant.ViewModel
 
             try
             {
-                IsBusy = true;
                 await _authTokenManager.SignUpWithPasswordAsync(Email, Password);
                 await Shell.Current.GoToAsync("//ProgramPage");
             }

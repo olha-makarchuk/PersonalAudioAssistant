@@ -5,11 +5,17 @@ namespace PersonalAudioAssistant.View;
 public partial class ProgramPage : ContentPage
 {
 
-    private readonly GoogleDriveService _authTokenManager;
-    public ProgramPage()
+    private readonly AuthTokenManager _authTokenManager;
+    public ProgramPage(AuthTokenManager authTokenManager)
     {
         InitializeComponent();
-        _authTokenManager = new GoogleDriveService();
+        _authTokenManager = authTokenManager;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        Shell.Current.FlyoutBehavior = FlyoutBehavior.Flyout;
     }
 
     private async void SignOut_Clicked(object sender, EventArgs e)
@@ -17,7 +23,7 @@ public partial class ProgramPage : ContentPage
 
         try
         {
-            await _authTokenManager.SignOut();
+            await _authTokenManager.SignOutAsync();
 
         }
         catch (Exception ex)

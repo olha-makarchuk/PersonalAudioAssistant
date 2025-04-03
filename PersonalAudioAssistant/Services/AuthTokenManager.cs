@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth;
+using System;
 using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.Services
@@ -10,7 +11,17 @@ namespace PersonalAudioAssistant.Services
         private readonly GoogleUserService _googleAuthService;
         private readonly IMediator _mediator;
 
-        public bool IsSignedIn => CheckIfUserIsSignedIn().Result;
+        public event EventHandler<bool> UserSignInStatusChanged;
+
+        private void OnUserSignInStatusChanged(bool isSignedIn)
+        {
+            UserSignInStatusChanged?.Invoke(this, isSignedIn);
+        }
+
+        public async Task<bool> IsSignedInAsync()
+        {
+            return await CheckIfUserIsSignedIn();
+        }
 
         public AuthTokenManager(GoogleUserService googleAuthService, IMediator mediator)
         {
@@ -24,10 +35,6 @@ namespace PersonalAudioAssistant.Services
             if (await IsAccessTokenExpired() && !string.IsNullOrEmpty(refreshToken))
             {
                 await RefreshTokenAsync();
-            }
-            else
-            {
-                await SignOutAsync();
             }
         }
 
@@ -83,8 +90,8 @@ namespace PersonalAudioAssistant.Services
             }
 
             await SaveTokensAsync(response.AccessToken, response.RefreshToken, expiryTime);
-
             await SecureStorage.SetAsync("user_email", response.Email);
+            OnUserSignInStatusChanged(true);
         }
 
         public async Task SignUpWithPasswordAsync(string email, string password)
@@ -112,15 +119,10 @@ namespace PersonalAudioAssistant.Services
         {
             SecureStorage.Remove("access_token");
             SecureStorage.Remove("refresh_token");
+            SecureStorage.Remove("access_token_expires_at");
+            SecureStorage.Remove("user_email");
 
-            var isGoogle = await SecureStorage.GetAsync("is_google");
-
-            if (isGoogle == "true")
-            {
-                SecureStorage.Remove("access_token_expires_at");
-                SecureStorage.Remove("user_email");
-            }
-
+            OnUserSignInStatusChanged(false);
             await Task.CompletedTask;
         }
 
@@ -171,16 +173,15 @@ namespace PersonalAudioAssistant.Services
                 };
 
                 var tokenResponse = await _mediator.Send(refreshCommand);
+                DateTime expiryTime = DateTime.UtcNow.AddHours(1);
 
-                // Приклад: оновлюємо токени, якщо відповідь містить дані
-                // long expiresInSeconds = (long)TimeSpan.FromHours(1).TotalSeconds;
-                // await SaveTokensAsync(tokenResponse.AccessToken, tokenResponse.RefreshToken, expiresInSeconds);
+                await SaveTokensAsync(tokenResponse.AccessToken, tokenResponse.RefreshToken, expiryTime);
             }
             catch (Exception ex)
             {
-                await SignOutAsync();
+                //await SignOutAsync();
                 await InitializeAsync();
-                //throw new Exception($"Помилка оновлення токену: {ex.Message}");
+                throw new Exception($"Помилка оновлення токену: {ex.Message}");
             }
         }
 
@@ -203,7 +204,6 @@ namespace PersonalAudioAssistant.Services
             return currentUnixTime >= (expiryUnixTime - 10);
         }
 
-
         public async Task<bool> IsUserSignedInAsync()
         {
             var accessToken = await SecureStorage.GetAsync("access_token");
@@ -214,10 +214,12 @@ namespace PersonalAudioAssistant.Services
 
         private async Task<bool> CheckIfUserIsSignedIn()
         {
-            var accessToken = SecureStorage.GetAsync("access_token").Result;
-            var refreshToken = SecureStorage.GetAsync("refresh_token").Result;
-            return !string.IsNullOrEmpty(accessToken) &&  !await IsAccessTokenExpired();
+            var accessToken = await SecureStorage.GetAsync("access_token");
+            var refreshToken = await SecureStorage.GetAsync("refresh_token");
+            return !string.IsNullOrEmpty(accessToken) && !await IsAccessTokenExpired();
         }
+
+
         public async Task SaveTokensAsync(string accessToken, string refreshToken, DateTimeOffset expiryTime)
         {
             await SecureStorage.SetAsync("access_token", accessToken);

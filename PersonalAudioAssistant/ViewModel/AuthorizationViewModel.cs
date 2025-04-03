@@ -18,6 +18,7 @@ namespace PersonalAudioAssistant.ViewModel
             _authTokenManager = new AuthTokenManager(googleUserService, _mediator);
         }
 
+
         // Властивості для зв’язування з Entry
         [ObservableProperty]
         private string email;
@@ -33,6 +34,8 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         private async Task SignInAsync()
         {
+            IsBusy = true;
+
             if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {
                 await App.Current.MainPage.DisplayAlert("Помилка", "Будь ласка, введіть email та пароль.", "ОК");
@@ -41,9 +44,11 @@ namespace PersonalAudioAssistant.ViewModel
 
             try
             {
-                IsBusy = true;
                 await _authTokenManager.SignInWithPasswordAsync(Email, Password);
+
+                (Shell.Current as AppShell).IsLogged = true;
                 await Shell.Current.GoToAsync("//ProgramPage");
+
             }
             catch (Exception ex)
             {
@@ -54,6 +59,7 @@ namespace PersonalAudioAssistant.ViewModel
                 IsBusy = false;
             }
         }
+
 
         // Команда для входу через Google
         [RelayCommand]
