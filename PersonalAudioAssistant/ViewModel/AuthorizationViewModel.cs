@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.View;
 using System;
 using System.Threading.Tasks;
 
@@ -49,6 +50,7 @@ namespace PersonalAudioAssistant.ViewModel
                 (Shell.Current as AppShell).IsLogged = true;
                 await Shell.Current.GoToAsync("//ProgramPage");
 
+                Shell.Current.FlyoutBehavior = FlyoutBehavior.Flyout;
             }
             catch (Exception ex)
             {
@@ -70,6 +72,7 @@ namespace PersonalAudioAssistant.ViewModel
                 IsBusy = true;
                 await _authTokenManager.Sign_In_Up_AsyncGoogle();
                 await Shell.Current.GoToAsync("//ProgramPage");
+
             }
             catch (Exception ex)
             {
@@ -85,7 +88,8 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         private async Task SignUpAsync()
         {
-            await Shell.Current.GoToAsync("//RegistrationPage");
+            await Shell.Current.GoToAsync("/RegistrationPage");
+
         }
 
         // Метод для ініціалізації, який викликається при появі сторінки

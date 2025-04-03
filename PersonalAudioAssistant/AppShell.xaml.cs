@@ -3,6 +3,7 @@ using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.View;
 using System;
 using Microsoft.Maui.Dispatching;
+using System.Globalization;
 
 namespace PersonalAudioAssistant
 {
@@ -12,6 +13,7 @@ namespace PersonalAudioAssistant
         {
             InitializeComponent();
             Routing.RegisterRoute(nameof(AuthorizationPage), typeof(AuthorizationPage));
+            Routing.RegisterRoute(nameof(RegistrationPage), typeof(RegistrationPage));
             Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
             Routing.RegisterRoute(nameof(ProgramPage), typeof(ProgramPage));
 
@@ -32,9 +34,36 @@ namespace PersonalAudioAssistant
             get => (bool)GetValue(IsLoggedProperty);
             set => SetValue(IsLoggedProperty, value);
         }
+        public bool IsLoggedInverse => !IsLogged;
+
 
         public static readonly BindableProperty IsLoggedProperty =
             BindableProperty.Create(nameof(IsLogged), typeof(bool), typeof(AppShell), false);
 
+    }
+}
+
+
+namespace PersonalAudioAssistant.Converters
+{
+    public class InverseBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolean)
+            {
+                return !boolean;
+            }
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolean)
+            {
+                return !boolean;
+            }
+            return value;
+        }
     }
 }

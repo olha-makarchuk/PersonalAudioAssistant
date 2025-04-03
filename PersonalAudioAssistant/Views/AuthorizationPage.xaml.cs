@@ -1,15 +1,17 @@
+using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
 namespace PersonalAudioAssistant.View
 {
     public partial class AuthorizationPage : ContentPage
     {
-        private AuthorizationViewModel ViewModel => BindingContext as AuthorizationViewModel;
-
-        public AuthorizationPage(AuthorizationViewModel viewModel)
+        AuthTokenManager _authTokenManager;
+        
+        public AuthorizationPage(AuthorizationViewModel viewModel, AuthTokenManager authTokenManager)
         {
             InitializeComponent();
             BindingContext = viewModel;
+            _authTokenManager = authTokenManager;
         }
 
         protected override async void OnAppearing()
@@ -17,9 +19,11 @@ namespace PersonalAudioAssistant.View
             base.OnAppearing();
             Shell.Current.FlyoutBehavior = FlyoutBehavior.Disabled;
 
-            if (ViewModel != null)
+            await _authTokenManager.InitializeAsync();
+
+            if (await _authTokenManager.IsSignedInAsync())
             {
-                await ViewModel.InitializeAsync();
+                await _authTokenManager.SignOutAsync();
             }
         }
     }

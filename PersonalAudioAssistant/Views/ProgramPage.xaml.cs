@@ -28,13 +28,9 @@ public partial class ProgramPage : ContentPage
         }
         catch (Exception ex)
         {
-            // Якщо помилка пов'язана з неможливістю відкликання, можна її залогувати або проігнорувати
             Console.WriteLine($"Не вдалося відкликати токен: {ex.Message}");
         }
 
-
-        await Shell.Current.GoToAsync("//AuthorizationPage");
+        Shell.Current?.GoToAsync("AuthorizationPage");
     }
-
-
 }

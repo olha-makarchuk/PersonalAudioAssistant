@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.View;
 
 namespace PersonalAudioAssistant
 {
@@ -34,7 +35,7 @@ namespace PersonalAudioAssistant
             }
             else
             {
-                Shell.Current?.GoToAsync("//AuthorizationPage");
+                Shell.Current?.GoToAsync($"//AuthorizationPage");
             }
         }
     }

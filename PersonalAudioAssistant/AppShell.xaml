@@ -9,25 +9,22 @@
     Title="PersonalAudioAssistant">
 
     <ShellContent
+        Title="Вийти"
+        IsVisible="{Binding IsLoggedInverse}"
+        ContentTemplate="{DataTemplate view:AuthorizationPage}"
+        Route="AuthorizationPage"
+        Shell.NavBarIsVisible="False"/>
+
+
+    <ShellContent
         Title="MainPage"
+        IsVisible="{Binding }"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
-    <Tab IsVisible="{Binding IsLogged}">
-        <ShellContent
-        Title="AuthorizationPage"
-        ContentTemplate="{DataTemplate view:AuthorizationPage}"
-        Route="AuthorizationPage"/>
-    </Tab>
-    <Tab IsVisible="{Binding IsLogged}">
-        <ShellContent
-        Title="RegistrationPage"
-        ContentTemplate="{DataTemplate view:RegistrationPage}"
-        Route="RegistrationPage"/>
-    </Tab>
-
     <ShellContent
         Title="ProgramPage"
+        IsVisible="{Binding IsLogged}"
         ContentTemplate="{DataTemplate view:ProgramPage}"
         Route="ProgramPage"/>
 
