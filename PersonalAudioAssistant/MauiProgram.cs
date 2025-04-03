@@ -54,9 +54,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<GoogleUserService>();
         builder.Services.AddSingleton<MainPage>();
         builder.Services.AddSingleton<AppShell>();
-        builder.Services.AddTransient<ProgramPage>();
         builder.Services.AddScoped<AuthorizationPage, AuthorizationViewModel>();
         builder.Services.AddScoped<RegistrationPage, RegistrationPageViewModel>();
+        builder.Services.AddScoped<ProgramPage, ProgramPageViewModel>();
+
 
         builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
 

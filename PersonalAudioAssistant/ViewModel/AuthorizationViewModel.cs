@@ -2,9 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Services;
-using PersonalAudioAssistant.View;
-using System;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -19,19 +16,15 @@ namespace PersonalAudioAssistant.ViewModel
             _authTokenManager = new AuthTokenManager(googleUserService, _mediator);
         }
 
-
-        // Властивості для зв’язування з Entry
         [ObservableProperty]
         private string email;
 
         [ObservableProperty]
         private string password;
 
-        // Прапорець для індикації завантаження
         [ObservableProperty]
         private bool isBusy;
 
-        // Команда для входу за допомогою email/паролю
         [RelayCommand]
         private async Task SignInAsync()
         {
@@ -62,8 +55,6 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-
-        // Команда для входу через Google
         [RelayCommand]
         private async Task SignInGoogleAsync()
         {
@@ -84,7 +75,6 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-        // Команда для переходу до сторінки реєстрації
         [RelayCommand]
         private async Task SignUpAsync()
         {
@@ -92,7 +82,6 @@ namespace PersonalAudioAssistant.ViewModel
 
         }
 
-        // Метод для ініціалізації, який викликається при появі сторінки
         public async Task InitializeAsync()
         {
             try

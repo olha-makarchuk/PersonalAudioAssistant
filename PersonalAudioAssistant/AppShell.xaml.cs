@@ -9,15 +9,24 @@ namespace PersonalAudioAssistant
 {
     public partial class AppShell : Shell
     {
+        private readonly AuthTokenManager _authTokenManager;
         public AppShell(AuthTokenManager authTokenManager)
         {
             InitializeComponent();
+            BindingContext = this;
+
             Routing.RegisterRoute(nameof(AuthorizationPage), typeof(AuthorizationPage));
             Routing.RegisterRoute(nameof(RegistrationPage), typeof(RegistrationPage));
             Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
             Routing.RegisterRoute(nameof(ProgramPage), typeof(ProgramPage));
 
+            _authTokenManager = authTokenManager;
             authTokenManager.UserSignInStatusChanged += OnUserSignInStatusChanged;
+        }
+
+        private async void OnFooterTapped(object sender, System.EventArgs e)
+        {
+            await Shell.Current.GoToAsync(nameof(View.AuthorizationPage));
         }
 
         private void OnUserSignInStatusChanged(object sender, bool isSignedIn)
@@ -40,30 +49,10 @@ namespace PersonalAudioAssistant
         public static readonly BindableProperty IsLoggedProperty =
             BindableProperty.Create(nameof(IsLogged), typeof(bool), typeof(AppShell), false);
 
-    }
-}
-
-
-namespace PersonalAudioAssistant.Converters
-{
-    public class InverseBooleanConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public async Task Sign_Out(object sender, System.EventArgs e)
         {
-            if (value is bool boolean)
-            {
-                return !boolean;
-            }
-            return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is bool boolean)
-            {
-                return !boolean;
-            }
-            return value;
+            await _authTokenManager.SignOutAsync();
+            await Shell.Current.GoToAsync("//AuthorizationPage");
         }
     }
 }

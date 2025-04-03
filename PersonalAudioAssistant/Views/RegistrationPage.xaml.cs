@@ -7,7 +7,7 @@ namespace PersonalAudioAssistant.View
 {
     public partial class RegistrationPage : ContentPage
     {
-        private RegistrationPageViewModel ViewModel => BindingContext as RegistrationPageViewModel;
+        private RegistrationPageViewModel ViewModel;
 
         public RegistrationPage(RegistrationPageViewModel viewModel)
         {
