@@ -1,7 +1,7 @@
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
-namespace PersonalAudioAssistant.View
+namespace PersonalAudioAssistant.Views
 {
     public partial class AuthorizationPage : ContentPage
     {
@@ -17,7 +17,6 @@ namespace PersonalAudioAssistant.View
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            Shell.Current.FlyoutBehavior = FlyoutBehavior.Disabled;
 
             await _authTokenManager.InitializeAsync();
 

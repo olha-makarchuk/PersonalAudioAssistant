@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Services;
-using PersonalAudioAssistant.View;
+using PersonalAudioAssistant.Views;
 
 namespace PersonalAudioAssistant
 {

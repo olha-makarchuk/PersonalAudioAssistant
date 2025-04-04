@@ -70,6 +70,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="3.1.0" />
+		<PackageReference Include="Syncfusion.Maui.Popup" Version="29.1.35" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -80,6 +81,9 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <MauiXaml Update="Views\AuthorizationPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\MenuPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\ProgramPage.xaml">

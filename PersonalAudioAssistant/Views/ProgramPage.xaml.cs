@@ -1,8 +1,9 @@
 using AndroidX.Lifecycle;
+using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
-namespace PersonalAudioAssistant.View;
+namespace PersonalAudioAssistant.Views;
 
 public partial class ProgramPage : ContentPage
 {
@@ -12,12 +13,12 @@ public partial class ProgramPage : ContentPage
     {
         InitializeComponent();
         _authTokenManager = authTokenManager;
-        BindingContext = viewModel;
+        //BindingContext = viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        Shell.Current.FlyoutBehavior = FlyoutBehavior.Flyout;
+        Shell.Current.FlyoutBehavior = FlyoutBehavior.Disabled;
     }
 }

@@ -6,13 +6,14 @@ using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Persistence.Context;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth;
 using PersonalAudioAssistant.Services;
-using PersonalAudioAssistant.View;
 using MediatR;
 using PeronalAudioAssistant.Application.PlatformFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Persistence.Repositories;
 using PersonalAudioAssistant.ViewModel;
+using PersonalAudioAssistant.Views;
+using Syncfusion.Maui.Core.Hosting;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -63,10 +64,10 @@ public static class MauiProgram
 
         builder.Services.AddTransient<TokenBase>();
 
+
         // CosmosDb
         builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");
 
         return builder.Build();
     }
-
 }

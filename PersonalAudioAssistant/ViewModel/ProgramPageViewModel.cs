@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Views;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -19,18 +20,17 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         private async Task SignOut_Clicked()
         {
-
             try
             {
-                await _authTokenManager.SignOutAsync();
-
+                await _authTokenManager.SignOutAsync(); // Perform sign-out
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Не вдалося відкликати токен: {ex.Message}");
             }
 
-            Shell.Current?.GoToAsync("//AuthorizationPage");
+            // Navigate back to MenuPage
+            await Shell.Current.GoToAsync("/MenuPage");
         }
     }
 }
