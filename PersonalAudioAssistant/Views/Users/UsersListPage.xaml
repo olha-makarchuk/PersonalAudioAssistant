@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PersonalAudioAssistant.Views.Users.UsersListPage"
+             Title="UsersListPage">
+    <VerticalStackLayout>
+        <Button Text="Додати"
+                 Command="{Binding AddUserCommand}"
+                 BackgroundColor="{StaticResource Primary}"
+                 TextColor="White"
+                 WidthRequest="300"
+                 HeightRequest="50"
+                 FontSize="18" />
+    </VerticalStackLayout>
+</ContentPage>

@@ -2,9 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Domain.Entities;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 {

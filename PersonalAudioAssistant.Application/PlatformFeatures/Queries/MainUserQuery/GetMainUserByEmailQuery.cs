@@ -4,7 +4,6 @@ using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.MainUserQuery
 {
-
     public class GetMainUserByEmailQuery : IRequest<MainUser>
     {
         public string Name { get; set; } = null!;
@@ -18,8 +17,13 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.MainUserQu
             }
             public async Task<MainUser> Handle(GetMainUserByEmailQuery query, CancellationToken cancellationToken)
             {
-                return await _mainUserRepository.GetUserByEmailAsync(query.Name, cancellationToken);
-                                        //?? throw new NotFoundException("User not found");
+                var user = await _mainUserRepository.GetUserByEmailAsync(query.Name, cancellationToken);
+                if(user == null)
+                {
+                    throw new Exception("User not found");
+                }
+
+                return user;
             }
         }
     }

@@ -14,7 +14,6 @@ namespace PersonalAudioAssistant.Persistence.Context
         public DbSet<AppSettings> AppSettings { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Message> Messages { get; set; }
-        public DbSet<IndividualParameters> IndividualParameters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,7 +22,6 @@ namespace PersonalAudioAssistant.Persistence.Context
             modelBuilder.Entity<AppSettings>().ToContainer("AppSettings");
             modelBuilder.Entity<Conversation>().ToContainer("Conversation");
             modelBuilder.Entity<Message>().ToContainer("Message");
-            modelBuilder.Entity<IndividualParameters>().ToContainer("IndividualParameters");
         }
     }
 }

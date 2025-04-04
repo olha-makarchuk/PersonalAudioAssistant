@@ -4,16 +4,15 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Persistence.Context;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth;
 using PersonalAudioAssistant.Services;
 using MediatR;
 using PeronalAudioAssistant.Application.PlatformFeatures;
-using Microsoft.Extensions.DependencyInjection;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Persistence.Repositories;
 using PersonalAudioAssistant.ViewModel;
 using PersonalAudioAssistant.Views;
-using Syncfusion.Maui.Core.Hosting;
+using PersonalAudioAssistant.Views.Users;
+using PersonalAudioAssistant.ViewModel.Users;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -45,7 +44,7 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        // Реєстрація інших сервісів
+        // Services
         builder.Services.AddApplication();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton(TextToSpeech.Default);
@@ -53,17 +52,22 @@ public static class MauiProgram
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
+        builder.Services.AddTransient<TokenBase>();
+
+        // Pages
         builder.Services.AddSingleton<MainPage>();
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddScoped<AuthorizationPage, AuthorizationViewModel>();
         builder.Services.AddScoped<RegistrationPage, RegistrationPageViewModel>();
         builder.Services.AddScoped<ProgramPage, ProgramPageViewModel>();
+        builder.Services.AddScoped<SettingsPage, SettingsViewModel>();
+        builder.Services.AddScoped<CloneVoicePage, CloneVoiceViewModel>();
+        builder.Services.AddScoped<UsersListPage, UsersListViewModel>();
+        builder.Services.AddScoped<AddUserPage, AddUserViewModel>();
+        builder.Services.AddScoped<UpdateUserPage, UpdateUserViewModel>();
 
-
+        // Repositories
         builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
-
-        builder.Services.AddTransient<TokenBase>();
-
 
         // CosmosDb
         builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");

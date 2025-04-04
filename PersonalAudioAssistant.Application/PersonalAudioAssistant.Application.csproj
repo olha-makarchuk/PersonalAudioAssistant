@@ -8,8 +8,6 @@
 
   <ItemGroup>
     <Folder Include="PlatformFeatures\Commands\MainUserCommands\" />
-    <Folder Include="PlatformFeatures\Commands\SubUserCommands\" />
-    <Folder Include="PlatformFeatures\Queries\SubUserQuery\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

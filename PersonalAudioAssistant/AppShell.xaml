@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:PersonalAudioAssistant"
     xmlns:view="clr-namespace:PersonalAudioAssistant.Views"
+    xmlns:view_users="clr-namespace:PersonalAudioAssistant.Views.Users"
     Shell.FlyoutBehavior="Disabled"
     Title="PersonalAudioAssistant">
 
@@ -23,11 +24,9 @@
 
 
     <ShellContent
-        Title="Вийти"
         ContentTemplate="{DataTemplate view:AuthorizationPage}"
         Route="AuthorizationPage"
         Shell.NavBarIsVisible="False"/>
-
 
     <ShellContent
         Title="MainPage"
@@ -42,5 +41,29 @@
         Title="RegistrationPage"
         ContentTemplate="{DataTemplate view:RegistrationPage}"
         Route="RegistrationPage"/>
-    
+
+    <ShellContent
+        Title="CloneVoicePage"
+        ContentTemplate="{DataTemplate view:CloneVoicePage}"
+        Route="CloneVoicePage"/>
+
+    <ShellContent
+        Title="SettingsPage"
+        ContentTemplate="{DataTemplate view:SettingsPage}"
+        Route="SettingsPage"/>
+
+    <ShellContent
+        Title="AddUserPage"
+        ContentTemplate="{DataTemplate view_users:AddUserPage}"
+        Route="AddUserPage"/>
+
+    <ShellContent
+        Title="UpdateUserPage"
+        ContentTemplate="{DataTemplate view_users:UpdateUserPage}"
+        Route="UpdateUserPage"/>
+
+    <ShellContent
+        Title="UsersListPage"
+        ContentTemplate="{DataTemplate view_users:UsersListPage}"
+        Route="UsersListPage"/>
 </Shell>

@@ -32,6 +32,21 @@
                          Color="#cccccc"
                          Margin="0, 0, 0, 50"/>
             </VerticalStackLayout>
+
+            <Button Text="Головна                     "
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    HorizontalOptions="End"
+                    HeightRequest="60"
+                    FontSize="16"
+                    WidthRequest="300" 
+                    Margin="0,10"
+                    Clicked="MainPageClicked"
+                    ImageSource="main.png"/>
+            <BoxView HeightRequest="1"
+                     Color="#cccccc"
+                     Margin="10,0"/>
             
             <Button Text="Користувачі                     "
                     BackgroundColor="Transparent"
@@ -42,6 +57,7 @@
                     FontSize="16"
                     WidthRequest="300" 
                     Margin="0,10"
+                    Clicked="UsersListPageClicked"
                     ImageSource="users.png"/>
             <BoxView HeightRequest="1"
                      Color="#cccccc"
@@ -56,6 +72,7 @@
                     FontSize="16"
                     WidthRequest="300" 
                     Margin="0,10"
+                    Clicked="CloneVoicePageClicked"
                     ImageSource="voice.png"/>
             <BoxView HeightRequest="1"
                      Color="#cccccc"
@@ -70,6 +87,7 @@
                     FontSize="16"
                     Margin="0,10"
                     WidthRequest="300" 
+                    Clicked="SettingsPageClicked"
                     ImageSource="settings.png"/>
             <BoxView HeightRequest="1"
                      Color="#cccccc"
