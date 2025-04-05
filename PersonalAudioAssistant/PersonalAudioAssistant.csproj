@@ -80,6 +80,9 @@
 		<ProjectReference Include="..\PersonalAudioAssistant.Persistence\PersonalAudioAssistant.Persistence.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+	  <MauiXaml Update="Views\AnaliticsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\AuthorizationPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

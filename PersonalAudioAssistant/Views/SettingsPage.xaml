@@ -1,12 +1,99 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.SettingsPage"
-             Title="SettingsPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="Налаштування"
+             BackgroundColor="White">
+    <ContentPage.Resources>
+        <!-- Стиль для полів вводу -->
+        <Style TargetType="Entry">
+            <Setter Property="BackgroundColor" Value="White"/>
+            <Setter Property="TextColor" Value="#333333"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="HeightRequest" Value="40"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid>
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <Label Text="Налаштування"
+                   FontSize="26"
+                   HorizontalOptions="Center"
+                   FontAttributes="Bold" />
+
+                <Frame BackgroundColor="White"
+                   CornerRadius="10"
+                   Padding="15"
+                   HasShadow="True">    
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Електрона пошта: " FontSize="18"/>
+                    <Label Text="{Binding Email}"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            
+            <!-- Секція основних налаштувань -->
+            <Frame BackgroundColor="White"
+                   CornerRadius="10"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Тема" FontSize="18"/>
+                    <Picker ItemsSource="{Binding Themes}"
+                            SelectedItem="{Binding Theme}" />
+
+                    <Label Text="Мінімальний поріг" FontSize="18"/>
+                    <Entry Placeholder="Min Token Threshold"
+                           Keyboard="Numeric"
+                           Text="{Binding MinTokenThreshold}" />
+
+                    <Label Text="Сума поповнення" FontSize="18"/>
+                    <Entry Placeholder="Charge Amount"
+                           Keyboard="Numeric"
+                           Text="{Binding ChargeAmount}" />
+
+                    <Label Text="Баланс:" FontSize="18"/>
+                    <Label Text="{Binding Balance}"
+                           FontAttributes="Bold"
+                           FontSize="20"
+                           TextColor="Green" />
+
+                    <Button Text="Зберегти налаштування"
+                            Command="{Binding SaveSettingsCommand}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Секція оплати -->
+            <Frame BackgroundColor="White"
+                   CornerRadius="10"
+                   Padding="15"
+                   HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Спосіб оплати" FontSize="18"/>
+
+                    <Label Text="{Binding Payment}" TextColor="Gray" />
+                    
+                    <Button Text="{Binding PaymentButtonText}" 
+                Command="{Binding AddCardCommand}" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+
+            <!-- Кнопка виходу -->
+            <Button Text="Вийти"
+                    Command="{Binding SignOutCommand}"
+                    BackgroundColor="#D9534F"/>
+        </VerticalStackLayout>
+    </ScrollView>
+        
+        <Grid IsVisible="{Binding IsBusy}" BackgroundColor="#80000000">
+            <ActivityIndicator 
+                IsRunning="{Binding IsBusy}" 
+                VerticalOptions="Center" 
+                HorizontalOptions="Center"
+                Color="White"/>
+        </Grid>
+    </Grid>
 </ContentPage>

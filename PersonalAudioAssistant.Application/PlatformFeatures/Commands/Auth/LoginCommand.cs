@@ -60,6 +60,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
             return new MainUserLoginResponse
             {
+                UserId = userExist.Id.ToString(),
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 AccessExpiresAt = DateTime.UtcNow.AddHours(TokenExpiryTimeInHours),
@@ -79,6 +80,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
     public class MainUserLoginResponse
     {
+        public string? UserId { get; set; }
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public DateTime AccessExpiresAt { get; set; }

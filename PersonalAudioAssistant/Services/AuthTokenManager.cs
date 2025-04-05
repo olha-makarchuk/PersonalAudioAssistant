@@ -51,9 +51,9 @@ namespace PersonalAudioAssistant.Services
 
             await SecureStorage.SetAsync("is_google", "true");
 
-            await _mediator.Send(command);
+            var userId = await _mediator.Send(command);
 
-            await SignIn(response, expiryTime);
+            await SignIn(response, userId, expiryTime);
         }
 
         public async Task SignInWithPasswordAsync(string email, string password)
@@ -79,10 +79,10 @@ namespace PersonalAudioAssistant.Services
             }
             await SecureStorage.SetAsync("is_google", "false");
 
-            await SignIn(response, tokens.RefreshExpiresAt);
+            await SignIn(response, tokens.UserId, tokens.RefreshExpiresAt);
         }
 
-        private async Task SignIn(TokenResponse response, DateTimeOffset expiryTime)
+        private async Task SignIn(TokenResponse response, string userId, DateTimeOffset expiryTime)
         {
             if (response.RefreshToken == null || response.AccessToken == null || response.Email == null)
             {
@@ -91,6 +91,8 @@ namespace PersonalAudioAssistant.Services
 
             await SaveTokensAsync(response.AccessToken, response.RefreshToken, expiryTime);
             await SecureStorage.SetAsync("user_email", response.Email);
+            await SecureStorage.SetAsync("user_id", userId);
+
             OnUserSignInStatusChanged(true);
         }
 
@@ -112,7 +114,7 @@ namespace PersonalAudioAssistant.Services
             };
             await SecureStorage.SetAsync("is_google", "false");
 
-            await SignIn(tokenResponse, response.RefreshExpiresAt);
+            await SignIn(tokenResponse, response.UserId, response.RefreshExpiresAt);
         }
 
         public async Task SignOutAsync()

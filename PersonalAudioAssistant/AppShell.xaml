@@ -31,16 +31,17 @@
     <ShellContent
         Title="MainPage"
         ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Route="MainPage" 
+        Shell.NavBarIsVisible="False"/>
 
     <ShellContent
         ContentTemplate="{DataTemplate view:ProgramPage}"
         Route="ProgramPage"/>
 
     <ShellContent
-        Title="RegistrationPage"
         ContentTemplate="{DataTemplate view:RegistrationPage}"
-        Route="RegistrationPage"/>
+        Route="RegistrationPage"
+        Shell.NavBarIsVisible="False"/>
 
     <ShellContent
         Title="CloneVoicePage"
@@ -66,4 +67,9 @@
         Title="UsersListPage"
         ContentTemplate="{DataTemplate view_users:UsersListPage}"
         Route="UsersListPage"/>
+
+    <ShellContent
+        Title="AnaliticsPage"
+        ContentTemplate="{DataTemplate view:AnaliticsPage}"
+        Route="AnaliticsPage"/>
 </Shell>

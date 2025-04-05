@@ -2,14 +2,38 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.Users.AddUserPage"
-             Title="AddUserPage">
-    <VerticalStackLayout>
-        <Button Text="Зберегти"
-                 Command="{Binding SaveUserCommand}"
-                 BackgroundColor="{StaticResource Primary}"
-                 TextColor="White"
-                 WidthRequest="300"
-                 HeightRequest="50"
-                 FontSize="18" />
-    </VerticalStackLayout>
+             Title="Додати користувача"
+             BackgroundColor="White">
+
+    <ContentPage.Content>
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="15">
+                <Label Text="Додати користувача" 
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+
+                <!-- Поле для введення імені користувача -->
+                <Entry Placeholder="Ім'я користувача" 
+                       Text="{Binding UserName}" 
+                       FontSize="18"/>
+
+                <!-- Поле для введення стартової фрази -->
+                <Entry Placeholder="Стартова фраза" 
+                       Text="{Binding StartPhrase}" 
+                       FontSize="18"/>
+
+                <!-- Можна додати інші поля, наприклад для введення EndPhrase, VoiceId тощо -->
+
+                <!-- Кнопка для збереження -->
+                <Button Text="Зберегти"
+                        Command="{Binding SaveUserCommand}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        HeightRequest="50"
+                        FontSize="18"
+                        CornerRadius="10"/>
+            </VerticalStackLayout>
+        </ScrollView>
+    </ContentPage.Content>
 </ContentPage>

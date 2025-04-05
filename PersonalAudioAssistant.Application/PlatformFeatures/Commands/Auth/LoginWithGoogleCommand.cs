@@ -5,24 +5,26 @@ using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 {
-    public class LoginWithGoogleCommand : IRequest
+    public class LoginWithGoogleCommand : IRequest<string>
     {
         public string? Email { get; set; }
         public string? RefreshToken { get; set; }
     }
 
-    public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleCommand>
+    public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleCommand, string>
     {
         private readonly IMainUserRepository _mainUserRepository;
         private readonly IConfiguration _configuration;
+        private readonly IAppSettingsRepository _appSettingsRepository;
 
-        public LoginWithGoogleCommandHandler(IMainUserRepository mainUserRepository, IConfiguration configuration)
+        public LoginWithGoogleCommandHandler(IMainUserRepository mainUserRepository, IConfiguration configuration, IAppSettingsRepository appSettingsRepository)
         {
             _mainUserRepository = mainUserRepository;
             _configuration = configuration;
+            _appSettingsRepository = appSettingsRepository;
         }
 
-        public async Task Handle(LoginWithGoogleCommand request, CancellationToken cancellationToken = default)
+        public async Task<string> Handle(LoginWithGoogleCommand request, CancellationToken cancellationToken = default)
         {
             var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]);
 
@@ -42,6 +44,16 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                     RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
                 };
 
+                var appSettings = new AppSettings()
+                {
+                    Theme = "Light",
+                    Payment = null,
+                    MinTokenThreshold = -1,
+                    ChargeAmount = -1
+                };
+
+                await _appSettingsRepository.AddSettingsAsync(appSettings, cancellationToken);
+
                 await _mainUserRepository.CreateUser(mainUser, cancellationToken);
             }
             else
@@ -51,6 +63,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
                 await _mainUserRepository.UpdateUser(user, cancellationToken);
             }
+
+            return user.Id.ToString();
         }
     }
 }

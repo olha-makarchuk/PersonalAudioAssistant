@@ -33,4 +33,10 @@ public partial class MenuPage : Popup
         await Shell.Current.GoToAsync("//SettingsPage");
         Close();
     }
+
+    private async void AnaliticsPageClicked(object sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("//AnaliticsPage");
+        Close();
+    }
 }

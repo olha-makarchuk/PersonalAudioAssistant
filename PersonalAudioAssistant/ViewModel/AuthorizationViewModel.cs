@@ -41,8 +41,6 @@ namespace PersonalAudioAssistant.ViewModel
                 await _authTokenManager.SignInWithPasswordAsync(Email, Password);
 
                 await Shell.Current.GoToAsync("//ProgramPage");
-
-                Shell.Current.FlyoutBehavior = FlyoutBehavior.Flyout;
             }
             catch (Exception ex)
             {

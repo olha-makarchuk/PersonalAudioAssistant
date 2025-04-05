@@ -9,5 +9,6 @@ namespace PersonalAudioAssistant.Domain.Entities
         public int MinTokenThreshold { get; set; }
         public int ChargeAmount { get; set; }
         public int Balance { get; set; }
+        public string? UserId { get; set; }
     }
 }

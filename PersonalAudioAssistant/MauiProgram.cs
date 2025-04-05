@@ -65,9 +65,12 @@ public static class MauiProgram
         builder.Services.AddScoped<UsersListPage, UsersListViewModel>();
         builder.Services.AddScoped<AddUserPage, AddUserViewModel>();
         builder.Services.AddScoped<UpdateUserPage, UpdateUserViewModel>();
+        builder.Services.AddScoped<AnaliticsPage, AnaliticsViewModel>();
 
         // Repositories
         builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
+        builder.Services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
+        builder.Services.AddScoped<ISubUserRepository, SubUserRepository>();
 
         // CosmosDb
         builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");

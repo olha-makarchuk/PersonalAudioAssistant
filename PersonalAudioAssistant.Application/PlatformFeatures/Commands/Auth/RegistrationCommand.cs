@@ -19,12 +19,14 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
         private readonly IMainUserRepository _mainUserRepository;
         private readonly TokenBase _tokenApiBase;
         private readonly IConfiguration _configuration;
+        private readonly IAppSettingsRepository _appSettingsRepository;
 
-        public RegistrationCommandHandler(IMainUserRepository mainUserRepository, TokenBase tokenApiBase, IConfiguration configuration)
+        public RegistrationCommandHandler(IMainUserRepository mainUserRepository, TokenBase tokenApiBase, IConfiguration configuration, IAppSettingsRepository appSettingsRepository)
         {
             _mainUserRepository = mainUserRepository;
             _tokenApiBase = tokenApiBase;
             _configuration = configuration;
+            _appSettingsRepository = appSettingsRepository;
         }
 
         public async Task<MainUserRegisterResponse> Handle(RegistrationCommand request, CancellationToken cancellationToken = default)
@@ -58,12 +60,26 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
             string accessToken = _tokenApiBase.GenerateToken(claims);
             string refreshToken = TokenBase.GenerateRefreshToken();
-
             user.RefreshToken = refreshToken;
+
+
+            var appSettings = new AppSettings()
+            {
+                UserId = user.Id.ToString(),
+                Theme = "Light",
+                Payment = null,
+                MinTokenThreshold = -1,
+                ChargeAmount = -1
+            };
+
+            await _appSettingsRepository.AddSettingsAsync(appSettings, cancellationToken);
             await _mainUserRepository.CreateUser(user, cancellationToken);
+            
+            var userNew = await _mainUserRepository.GetUserByEmailAsync(request.Email, cancellationToken);
 
             return new MainUserRegisterResponse
             {
+                UserId = userNew.Id.ToString(),
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 AccessExpiresAt = DateTime.UtcNow.AddHours(TokenExpiryTimeInHours),
@@ -81,6 +97,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
     public class MainUserRegisterResponse
     {
+        public string UserId { get; set; }
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public DateTime AccessExpiresAt { get; set; }

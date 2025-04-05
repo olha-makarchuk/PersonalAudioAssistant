@@ -21,6 +21,7 @@ namespace PersonalAudioAssistant
             Routing.RegisterRoute(nameof(UsersListPage), typeof(UsersListPage));
             Routing.RegisterRoute(nameof(AddUserPage), typeof(AddUserPage));
             Routing.RegisterRoute(nameof(UpdateUserPage), typeof(UpdateUserPage));
+            Routing.RegisterRoute(nameof(AnaliticsPage), typeof(AnaliticsPage));
         }
 
         private void SignOut_Clicked(object sender, EventArgs e)

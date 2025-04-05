@@ -2,14 +2,53 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.Users.UsersListPage"
-             Title="UsersListPage">
-    <VerticalStackLayout>
-        <Button Text="Додати"
-                 Command="{Binding AddUserCommand}"
-                 BackgroundColor="{StaticResource Primary}"
-                 TextColor="White"
-                 WidthRequest="300"
-                 HeightRequest="50"
-                 FontSize="18" />
-    </VerticalStackLayout>
+             Title="Список користувачів"
+             BackgroundColor="White">
+
+    <ContentPage.Content>
+        <VerticalStackLayout Padding="0" Spacing="15">
+            <Label Text="Користувачі" 
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <!-- CollectionView для відображення списку користувачів -->
+            <CollectionView ItemsSource="{Binding Users}"
+                            SelectionMode="Single"
+                            SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                            EmptyView="Немає доданих користувачів">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame CornerRadius="10"
+                               Padding="15"
+                               Margin="5"
+                               HasShadow="True"
+                               BackgroundColor="#F0F0F0">
+                            <StackLayout Orientation="Vertical">
+                                <!-- Відображення імені користувача -->
+                                <Label Text="{Binding UserName}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="#333" />
+                                <!-- Додаткова інформація, наприклад StartPhrase -->
+                                <Label Text="{Binding StartPhrase}"
+                                       FontSize="14"
+                                       TextColor="Gray" />
+                            </StackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Кнопка для додавання нового користувача -->
+            <Button Text="Додати користувача"
+                    Command="{Binding AddUserCommand}"
+                    TextColor="White"
+                    CornerRadius="10"
+                    HorizontalOptions="End"
+                    VerticalOptions="End"
+                    HeightRequest="50"
+                    FontSize="18" />
+        </VerticalStackLayout>
+    </ContentPage.Content>
 </ContentPage>
