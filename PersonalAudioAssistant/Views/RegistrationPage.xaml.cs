@@ -12,6 +12,7 @@ namespace PersonalAudioAssistant.Views
         public RegistrationPage(RegistrationPageViewModel viewModel)
         {
             InitializeComponent();
+            Shell.SetTitleView(this, null);
             BindingContext = viewModel;
         }
 

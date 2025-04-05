@@ -10,10 +10,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
     public partial class UsersListViewModel : ObservableObject
     {
         private readonly IMediator _mediator;
-
-        public ObservableCollection<SubUser> Users { get; } = new ObservableCollection<SubUser>();
-
         private SubUser _selectedUser;
+
+        [ObservableProperty]
+        ObservableCollection<SubUser> users;
+
         public SubUser SelectedUser
         {
             get => _selectedUser;
@@ -30,12 +31,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
         public UsersListViewModel(IMediator mediator)
         {
             _mediator = mediator;
+            Users = new ObservableCollection<SubUser>(); // Ініціалізація колекції
             LoadUsers();
         }
 
         private async void LoadUsers()
         {
             var usersList = await _mediator.Send(new GetAllUsersOuery());
+            Users.Clear();
             foreach (var user in usersList)
             {
                 Users.Add(user);
@@ -44,14 +47,19 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         private async void OnUserSelected(SubUser user)
         {
-            await Shell.Current.GoToAsync($"//UserDetailPage?userId={user.Id}");
-            SelectedUser = null; 
+            await Shell.Current.GoToAsync($"/UpdateUserPage?userId={user.Id}");
+            SelectedUser = null;
         }
 
         [RelayCommand]
         private async Task AddUser()
         {
-            await Shell.Current.GoToAsync("//AddUserPage");
+            await Shell.Current.GoToAsync("/AddUserPage");
+        }
+
+        public void RefreshUsers()
+        {
+            LoadUsers();
         }
     }
 }

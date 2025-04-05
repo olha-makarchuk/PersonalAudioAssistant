@@ -5,50 +5,41 @@
              Title="Список користувачів"
              BackgroundColor="White">
 
-    <ContentPage.Content>
-        <VerticalStackLayout Padding="0" Spacing="15">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <VerticalStackLayout Grid.Row="0" Padding="0" >
             <Label Text="Користувачі" 
                    FontSize="22"
                    FontAttributes="Bold"
-                   HorizontalOptions="Center" />
+                   HorizontalOptions="Center"
+                   TextColor="Black" />
 
-            <!-- CollectionView для відображення списку користувачів -->
-            <CollectionView ItemsSource="{Binding Users}"
-                            SelectionMode="Single"
-                            SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                            EmptyView="Немає доданих користувачів">
-                <CollectionView.ItemTemplate>
+            <ListView ItemsSource="{Binding Users}"
+                      SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                      HeightRequest="400">
+                <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Frame CornerRadius="10"
-                               Padding="15"
-                               Margin="5"
-                               HasShadow="True"
-                               BackgroundColor="#F0F0F0">
-                            <StackLayout Orientation="Vertical">
-                                <!-- Відображення імені користувача -->
-                                <Label Text="{Binding UserName}"
-                                       FontSize="18"
-                                       FontAttributes="Bold"
-                                       TextColor="#333" />
-                                <!-- Додаткова інформація, наприклад StartPhrase -->
-                                <Label Text="{Binding StartPhrase}"
-                                       FontSize="14"
-                                       TextColor="Gray" />
-                            </StackLayout>
-                        </Frame>
+                        <TextCell Text="{Binding UserName}"
+                                  TextColor="Black" />
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <!-- Кнопка для додавання нового користувача -->
-            <Button Text="Додати користувача"
-                    Command="{Binding AddUserCommand}"
-                    TextColor="White"
-                    CornerRadius="10"
-                    HorizontalOptions="End"
-                    VerticalOptions="End"
-                    HeightRequest="50"
-                    FontSize="18" />
+                </ListView.ItemTemplate>
+            </ListView>
         </VerticalStackLayout>
-    </ContentPage.Content>
+
+        <Button Grid.Row="1"
+                Text="+"
+                Command="{Binding AddUserCommand}"
+                TextColor="White"
+                CornerRadius="10"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                HeightRequest="60"
+                WidthRequest="60"
+                FontSize="32"
+                Margin="23" />
+    </Grid>
 </ContentPage>

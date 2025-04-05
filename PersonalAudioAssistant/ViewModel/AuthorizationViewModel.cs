@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
+using PersonalAudioAssistant.Application.Services.Api;
 using PersonalAudioAssistant.Services;
 
 namespace PersonalAudioAssistant.ViewModel
@@ -29,6 +30,8 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task SignInAsync()
         {
             IsBusy = true;
+
+            VoicesApi voicesApi = new VoicesApi();
 
             if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {
