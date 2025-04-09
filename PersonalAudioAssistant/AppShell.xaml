@@ -22,16 +22,15 @@
         </Grid>
     </Shell.TitleView>
 
-
-    <ShellContent
-        ContentTemplate="{DataTemplate view:AuthorizationPage}"
-        Route="AuthorizationPage"
-        Shell.NavBarIsVisible="False"/>
-
     <ShellContent
         Title="MainPage"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" 
+        Shell.NavBarIsVisible="False"/>
+    
+    <ShellContent
+        ContentTemplate="{DataTemplate view:AuthorizationPage}"
+        Route="AuthorizationPage"
         Shell.NavBarIsVisible="False"/>
 
     <ShellContent

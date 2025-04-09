@@ -19,7 +19,6 @@ public partial class AddUserPage : ContentPage
         if (BindingContext is AddUserViewModel viewModel)
         {
             viewModel.OnNavigatedFrom();
-
         }
     }
 

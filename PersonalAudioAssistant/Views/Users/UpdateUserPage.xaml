@@ -1,24 +1,224 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="PersonalAudioAssistant.Views.Users.UpdateUserPage"
+             Title="Оновлення"
              Shell.TitleView="{x:Null}"
-             Title="UpdateUserPage">
-    <VerticalStackLayout>
-        <Button Text="Зберегти"
-                 Command="{Binding UpdateUserCommand}"
-                 BackgroundColor="{StaticResource Primary}"
-                 TextColor="White"
-                 WidthRequest="300"
-                 HeightRequest="50"
-                 FontSize="18" />
-        
-        <Button Text="Видалити"
-                 Command="{Binding DeleteUserCommand}"
-                 BackgroundColor="{StaticResource Primary}"
-                 TextColor="White"
-                 WidthRequest="300"
-                 HeightRequest="50"
-                 FontSize="18" />
-    </VerticalStackLayout>
+             BackgroundColor="White">
+
+    <ContentPage.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#FFFFFF" Offset="0.0" />
+            <GradientStop Color="#F5F5F5" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="25" Spacing="25">
+            <!-- Введення імені користувача -->
+            <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Введіть ім'я користувача:" 
+                       FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+                    <Entry Text="{Binding UserName}" 
+                       Placeholder="Ім'я користувача"
+                       BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Параметри користувача -->
+            <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Індивідуальні параметри:" 
+                       FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                    <Label Text="Початкова фраза:" TextColor="#555555"/>
+                    <Entry Text="{Binding SubUser.StartPhrase}"
+                       Placeholder="Початкова фраза" 
+                       BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+
+                    <Label Text="Оберіть спосіб завершення:" FontSize="16" FontAttributes="Bold" TextColor="#333333"/>
+                    <StackLayout Orientation="Horizontal" Spacing="10">
+                        <RadioButton Content="Кінцева фраза" GroupName="CompletionOption" 
+                                 IsChecked="{Binding IsEndPhraseSelected}" />
+                        <RadioButton Content="Час завершення" GroupName="CompletionOption"
+                                 IsChecked="{Binding IsEndTimeSelected}" />
+                    </StackLayout>
+
+                    <StackLayout IsVisible="{Binding IsEndPhraseSelected}">
+                        <Label Text="Кінцева фраза:" TextColor="#555555"/>
+                        <Entry Text="{Binding SubUser.EndPhrase}"
+                           Placeholder="Кінцева фраза" 
+                           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                    </StackLayout>
+
+                    <StackLayout IsVisible="{Binding IsEndTimeSelected}">
+                        <Label Text="Час завершення (сек):" TextColor="#555555"/>
+                        <Picker ItemsSource="{Binding EndTimeOptions}"
+                            SelectedItem="{Binding SelectedEndTime}"
+                            Title="Оберіть час"
+                            BackgroundColor="#F0F0F0"
+                            TextColor="#333333" />
+                    </StackLayout>
+
+                    <StackLayout>
+                        <Label Text="Змінити зразок вашого голосу:" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 20"/>
+                        <Button Text="Розпочати запис"
+                            Command="{Binding RecordReferenceVoiceCommand}"
+                            HorizontalOptions="Center" />
+                    </StackLayout>
+
+                    <StackLayout>
+                        <Label Text="Змінити пароль до історії розмов:" 
+           FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 10"/>
+                        <Label Text="Старий пароль:" TextColor="#555555"/>
+                        <Entry Text="{Binding OldPassword}"
+           Placeholder="Введіть старий пароль"
+           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                    </StackLayout>
+
+                    <StackLayout>
+                        <Label Text="Новий пароль:" TextColor="#555555"/>
+                        <Entry Text="{Binding NewPassword}"
+           Placeholder="Введіть новий пароль"
+           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                    </StackLayout>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Голосовий вибір разом з фільтрацією -->
+            <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <!-- Блок фільтрів -->
+                    <Label Text="Фільтрація голосів:" 
+                       FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Picker Title="Акцент"
+                            ItemsSource="{Binding AccentOptions}"
+                            SelectedItem="{Binding FilterAccent, Mode=TwoWay}"
+                            Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />
+                        <Button Grid.Column="1"
+                            BackgroundColor="Grey" 
+                            Text="X" 
+                            WidthRequest="40" HeightRequest="40" 
+                            FontSize="16" 
+                            Command="{Binding ResetAccentFilterCommand}" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Picker Title="Тон/Настрій"
+                            ItemsSource="{Binding DescriptionOptions}"
+                            SelectedItem="{Binding FilterDescription, Mode=TwoWay}"
+                            Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />
+                        <Button Grid.Column="1"
+                            BackgroundColor="Grey" 
+                            Text="X" 
+                            WidthRequest="40" HeightRequest="40"  
+                            FontSize="16" 
+                            Command="{Binding ResetDescriptionFilterCommand}" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Picker Title="Вік"
+                            ItemsSource="{Binding AgeOptions}"
+                            SelectedItem="{Binding FilterAge, Mode=TwoWay}"
+                            Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />
+                        <Button Grid.Column="1"
+                            BackgroundColor="Grey" 
+                            Text="X" 
+                            WidthRequest="40" HeightRequest="40"  
+                            FontSize="16" 
+                            Command="{Binding ResetAgeFilterCommand}" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Picker Title="Стать"
+                            ItemsSource="{Binding GenderOptions}"
+                            SelectedItem="{Binding FilterGender, Mode=TwoWay}"
+                            Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />
+                        <Button Grid.Column="1"
+                            BackgroundColor="Grey" 
+                            Text="X" 
+                            WidthRequest="40" HeightRequest="40"  
+                            FontSize="16" 
+                            Command="{Binding ResetGenderFilterCommand}" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Picker Title="Використання"
+                            ItemsSource="{Binding UseCaseOptions}"
+                            SelectedItem="{Binding FilterUseCase, Mode=TwoWay}"
+                            Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />
+                        <Button Grid.Column="1"
+                            BackgroundColor="Grey" 
+                            Text="X" 
+                            WidthRequest="40" HeightRequest="40"  
+                            FontSize="16" 
+                            Command="{Binding ResetUseCaseFilterCommand}" />
+                    </Grid>
+
+                    <!-- Голосовий вибір -->
+                    <Label Text="Виберіть голос:" 
+                       FontSize="18" FontAttributes="Bold" TextColor="#333333" Margin="10,20,0,10"/>
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Picker Grid.Column="0" ItemsSource="{Binding Voices}"
+                            ItemDisplayBinding="{Binding name}" 
+                            SelectedItem="{Binding SelectedVoice}"
+                            BackgroundColor="#F0F0F0" HeightRequest="50"
+                            TextColor="#333333" />
+                        <Button Grid.Column="1" Text="▶" 
+                            Command="{Binding PlaySelectedVoiceCommand}"
+                            FontSize="22" WidthRequest="60" HeightRequest="60"
+                            TextColor="White" 
+                            CornerRadius="30" Margin="10,0,0,0"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <toolkit:MediaElement x:Name="mediaElement" 
+                              Source="{Binding SelectedVoiceUrl}" 
+                              IsVisible="False" />
+
+
+            <HorizontalStackLayout Spacing="50" HorizontalOptions="Center">
+                <Button Text="Видалити" 
+                        Command="{Binding DeleteUserCommand}"
+                        FontSize="20" TextColor="White" BackgroundColor="#a10900"
+                        CornerRadius="30" HeightRequest="50" WidthRequest="130" />
+                
+                <Button Text="Зберегти" 
+                        Command="{Binding UpdateUserCommand}"
+                        FontSize="20" TextColor="White" BackgroundColor="#036700"
+                        CornerRadius="30" HeightRequest="50" WidthRequest="130" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView> 
 </ContentPage>

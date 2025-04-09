@@ -62,8 +62,8 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 IsBusy = true;
                 await _authTokenManager.Sign_In_Up_AsyncGoogle();
-                await Shell.Current.GoToAsync("//ProgramPage");
-
+                //await Shell.Current.GoToAsync("//ProgramPage");
+                await Shell.Current.GoToAsync("//MainPage");
             }
             catch (Exception ex)
             {

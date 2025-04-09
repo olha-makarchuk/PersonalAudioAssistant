@@ -31,7 +31,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         public UsersListViewModel(IMediator mediator)
         {
             _mediator = mediator;
-            Users = new ObservableCollection<SubUser>(); // Ініціалізація колекції
+            Users = new ObservableCollection<SubUser>(); 
             LoadUsers();
         }
 

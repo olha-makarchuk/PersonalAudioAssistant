@@ -53,6 +53,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
         builder.Services.AddTransient<TokenBase>();
+        builder.Services.AddTransient<ManageCacheData>();
+        builder.Services.AddMemoryCache();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();

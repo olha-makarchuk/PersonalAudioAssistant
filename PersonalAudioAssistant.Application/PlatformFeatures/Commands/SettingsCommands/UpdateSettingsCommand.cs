@@ -28,7 +28,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsC
 
         public async Task Handle(UpdateSettingsCommand request, CancellationToken cancellationToken = default)
         {
-            var settings = _appSettingsRepository.GetSettingsByUserIdAsync(request.UserId, cancellationToken);
+            var settings = await _appSettingsRepository.GetSettingsByUserIdAsync(request.UserId, cancellationToken);
             if (settings == null)
             {
                 throw new Exception("Settings not found");

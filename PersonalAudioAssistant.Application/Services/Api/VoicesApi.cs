@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using RestSharp;
 
 namespace PersonalAudioAssistant.Application.Services.Api
@@ -12,33 +9,58 @@ namespace PersonalAudioAssistant.Application.Services.Api
 
         public async Task<List<Voice>> GetVoicesAsync()
         {
+            var allFilteredVoices = new List<Voice>();
+            string? nextPageToken = null;
+            int totalCount = 0;
+
             var options = new RestClientOptions("https://api.elevenlabs.io")
             {
                 ThrowOnAnyError = true
             };
-
             var client = new RestClient(options);
-            var request = new RestRequest("v2/voices?include_total_count=true", Method.Get);
-            request.AddHeader("xi-api-key", _apiKey);
 
-            var response = await client.ExecuteAsync(request);
-
-            if (response.IsSuccessful)
+            do
             {
-                Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(response.Content);
-                var filteredVoices = myDeserializedClass.voices
-                    .Where(v => v.fine_tuning?.state?.eleven_flash_v2_5 == "fine_tuned")
-                    .ToList();
+                var request = new RestRequest("v2/voices?include_total_count=true", Method.Get);
+                request.AddHeader("xi-api-key", _apiKey);
 
-                return filteredVoices;
-            }
+                if (!string.IsNullOrEmpty(nextPageToken))
+                {
+                    request.AddQueryParameter("page_token", nextPageToken);
+                }
 
-            throw new Exception($"API call failed with status {response.StatusCode}: {response.Content}");
+                var response = await client.ExecuteAsync(request);
+
+                if (response.IsSuccessful)
+                {
+                    var result = JsonConvert.DeserializeObject<Root>(response.Content);
+
+                    if (totalCount == 0)
+                    {
+                        totalCount = result.total_count;
+                    }
+
+                    var filteredVoices = result.voices
+                        .Where(v => v.fine_tuning?.state?.eleven_flash_v2_5 == "fine_tuned")
+                        .ToList();
+
+                    allFilteredVoices.AddRange(filteredVoices);
+
+                    nextPageToken = result.next_page_token.ToString();
+                }
+                else
+                {
+                    throw new Exception($"API call failed with status {response.StatusCode}: {response.Content}");
+                }
+
+            } while (allFilteredVoices.Count < totalCount);
+
+            return allFilteredVoices;
         }
     }
 }
 
-namespace PersonalAudioAssistant.Application.Services.Api
+    namespace PersonalAudioAssistant.Application.Services.Api
 {
     public class FineTuning
     {

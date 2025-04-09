@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery;
+using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Services;
 using System.Collections.ObjectModel;
 using static Android.Content.Res.Resources;
@@ -30,6 +31,7 @@ namespace PersonalAudioAssistant.ViewModel
             _mediator = mediator;
             Themes = new ObservableCollection<string> { "Light", "Dark" };
             _authTokenManager = authTokenManager;
+            LoadSettingsAsync();
         }
 
         public string PaymentButtonText => string.IsNullOrWhiteSpace(Payment) ? "Додати карту" : "Змінити карту";
@@ -40,15 +42,14 @@ namespace PersonalAudioAssistant.ViewModel
             OnPropertyChanged(nameof(PaymentButtonText));
         }
 
-        [RelayCommand]
-        public async Task LoadSettingsAsync()
+        public async void LoadSettingsAsync()
         {
             IsBusy = true;
             try
             {
                 UserId = await SecureStorage.GetAsync("user_id");
 
-                var settings = await _mediator.Send(new GetSettingsByEmailQuery()
+                var settings = await _mediator.Send(new GetSettingsByUserIdQuery()
                 {
                     UserId = UserId
                 });

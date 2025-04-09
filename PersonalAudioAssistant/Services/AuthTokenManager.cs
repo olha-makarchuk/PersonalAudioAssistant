@@ -32,7 +32,9 @@ namespace PersonalAudioAssistant.Services
         public async Task InitializeAsync()
         {
             var refreshToken = await GetRefreshTokenAsync();
-            if (await IsAccessTokenExpired() && !string.IsNullOrEmpty(refreshToken))
+            var a = await IsAccessTokenExpired();
+            var b = !string.IsNullOrEmpty(refreshToken);
+            if (a && b)
             {
                 await RefreshTokenAsync();
             }
@@ -123,6 +125,7 @@ namespace PersonalAudioAssistant.Services
             SecureStorage.Remove("refresh_token");
             SecureStorage.Remove("access_token_expires_at");
             SecureStorage.Remove("user_email");
+            SecureStorage.Remove("user_id");
 
             OnUserSignInStatusChanged(false);
             await Task.CompletedTask;

@@ -19,11 +19,6 @@ namespace PersonalAudioAssistant.Views
             base.OnAppearing();
 
             await _authTokenManager.InitializeAsync();
-
-            if (await _authTokenManager.IsSignedInAsync())
-            {
-                await _authTokenManager.SignOutAsync();
-            }
         }
     }
 }

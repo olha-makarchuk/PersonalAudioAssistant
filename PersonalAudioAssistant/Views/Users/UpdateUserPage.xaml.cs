@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.ViewModel.Users;
 
 namespace PersonalAudioAssistant.Views.Users;
@@ -10,4 +11,5 @@ public partial class UpdateUserPage : ContentPage
         Shell.SetTitleView(this, null);
         BindingContext = viewModel;
     }
+    public MediaElement MediaElement => mediaElement;
 }

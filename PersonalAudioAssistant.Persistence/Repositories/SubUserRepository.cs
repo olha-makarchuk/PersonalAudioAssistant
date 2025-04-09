@@ -22,7 +22,8 @@ namespace PersonalAudioAssistant.Persistence.Repositories
 
         public async Task DeleteUser(string id, CancellationToken cancellationToken)
         {
-            var user = await _context.SubUsers.FindAsync(new object[] { id }, cancellationToken);
+            Guid guidId = Guid.Parse(id);
+            var user = await _context.SubUsers.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
             _context.Remove(user);
             await _context.SaveChangesAsync(cancellationToken);
         }
@@ -34,7 +35,8 @@ namespace PersonalAudioAssistant.Persistence.Repositories
 
         public async Task<SubUser> GetUserByIdAsync(string id, CancellationToken cancellationToken)
         {
-            return await _context.SubUsers.FindAsync(new object[] { id }, cancellationToken);
+            Guid guidId = Guid.Parse(id);
+            return await _context.SubUsers.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
         }
 
         public async Task<SubUser> GetUserByNameAsync(string name, CancellationToken cancellationToken)

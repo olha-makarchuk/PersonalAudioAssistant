@@ -25,8 +25,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
 
         public async Task Handle(DeleteSubUserCoomand request, CancellationToken cancellationToken = default)
         {
-            var user = _subUserRepository.GetUserByIdAsync(request.UserId, cancellationToken);
-            if (user != null)
+            var user = await _subUserRepository.GetUserByIdAsync(request.UserId, cancellationToken);
+            if (user == null)
             {
                 throw new Exception("User with this Id not exists.");
             }

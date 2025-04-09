@@ -4,7 +4,7 @@
              x:Class="PersonalAudioAssistant.MainPage"
              Title="Home">
 
-    <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
         <ActivityIndicator IsRunning="True" Color="Blue" WidthRequest="50" HeightRequest="50"/>
         <Label Text="Завантаження..." FontSize="18" HorizontalOptions="Center"/>
     </StackLayout>

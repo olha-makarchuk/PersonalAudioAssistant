@@ -6,18 +6,18 @@ using System.ComponentModel;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery
 {
-    public class GetSettingsByEmailQuery : IRequest<AppSettings>
+    public class GetSettingsByUserIdQuery : IRequest<AppSettings>
     {
         public string? UserId { get; set; }
 
-        public class GetSettingsByEmailQueryHandler : IRequestHandler<GetSettingsByEmailQuery, AppSettings>
+        public class GetSettingsByUserIdQueryHandler : IRequestHandler<GetSettingsByUserIdQuery, AppSettings>
         {
             private readonly IAppSettingsRepository _appSettingsRepository;
-            public GetSettingsByEmailQueryHandler(IAppSettingsRepository appSettingsRepository)
+            public GetSettingsByUserIdQueryHandler(IAppSettingsRepository appSettingsRepository)
             {
                 _appSettingsRepository = appSettingsRepository;
             }
-            public async Task<AppSettings> Handle(GetSettingsByEmailQuery query, CancellationToken cancellationToken)
+            public async Task<AppSettings> Handle(GetSettingsByUserIdQuery query, CancellationToken cancellationToken)
             {
                 var user = await _appSettingsRepository.GetSettingsByUserIdAsync(query.UserId, cancellationToken);
                 if (user == null)
