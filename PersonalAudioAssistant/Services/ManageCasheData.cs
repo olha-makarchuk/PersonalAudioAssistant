@@ -35,6 +35,12 @@ namespace PersonalAudioAssistant.Services
             return users;
         }
 
+        public async Task UpdateUsersList()
+        {
+            _cache.Remove(UsersCacheKey);
+            await GetUsersAsync();
+        }
+
         public async Task<AppSettings> GetAppSettingsAsync()
         {
             if (!_cache.TryGetValue(SettingsCacheKey, out AppSettings settings))
@@ -46,6 +52,12 @@ namespace PersonalAudioAssistant.Services
             }
 
             return settings;
+        }
+
+        public async Task UpdateAppSetttingsList()
+        {
+            _cache.Remove(SettingsCacheKey);
+            await GetUsersAsync();
         }
 
         public void ClearCache()

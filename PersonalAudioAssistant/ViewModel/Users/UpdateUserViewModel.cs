@@ -1,17 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using Microsoft.Maui.Controls;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Application.Services.Api;
 using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -19,24 +16,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
     {
         private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
+        private readonly ManageCacheData _manageCacheData;
         private readonly IAudioRecorder _audioRecorder;
         private Stream _recordedAudioStream;
         private List<Voice> allVoices = new List<Voice>();
 
-        [ObservableProperty]
-        private string filterAccent;
-
-        [ObservableProperty]
-        private string filterDescription;
-
-        [ObservableProperty]
-        private string filterAge;
-
-        [ObservableProperty]
-        private string filterGender;
-
-        [ObservableProperty]
-        private string filterUseCase;
+        public VoiceFilterModel VoiceFilter { get; } = new VoiceFilterModel();
 
         [ObservableProperty]
         private string userName;
@@ -89,15 +74,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         private ObservableCollection<string> useCaseOptions = new ObservableCollection<string>();
 
-        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager)
+        [ObservableProperty]
+        private bool isPasswordEnabled;
+
+        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData)
         {
             _mediator = mediator;
             _audioManager = audioManager;
             _audioRecorder = audioManager.CreateRecorder();
+            _manageCacheData = manageCacheData;
             LoadVoicesAsync();
         }
 
-        // Реакція на зміну вибраного голосу
         partial void OnSelectedVoiceChanged(Voice value)
         {
             if (value != null)
@@ -120,6 +108,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 IsEndPhraseSelected = false;
             }
+        }
+
+        private void ApplyVoiceFilter()
+        {
+            Voices = VoiceFilter.ApplyFilter(allVoices);
+            SelectedVoice = Voices.FirstOrDefault();
         }
 
         [RelayCommand]
@@ -155,11 +149,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 return;
             }
 
-            if (_recordedAudioStream == null)
-            {
-                await Shell.Current.DisplayAlert("Помилка", "Будь ласка, запишіть голос.", "OK");
-                return;
-            }
+            // The recorded audio is not mandatory for updating, so we don't check for null here.
+            // The backend should handle cases where UserVoice is empty.
 
             var command = new UpdateSubUserCoomand
             {
@@ -168,17 +159,27 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : string.Empty,
                 EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : string.Empty,
                 VoiceId = SelectedVoice.voice_id,
-                UserVoice = new byte[0],
-                NewPassword = NewPassword,
-                Password = OldPassword
+                UserVoice = _recordedAudioStream != null ? GetBytesFromStream(_recordedAudioStream) : new byte[0],
+                NewPassword = IsPasswordEnabled ? NewPassword : string.Empty,
+                Password = IsPasswordEnabled ? OldPassword : string.Empty
             };
             await _mediator.Send(command);
 
-            // Оновлення списку користувачів
+            await _manageCacheData.UpdateUsersList();
+
             var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
             usersListViewModel?.RefreshUsers();
 
             await Shell.Current.GoToAsync("//UsersListPage");
+        }
+
+        private byte[] GetBytesFromStream(Stream stream)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+                return memoryStream.ToArray();
+            }
         }
 
         [RelayCommand]
@@ -193,6 +194,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 };
                 await _mediator.Send(command);
 
+                await _manageCacheData.UpdateUsersList();
                 var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
                 usersListViewModel?.RefreshUsers();
                 await Shell.Current.GoToAsync("//UsersListPage");
@@ -210,8 +212,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 {
                     allVoices = voiceList;
                     Voices = new ObservableCollection<Voice>(voiceList);
+                    ApplyVoiceFilter();
 
-                    // Якщо SubUser має вказаний голос (наприклад, через властивість VoiceId), то шукаємо цей голос у списку.
                     if (!string.IsNullOrWhiteSpace(SubUser?.VoiceId))
                     {
                         var userVoice = Voices.FirstOrDefault(v => v.voice_id == SubUser.VoiceId);
@@ -222,7 +224,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                         }
                         else
                         {
-                            // Якщо голос за ідентифікатором не знайдений – встановлюємо перший голос.
                             SelectedVoice = Voices.FirstOrDefault();
                             SelectedVoiceUrl = SelectedVoice?.preview_url;
                         }
@@ -294,53 +295,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
-        [RelayCommand]
-        public void ApplyFilter()
-        {
-            var filtered = allVoices.AsEnumerable();
-
-            if (!string.IsNullOrWhiteSpace(FilterAccent))
-                filtered = filtered.Where(v => v.labels?.accent?.Contains(FilterAccent, System.StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterDescription))
-                filtered = filtered.Where(v => v.labels?.description?.Contains(FilterDescription, System.StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterAge))
-                filtered = filtered.Where(v => v.labels?.age?.Contains(FilterAge, System.StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterGender))
-                filtered = filtered.Where(v => v.labels?.gender?.Contains(FilterGender, System.StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterUseCase))
-                filtered = filtered.Where(v => v.labels?.use_case?.Contains(FilterUseCase, System.StringComparison.OrdinalIgnoreCase) == true);
-
-            Voices = new ObservableCollection<Voice>(filtered);
-            SelectedVoice = Voices.FirstOrDefault();
-        }
-
-        public void OnNavigatedFrom()
-        {
-            UserName = null;
-            SubUser = new SubUser();
-            SelectedVoice = null;
-            SelectedVoiceUrl = null;
-            IsEndPhraseSelected = false;
-            IsEndTimeSelected = true;
-            SelectedEndTime = 2;
-            FilterAccent = null;
-            FilterDescription = null;
-            FilterAge = null;
-            FilterGender = null;
-            FilterUseCase = null;
-            OldPassword = null;
-            NewPassword = null;
-
-            Voices = new ObservableCollection<Voice>(allVoices);
-            SelectedVoice = Voices.FirstOrDefault();
-            SelectedVoiceUrl = SelectedVoice?.preview_url;
-        }
-
-
         private void InitializeFilterOptions()
         {
             AccentOptions = new ObservableCollection<string>(
@@ -384,63 +338,39 @@ namespace PersonalAudioAssistant.ViewModel.Users
             );
         }
 
-        partial void OnFilterDescriptionChanged(string value)
+        public void OnNavigatedFrom()
         {
-            ApplyFilter();
-        }
+            UserName = null;
+            SubUser = new SubUser();
+            SelectedVoice = null;
+            SelectedVoiceUrl = null;
+            IsEndPhraseSelected = false;
+            IsEndTimeSelected = true;
+            SelectedEndTime = 2;
+            IsPasswordEnabled = false; // Reset password enabled state
+            OldPassword = null;
+            NewPassword = null;
 
-        partial void OnFilterAgeChanged(string value)
-        {
-            ApplyFilter();
-        }
+            VoiceFilter.ResetAccentFilter();
+            VoiceFilter.ResetDescriptionFilter();
+            VoiceFilter.ResetAgeFilter();
+            VoiceFilter.ResetGenderFilter();
+            VoiceFilter.ResetUseCaseFilter();
 
-        partial void OnFilterGenderChanged(string value)
-        {
-            ApplyFilter();
-        }
-
-        partial void OnFilterUseCaseChanged(string value)
-        {
-            ApplyFilter();
-        }
-        partial void OnFilterAccentChanged(string value)
-        {
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetAccentFilter()
-        {
-            FilterAccent = null;
-            ApplyFilter();
+            Voices = new ObservableCollection<Voice>(allVoices);
+            SelectedVoice = Voices.FirstOrDefault();
+            SelectedVoiceUrl = SelectedVoice?.preview_url;
         }
 
         [RelayCommand]
-        public void ResetDescriptionFilter()
+        public void ResetAllFilters()
         {
-            FilterDescription = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetAgeFilter()
-        {
-            FilterAge = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetGenderFilter()
-        {
-            FilterGender = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetUseCaseFilter()
-        {
-            FilterUseCase = null;
-            ApplyFilter();
+            VoiceFilter.ResetAccentFilter();
+            VoiceFilter.ResetDescriptionFilter();
+            VoiceFilter.ResetAgeFilter();
+            VoiceFilter.ResetGenderFilter();
+            VoiceFilter.ResetUseCaseFilter();
+            ApplyVoiceFilter();
         }
 
         public async void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -458,6 +388,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 UserName = user.UserName;
                 SubUser = user;
+
+                IsPasswordEnabled = !string.IsNullOrEmpty(user.PasswordHash.ToString());
             }
         }
     }

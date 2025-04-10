@@ -69,22 +69,23 @@
                             HorizontalOptions="Center" />
                     </StackLayout>
 
-                    <StackLayout>
-                        <Label Text="Змінити пароль до історії розмов:" 
-           FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 10"/>
-                        <Label Text="Старий пароль:" TextColor="#555555"/>
-                        <Entry Text="{Binding OldPassword}"
-           Placeholder="Введіть старий пароль"
-           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                    <StackLayout Orientation="Horizontal" VerticalOptions="Center" Spacing="10">
+                        <CheckBox IsChecked="{Binding IsPasswordEnabled}" />
+                        <Label Text="Використовувати пароль до історії розмов:" VerticalOptions="Center" TextColor="#333333"/>
                     </StackLayout>
-
-                    <StackLayout>
-                        <Label Text="Новий пароль:" TextColor="#555555"/>
-                        <Entry Text="{Binding NewPassword}"
-           Placeholder="Введіть новий пароль"
-           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                    
+                    <StackLayout IsVisible="{Binding IsPasswordEnabled}">
+                        <StackLayout>
+                            <Label Text="Змінити пароль до історії розмов:" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 10"/>
+                            <Label Text="Старий пароль:" TextColor="#555555"/>
+                            <Entry Text="{Binding OldPassword}" Placeholder="Введіть старий пароль" BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                        </StackLayout>
+                        <StackLayout>
+                            <Label Text="Новий пароль:" TextColor="#555555"/>
+                            <Entry Text="{Binding NewPassword}" Placeholder="Введіть новий пароль" BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                        </StackLayout>
                     </StackLayout>
-
+                    
                 </VerticalStackLayout>
             </Frame>
 

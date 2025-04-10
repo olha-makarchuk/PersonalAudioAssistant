@@ -1,12 +1,11 @@
-using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
 namespace PersonalAudioAssistant.Views;
 
-public partial class CloneVoicePage : ContentPage
+public partial class HistoryPage : ContentPage
 {
-	public CloneVoicePage(CloneVoiceViewModel viewModel)
-	{
+	public HistoryPage(HistoryViewModel viewModel)
+    {
 		InitializeComponent();
         BindingContext = viewModel;
     }

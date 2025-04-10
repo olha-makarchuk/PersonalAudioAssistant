@@ -22,9 +22,9 @@ public partial class MenuPage : Popup
         Close();
     }
 
-    private async void CloneVoicePageClicked(object sender, EventArgs e)
+    private async void HistoryPageClicked(object sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("//CloneVoicePage");
+        await Shell.Current.GoToAsync("//HistoryPage");
         Close();
     }
 

@@ -17,11 +17,12 @@ namespace PersonalAudioAssistant
             Routing.RegisterRoute(nameof(ProgramPage), typeof(ProgramPage));
             Routing.RegisterRoute(nameof(MenuPage), typeof(MenuPage));
             Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));
-            Routing.RegisterRoute(nameof(CloneVoicePage), typeof(CloneVoicePage));
+            Routing.RegisterRoute(nameof(HistoryPage), typeof(HistoryPage));
             Routing.RegisterRoute(nameof(UsersListPage), typeof(UsersListPage));
             Routing.RegisterRoute(nameof(AddUserPage), typeof(AddUserPage));
             Routing.RegisterRoute(nameof(UpdateUserPage), typeof(UpdateUserPage));
             Routing.RegisterRoute(nameof(AnaliticsPage), typeof(AnaliticsPage));
+            Routing.RegisterRoute(nameof(PaymentPage), typeof(PaymentPage));
         }
 
         private void SignOut_Clicked(object sender, EventArgs e)

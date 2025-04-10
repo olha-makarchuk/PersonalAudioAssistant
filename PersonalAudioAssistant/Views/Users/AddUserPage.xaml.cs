@@ -22,5 +22,6 @@ public partial class AddUserPage : ContentPage
         }
     }
 
+
     public MediaElement MediaElement => mediaElement;
 }

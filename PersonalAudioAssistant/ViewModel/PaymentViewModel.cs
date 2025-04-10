@@ -2,7 +2,7 @@
 
 namespace PersonalAudioAssistant.ViewModel
 {
-    public class CloneVoiceViewModel: ObservableObject
+    public partial class PaymentViewModel : ObservableObject
     {
     }
 }

@@ -4,6 +4,7 @@ using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Application.Services.Api;
 using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
 using System.Collections.ObjectModel;
@@ -15,30 +16,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
+        private readonly ManageCacheData _manageCacheData;
         private Stream _recordedAudioStream;
         private List<Voice> allVoices = new List<Voice>();
 
-        [ObservableProperty]
-        private string filterAccent;
-
-        [ObservableProperty]
-        private string filterDescription;
-
-        [ObservableProperty]
-        private string filterAge;
-
-        [ObservableProperty]
-        private string filterGender;
-
-        [ObservableProperty]
-        private string filterUseCase;
+        public VoiceFilterModel VoiceFilter { get; } = new VoiceFilterModel();
 
         [ObservableProperty]
         private string userName;
 
         [ObservableProperty]
         private string password;
-        
+
         [ObservableProperty]
         private SubUser subUser = new SubUser();
 
@@ -78,11 +67,15 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         private ObservableCollection<string> useCaseOptions = new ObservableCollection<string>();
 
-        public AddUserViewModel(IMediator mediator, IAudioManager audioManager)
+        [ObservableProperty]
+        private bool isPasswordEnabled = false;
+
+        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData)
         {
             _mediator = mediator;
             _audioManager = audioManager;
-            _audioRecorder = audioManager.CreateRecorder();
+            _audioRecorder = _audioManager.CreateRecorder();
+            _manageCacheData = manageCacheData;
             LoadVoicesAsync();
         }
 
@@ -108,6 +101,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 IsEndPhraseSelected = false;
             }
+        }
+
+        private void ApplyVoiceFilter()
+        {
+            Voices = VoiceFilter.ApplyFilter(allVoices);
+            SelectedVoice = Voices.FirstOrDefault();
         }
 
         [RelayCommand]
@@ -143,13 +142,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 return;
             }
 
-            if(_recordedAudioStream == null)
+            if (_recordedAudioStream == null)
             {
                 await Shell.Current.DisplayAlert("Помилка", "Будь ласка, запишіть голос.", "OK");
                 return;
             }
 
-            if (password == null)
+            // Перевірка пароля лише якщо користувач обрав додавання пароля
+            if (IsPasswordEnabled && string.IsNullOrWhiteSpace(Password))
             {
                 await Shell.Current.DisplayAlert("Помилка", "Будь ласка, введіть пароль.", "OK");
                 return;
@@ -158,7 +158,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             var command = new AddSubUserCoomand
             {
                 UserName = UserName,
-                Password = Password,
+                Password = IsPasswordEnabled ? Password : string.Empty,
                 StartPhrase = SubUser.StartPhrase,
                 EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : string.Empty,
                 EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : string.Empty,
@@ -167,8 +167,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
             };
             await _mediator.Send(command);
 
-            // Отримання UsersListViewModel та виклик RefreshUsers
-            var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService<UsersListViewModel>();
+            await _manageCacheData.UpdateUsersList();
+
+            var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
             if (usersListViewModel != null)
             {
                 usersListViewModel.RefreshUsers();
@@ -187,7 +188,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 if (voiceList != null)
                 {
                     allVoices = voiceList;
-                    Voices = new ObservableCollection<Voice>(voiceList);
+                    ApplyVoiceFilter();
+
                     SelectedVoice = Voices.FirstOrDefault();
                     SelectedVoiceUrl = SelectedVoice?.preview_url;
 
@@ -212,7 +214,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 }
 
                 await _audioRecorder.StartAsync();
-                await Task.Delay(5000); 
+                await Task.Delay(5000);
                 var recordedAudio = await _audioRecorder.StopAsync();
 
                 if (recordedAudio == null)
@@ -249,50 +251,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 await Shell.Current.DisplayAlert("Помилка", $"Не вдалося відтворити голос: {ex.Message}", "OK");
             }
-        }
-
-        [RelayCommand]
-        public void ApplyFilter()
-        {
-            var filtered = allVoices.AsEnumerable();
-
-            if (!string.IsNullOrWhiteSpace(FilterAccent))
-                filtered = filtered.Where(v => v.labels?.accent?.Contains(FilterAccent, StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterDescription))
-                filtered = filtered.Where(v => v.labels?.description?.Contains(FilterDescription, StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterAge))
-                filtered = filtered.Where(v => v.labels?.age?.Contains(FilterAge, StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterGender))
-                filtered = filtered.Where(v => v.labels?.gender?.Contains(FilterGender, StringComparison.OrdinalIgnoreCase) == true);
-
-            if (!string.IsNullOrWhiteSpace(FilterUseCase))
-                filtered = filtered.Where(v => v.labels?.use_case?.Contains(FilterUseCase, StringComparison.OrdinalIgnoreCase) == true);
-
-            Voices = new ObservableCollection<Voice>(filtered);
-            SelectedVoice = Voices.FirstOrDefault();
-        }
-
-        public void OnNavigatedFrom()
-        {
-            UserName = null;
-            SubUser = new SubUser();
-            SelectedVoice = null;
-            SelectedVoiceUrl = null;
-            IsEndPhraseSelected = false;
-            IsEndTimeSelected = true;
-            SelectedEndTime = 2;
-            FilterAccent = null;
-            FilterDescription = null;
-            FilterAge = null;
-            FilterGender = null;
-            FilterUseCase = null;
-
-            Voices = new ObservableCollection<Voice>(allVoices);
-            SelectedVoice = Voices.FirstOrDefault();
-            SelectedVoiceUrl = SelectedVoice?.preview_url;
         }
 
         private void InitializeFilterOptions()
@@ -338,63 +296,37 @@ namespace PersonalAudioAssistant.ViewModel.Users
             );
         }
 
-        partial void OnFilterDescriptionChanged(string value)
+        public void OnNavigatedFrom()
         {
-            ApplyFilter();
-        }
+            UserName = null;
+            SubUser = new SubUser();
+            SelectedVoice = null;
+            SelectedVoiceUrl = null;
+            IsEndPhraseSelected = false;
+            IsEndTimeSelected = true;
+            SelectedEndTime = 2;
+            IsPasswordEnabled = false; // скидаємо властивість для пароля
 
-        partial void OnFilterAgeChanged(string value)
-        {
-            ApplyFilter();
-        }
+            VoiceFilter.ResetAccentFilter();
+            VoiceFilter.ResetDescriptionFilter();
+            VoiceFilter.ResetAgeFilter();
+            VoiceFilter.ResetGenderFilter();
+            VoiceFilter.ResetUseCaseFilter();
 
-        partial void OnFilterGenderChanged(string value)
-        {
-            ApplyFilter();
-        }
-
-        partial void OnFilterUseCaseChanged(string value)
-        {
-            ApplyFilter();
-        }
-        partial void OnFilterAccentChanged(string value)
-        {
-            ApplyFilter();
+            Voices = new ObservableCollection<Voice>(allVoices);
+            SelectedVoice = Voices.FirstOrDefault();
+            SelectedVoiceUrl = SelectedVoice?.preview_url;
         }
 
         [RelayCommand]
-        public void ResetAccentFilter()
+        public void ResetAllFilters()
         {
-            FilterAccent = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetDescriptionFilter()
-        {
-            FilterDescription = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetAgeFilter()
-        {
-            FilterAge = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetGenderFilter()
-        {
-            FilterGender = null;
-            ApplyFilter();
-        }
-
-        [RelayCommand]
-        public void ResetUseCaseFilter()
-        {
-            FilterUseCase = null;
-            ApplyFilter();
+            VoiceFilter.ResetAccentFilter();
+            VoiceFilter.ResetDescriptionFilter();
+            VoiceFilter.ResetAgeFilter();
+            VoiceFilter.ResetGenderFilter();
+            VoiceFilter.ResetUseCaseFilter();
+            ApplyVoiceFilter();
         }
     }
 }

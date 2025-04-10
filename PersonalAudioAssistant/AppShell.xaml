@@ -43,9 +43,9 @@
         Shell.NavBarIsVisible="False"/>
 
     <ShellContent
-        Title="CloneVoicePage"
-        ContentTemplate="{DataTemplate view:CloneVoicePage}"
-        Route="CloneVoicePage"/>
+        Title="HistoryPage"
+        ContentTemplate="{DataTemplate view:HistoryPage}"
+        Route="HistoryPage"/>
 
     <ShellContent
         Title="SettingsPage"
@@ -71,4 +71,9 @@
         Title="AnaliticsPage"
         ContentTemplate="{DataTemplate view:AnaliticsPage}"
         Route="AnaliticsPage"/>
+
+    <ShellContent
+        Title="PaymentPage"
+        ContentTemplate="{DataTemplate view:PaymentPage}"
+        Route="PaymentPage"/>
 </Shell>

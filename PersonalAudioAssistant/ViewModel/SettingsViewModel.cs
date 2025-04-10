@@ -14,8 +14,9 @@ namespace PersonalAudioAssistant.ViewModel
     {
         private readonly IMediator _mediator;
         private readonly AuthTokenManager _authTokenManager;
-        private string UserId;
+        private readonly ManageCacheData _manageCacheData;
 
+        private string UserId;
         [ObservableProperty] private string? theme;
         [ObservableProperty] private string? payment;
         [ObservableProperty] private int minTokenThreshold;
@@ -26,17 +27,17 @@ namespace PersonalAudioAssistant.ViewModel
         [ObservableProperty]
         private bool isBusy;
 
-        public SettingsViewModel(IMediator mediator, AuthTokenManager authTokenManager)
+        public SettingsViewModel(IMediator mediator, AuthTokenManager authTokenManager, ManageCacheData manageCacheData)
         {
             _mediator = mediator;
             Themes = new ObservableCollection<string> { "Light", "Dark" };
             _authTokenManager = authTokenManager;
+            _manageCacheData = manageCacheData;
             LoadSettingsAsync();
         }
 
         public string PaymentButtonText => string.IsNullOrWhiteSpace(Payment) ? "Додати карту" : "Змінити карту";
 
-        // Сповіщення про зміну:
         partial void OnPaymentChanged(string? value)
         {
             OnPropertyChanged(nameof(PaymentButtonText));
@@ -47,12 +48,7 @@ namespace PersonalAudioAssistant.ViewModel
             IsBusy = true;
             try
             {
-                UserId = await SecureStorage.GetAsync("user_id");
-
-                var settings = await _mediator.Send(new GetSettingsByUserIdQuery()
-                {
-                    UserId = UserId
-                });
+                var settings = await _manageCacheData.GetAppSettingsAsync();
 
                 if (settings != null)
                 {
@@ -69,7 +65,6 @@ namespace PersonalAudioAssistant.ViewModel
                 IsBusy = false;
             }
         }
-
 
         [RelayCommand]
         public async Task SaveSettingsAsync()

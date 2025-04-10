@@ -38,9 +38,7 @@ namespace PersonalAudioAssistant
 
             if (await _authTokenManager.IsSignedInAsync())
             {
-                await _manageCacheData.GetUsersAsync();
-                await _manageCacheData.GetAppSettingsAsync();
-                await LoadDataFromCache();
+                await LoadDataInCache();
 
                 Shell.Current?.GoToAsync("//ProgramPage");
             }
@@ -50,13 +48,11 @@ namespace PersonalAudioAssistant
             }
         }
 
-        private async Task LoadDataFromCache()
+        private async Task LoadDataInCache()
         {
             var usersList = await _manageCacheData.GetUsersAsync();
-            Console.WriteLine($"Number of users in cache: {usersList.Count}");
 
             var appSettings = await _manageCacheData.GetAppSettingsAsync();
-            Console.WriteLine($"App settings: {appSettings}");
         }
     }
 

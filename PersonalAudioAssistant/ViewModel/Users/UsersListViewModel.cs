@@ -1,19 +1,26 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
+using Microsoft.Extensions.Caching.Memory;
 using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Services;
 using System.Collections.ObjectModel;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
     public partial class UsersListViewModel : ObservableObject
     {
-        private readonly IMediator _mediator;
         private SubUser _selectedUser;
+        private readonly ManageCacheData _manageCacheData;
 
         [ObservableProperty]
         ObservableCollection<SubUser> users;
+
+        public UsersListViewModel(IMemoryCache cache, ManageCacheData manageCacheData)
+        {
+            _manageCacheData = manageCacheData;
+            Users = new ObservableCollection<SubUser>();
+            LoadUsers();
+        }
 
         public SubUser SelectedUser
         {
@@ -28,16 +35,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
-        public UsersListViewModel(IMediator mediator)
-        {
-            _mediator = mediator;
-            Users = new ObservableCollection<SubUser>(); 
-            LoadUsers();
-        }
-
         private async void LoadUsers()
         {
-            var usersList = await _mediator.Send(new GetAllUsersOuery());
+            var usersList = await _manageCacheData.GetUsersAsync();
+
             Users.Clear();
             foreach (var user in usersList)
             {

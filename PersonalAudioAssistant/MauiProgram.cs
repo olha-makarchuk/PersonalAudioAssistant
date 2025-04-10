@@ -63,11 +63,12 @@ public static class MauiProgram
         builder.Services.AddScoped<RegistrationPage, RegistrationPageViewModel>();
         builder.Services.AddScoped<ProgramPage, ProgramPageViewModel>();
         builder.Services.AddScoped<SettingsPage, SettingsViewModel>();
-        builder.Services.AddScoped<CloneVoicePage, CloneVoiceViewModel>();
+        builder.Services.AddScoped<HistoryPage, HistoryViewModel>();
         builder.Services.AddScoped<UsersListPage, UsersListViewModel>();
         builder.Services.AddScoped<AddUserPage, AddUserViewModel>();
         builder.Services.AddScoped<UpdateUserPage, UpdateUserViewModel>();
         builder.Services.AddScoped<AnaliticsPage, AnaliticsViewModel>();
+        builder.Services.AddScoped<PaymentPage, PaymentViewModel>();
 
         // Repositories
         builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
