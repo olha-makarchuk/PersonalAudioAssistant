@@ -1,12 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Services;
 using System.Collections.ObjectModel;
-using static Android.Content.Res.Resources;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -16,80 +12,62 @@ namespace PersonalAudioAssistant.ViewModel
         private readonly AuthTokenManager _authTokenManager;
         private readonly ManageCacheData _manageCacheData;
 
-        private string UserId;
-        [ObservableProperty] private string? theme;
-        [ObservableProperty] private string? payment;
-        [ObservableProperty] private int minTokenThreshold;
-        [ObservableProperty] private int chargeAmount;
-        [ObservableProperty] private int balance;
-        [ObservableProperty] private string email;
-        [ObservableProperty] private ObservableCollection<string> themes;
         [ObservableProperty]
-        private bool isBusy;
+        private string email;
 
-        public SettingsViewModel(IMediator mediator, AuthTokenManager authTokenManager, ManageCacheData manageCacheData)
+        [ObservableProperty]
+        private int balance;
+
+        [ObservableProperty]
+        private string theme;
+
+        [ObservableProperty]
+        private ObservableCollection<string> themes = new ObservableCollection<string>
+        {
+            "Light",
+            "Dark"
+        };
+
+        public SettingsViewModel(
+            IMediator mediator,
+            AuthTokenManager authTokenManager,
+            ManageCacheData manageCacheData)
         {
             _mediator = mediator;
-            Themes = new ObservableCollection<string> { "Light", "Dark" };
             _authTokenManager = authTokenManager;
             _manageCacheData = manageCacheData;
+
             LoadSettingsAsync();
         }
 
-        public string PaymentButtonText => string.IsNullOrWhiteSpace(Payment) ? "Додати карту" : "Змінити карту";
-
-        partial void OnPaymentChanged(string? value)
+        private async void LoadSettingsAsync()
         {
-            OnPropertyChanged(nameof(PaymentButtonText));
-        }
-
-        public async void LoadSettingsAsync()
-        {
-            IsBusy = true;
             try
             {
                 var settings = await _manageCacheData.GetAppSettingsAsync();
-
-                if (settings != null)
-                {
-                    Theme = settings.Theme;
-                    Payment = settings.Payment;
-                    MinTokenThreshold = settings.MinTokenThreshold;
-                    ChargeAmount = settings.ChargeAmount;
-                    Balance = settings.Balance;
-                }
                 Email = await SecureStorage.GetAsync("user_email");
+                Balance = settings.Balance;
+                Theme = settings.Theme;
             }
-            finally
+            catch (Exception ex)
             {
-                IsBusy = false;
+                Console.WriteLine($"Error loading settings: {ex.Message}");
             }
         }
 
         [RelayCommand]
         public async Task SaveSettingsAsync()
         {
-            await _mediator.Send(new UpdateSettingsCommand()
-            {
-                UserId = UserId,
-                Theme = Theme,
-                Payment = Payment,
-                MinTokenThreshold = MinTokenThreshold,
-                ChargeAmount = ChargeAmount
-            });
         }
 
         [RelayCommand]
-        public async Task AddCard()
-        {
-            Payment = "**** **** **** 1234"; 
-        }
+        public async Task PaymentDetails()
+            => await Shell.Current.GoToAsync("/PaymentPage");
 
         [RelayCommand]
         public async Task SignOut()
         {
-            _authTokenManager.SignOutAsync();
-
+            await _authTokenManager.SignOutAsync();
             await Shell.Current.GoToAsync("//AuthorizationPage");
         }
     }

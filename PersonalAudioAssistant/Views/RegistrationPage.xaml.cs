@@ -1,6 +1,3 @@
-using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth;
-using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
 namespace PersonalAudioAssistant.Views

@@ -4,9 +4,12 @@
              x:Class="PersonalAudioAssistant.Views.AnaliticsPage"
              Title="AnaliticsPage">
     <VerticalStackLayout>
-        <Label 
-            Text="Аналітика"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+        <Button Text="Історія платежів"
+                Command="{Binding NavigateToHistoryCommand}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                WidthRequest="300"
+                HeightRequest="50"
+                FontSize="18" />
     </VerticalStackLayout>
 </ContentPage>

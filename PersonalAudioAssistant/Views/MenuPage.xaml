@@ -92,18 +92,6 @@
             <BoxView HeightRequest="1"
                      Color="#cccccc"
                      Margin="10,0"/>
-
-            <Button Text="Історія                              "
-                    BackgroundColor="Transparent"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    HorizontalOptions="End"
-                    HeightRequest="60"
-                    FontSize="16"
-                    WidthRequest="300" 
-                    Margin="0,10"
-                    Clicked="HistoryPageClicked"
-                    ImageSource="history.png"/>
         </VerticalStackLayout>
     </Frame>
 </mct:Popup>

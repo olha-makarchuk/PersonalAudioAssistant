@@ -34,6 +34,11 @@
         Shell.NavBarIsVisible="False"/>
 
     <ShellContent
+        ContentTemplate="{DataTemplate view:PaymentPage}"
+        Route="PaymentPage"
+        Shell.NavBarIsVisible="False"/>
+    
+    <ShellContent
         ContentTemplate="{DataTemplate view:ProgramPage}"
         Route="ProgramPage"/>
 
@@ -72,8 +77,4 @@
         ContentTemplate="{DataTemplate view:AnaliticsPage}"
         Route="AnaliticsPage"/>
 
-    <ShellContent
-        Title="PaymentPage"
-        ContentTemplate="{DataTemplate view:PaymentPage}"
-        Route="PaymentPage"/>
 </Shell>

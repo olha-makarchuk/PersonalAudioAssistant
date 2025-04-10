@@ -14,6 +14,9 @@ namespace PersonalAudioAssistant.Persistence.Context
         public DbSet<AppSettings> AppSettings { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Payment> Payment { get; set; }
+        public DbSet<AutoPayments> AutoPayments { get; set; }
+        public DbSet<PaymentHistory> PaymentHistory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,6 +25,9 @@ namespace PersonalAudioAssistant.Persistence.Context
             modelBuilder.Entity<AppSettings>().ToContainer("AppSettings");
             modelBuilder.Entity<Conversation>().ToContainer("Conversation");
             modelBuilder.Entity<Message>().ToContainer("Message");
+            modelBuilder.Entity<Payment>().ToContainer("Payment");
+            modelBuilder.Entity<AutoPayments>().ToContainer("AutoPayments");
+            modelBuilder.Entity<PaymentHistory>().ToContainer("PaymentHistory");
         }
     }
 }

@@ -33,7 +33,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsC
             {
                 throw new Exception("Settings not found");
             }
-
+            /*
             var newSettings = new AppSettings()
             {
                 Theme = request.Theme,
@@ -42,7 +42,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsC
                 ChargeAmount = request.ChargeAmount
             };
 
-            await _appSettingsRepository.UpdateSettingsAsync(newSettings, cancellationToken);
+            await _appSettingsRepository.UpdateSettingsAsync(newSettings, cancellationToken);*/
         }
     }
 }

@@ -1,12 +1,51 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="PersonalAudioAssistant.Views.PaymentPage"
-             Title="PaymentPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Оплата"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             x:Class="PersonalAudioAssistant.Views.PaymentPage">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="25">
+
+            <!-- Заголовок -->
+            <Label Text="Додати картку" 
+                   FontSize="24" 
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <!-- Кнопка LiqPay -->
+            <Button Text="LiqPay>"
+                    BackgroundColor="#00C807"
+                    TextColor="White"
+                    CornerRadius="12"
+                    FontAttributes="Bold"
+                    WidthRequest="100"
+                    FontSize="20"
+                    HeightRequest="50"
+                    HorizontalOptions="Fill" />
+
+            <!-- Перемикач автоплатежу -->
+            <Frame BorderColor="LightGray" CornerRadius="10" Padding="15" HasShadow="True">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Автоплатіж" FontSize="20" FontAttributes="Bold" />
+
+                    <Grid ColumnDefinitions="Auto, *" VerticalOptions="Center">
+                        <Label Text="Увімкнути автоплатіж" VerticalOptions="Center" />
+                        <Switch IsToggled="False" Grid.Column="1" />
+                    </Grid>
+
+                    <!-- Введення мінімального балансу -->
+                    <VerticalStackLayout>
+                        <Label Text="Мінімальний баланс (₴)" />
+                        <Entry Placeholder="100" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+
+                    <!-- Введення суми поповнення -->
+                    <VerticalStackLayout>
+                        <Label Text="Сума поповнення (₴)" />
+                        <Entry Placeholder="200" Keyboard="Numeric" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

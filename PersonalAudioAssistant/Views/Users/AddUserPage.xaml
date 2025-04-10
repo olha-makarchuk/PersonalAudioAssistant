@@ -164,7 +164,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Picker Title="Використання"
+                        <Picker Title="Стиль"
                                 ItemsSource="{Binding UseCaseOptions}"
                                 SelectedItem="{Binding FilterUseCase, Mode=TwoWay}"
                                 Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />

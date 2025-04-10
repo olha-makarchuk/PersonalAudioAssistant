@@ -22,12 +22,6 @@ public partial class MenuPage : Popup
         Close();
     }
 
-    private async void HistoryPageClicked(object sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync("//HistoryPage");
-        Close();
-    }
-
     private async void SettingsPageClicked(object sender, EventArgs e)
     {
         await Shell.Current.GoToAsync("//SettingsPage");

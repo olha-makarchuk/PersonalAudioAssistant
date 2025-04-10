@@ -43,7 +43,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                     RefreshToken = request.RefreshToken,
                     RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
                 };
-
+                /*
                 var appSettings = new AppSettings()
                 {
                     Theme = "Light",
@@ -52,7 +52,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                     ChargeAmount = -1
                 };
 
-                await _appSettingsRepository.AddSettingsAsync(appSettings, cancellationToken);
+                await _appSettingsRepository.AddSettingsAsync(appSettings, cancellationToken);*/
 
                 await _mainUserRepository.CreateUser(mainUser, cancellationToken);
             }
