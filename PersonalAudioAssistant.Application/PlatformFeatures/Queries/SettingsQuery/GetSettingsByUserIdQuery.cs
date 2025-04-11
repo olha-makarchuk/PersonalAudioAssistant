@@ -1,8 +1,6 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.MainUserQuery;
 using PersonalAudioAssistant.Domain.Entities;
-using System.ComponentModel;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery
 {

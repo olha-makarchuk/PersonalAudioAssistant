@@ -101,23 +101,6 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Picker Title="Акцент"
-                            ItemsSource="{Binding AccentOptions}"
-                            SelectedItem="{Binding FilterAccent, Mode=TwoWay}"
-                            Grid.Column="0" BackgroundColor="#F0F0F0" TextColor="#333333" />
-                        <Button Grid.Column="1"
-                            BackgroundColor="Grey" 
-                            Text="X" 
-                            WidthRequest="40" HeightRequest="40" 
-                            FontSize="16" 
-                            Command="{Binding ResetAccentFilterCommand}" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
                         <Picker Title="Тон/Настрій"
                             ItemsSource="{Binding DescriptionOptions}"
                             SelectedItem="{Binding FilterDescription, Mode=TwoWay}"
@@ -190,7 +173,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Picker Grid.Column="0" ItemsSource="{Binding Voices}"
-                            ItemDisplayBinding="{Binding name}" 
+                            ItemDisplayBinding="{Binding Name}" 
                             SelectedItem="{Binding SelectedVoice}"
                             BackgroundColor="#F0F0F0" HeightRequest="50"
                             TextColor="#333333" />

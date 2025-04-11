@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
 
 namespace PersonalAudioAssistant.Services
 {
@@ -23,13 +21,16 @@ namespace PersonalAudioAssistant.Services
             _mediator = mediator;
         }
 
-        public async Task<List<SubUser>> GetUsersAsync()
+        public async Task<List<SubUser>> GetUsersAsync(Action<double> progress = null)
         {
             if (!_cache.TryGetValue(UsersCacheKey, out List<SubUser> users))
             {
-                users = await _mediator.Send(new GetAllUsersOuery());
-
+                await Task.Delay(1000); 
+                users = await _mediator.Send(new GetAllUsersByUserIdQuery() { UserId = await SecureStorage.GetAsync("user_id")});
+                progress?.Invoke(0.5); 
+                await Task.Delay(1000);
                 _cache.Set(UsersCacheKey, users);
+                progress?.Invoke(1.0); 
             }
 
             return users;
@@ -41,14 +42,17 @@ namespace PersonalAudioAssistant.Services
             await GetUsersAsync();
         }
 
-        public async Task<AppSettings> GetAppSettingsAsync()
+        public async Task<AppSettings> GetAppSettingsAsync(Action<double> progress = null)
         {
             if (!_cache.TryGetValue(SettingsCacheKey, out AppSettings settings))
             {
+                await Task.Delay(800); 
                 var userId = await SecureStorage.GetAsync("user_id");
                 settings = await _mediator.Send(new GetSettingsByUserIdQuery { UserId = userId });
-
+                progress?.Invoke(0.7);
+                await Task.Delay(700);
                 _cache.Set(SettingsCacheKey, settings);
+                progress?.Invoke(1.0);
             }
 
             return settings;

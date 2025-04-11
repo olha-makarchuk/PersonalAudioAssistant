@@ -1,0 +1,34 @@
+﻿using MediatR;
+using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
+using PersonalAudioAssistant.Domain.Entities;
+
+namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands
+{
+    public class CreatePaymentCommand : IRequest
+    {
+        public string? UserId { get; set; }
+    }
+
+    public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand>
+    {
+        private readonly IPaymentRepository _paymentRepository;
+
+        public CreatePaymentCommandHandler(IPaymentRepository paymentRepository)
+        {
+            _paymentRepository = paymentRepository;
+        }
+
+        public async Task Handle(CreatePaymentCommand request, CancellationToken cancellationToken = default)
+        {
+            var payment = new Payment()
+            {
+                UserId = request.UserId,
+                PaymentGatewayToken = string.Empty,
+                MaskedCardNumber = string.Empty
+            };
+
+            await _paymentRepository.AddPaymentAsync(payment, cancellationToken);
+        }
+    }
+}

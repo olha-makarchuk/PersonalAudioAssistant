@@ -10,4 +10,10 @@ public partial class PaymentPage : ContentPage
         Shell.SetTitleView(this, null);
         BindingContext = viewModel;
     }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await ((PaymentViewModel)BindingContext).InitializeAsync();
+    }
 }

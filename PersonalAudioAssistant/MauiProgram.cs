@@ -63,7 +63,6 @@ public static class MauiProgram
         builder.Services.AddScoped<RegistrationPage, RegistrationPageViewModel>();
         builder.Services.AddScoped<ProgramPage, ProgramPageViewModel>();
         builder.Services.AddScoped<SettingsPage, SettingsViewModel>();
-        builder.Services.AddScoped<HistoryPage, HistoryViewModel>();
         builder.Services.AddScoped<UsersListPage, UsersListViewModel>();
         builder.Services.AddScoped<AddUserPage, AddUserViewModel>();
         builder.Services.AddScoped<UpdateUserPage, UpdateUserViewModel>();
@@ -74,6 +73,10 @@ public static class MauiProgram
         builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
         builder.Services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
         builder.Services.AddScoped<ISubUserRepository, SubUserRepository>();
+        builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+        builder.Services.AddScoped<IAutoPaymentRepository, AutoPaymentRepository>();
+        builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();
+        builder.Services.AddScoped<IVoiceRepository, VoiceRepository>();
 
         // CosmosDb
         builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");

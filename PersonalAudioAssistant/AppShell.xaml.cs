@@ -17,7 +17,6 @@ namespace PersonalAudioAssistant
             Routing.RegisterRoute(nameof(ProgramPage), typeof(ProgramPage));
             Routing.RegisterRoute(nameof(MenuPage), typeof(MenuPage));
             Routing.RegisterRoute(nameof(SettingsPage), typeof(SettingsPage));
-            Routing.RegisterRoute(nameof(HistoryPage), typeof(HistoryPage));
             Routing.RegisterRoute(nameof(UsersListPage), typeof(UsersListPage));
             Routing.RegisterRoute(nameof(AddUserPage), typeof(AddUserPage));
             Routing.RegisterRoute(nameof(UpdateUserPage), typeof(UpdateUserPage));

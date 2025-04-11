@@ -4,10 +4,9 @@ namespace PersonalAudioAssistant.Application.Interfaces
 {
     public interface IPaymentRepository
     {
-        Task<Payment> GetPaymentByIdAsync(string userId);
-        Task<Payment> GetPaymentByUserIdAsync(string userId);
-        Task UpdatePaymentAsync(Payment payment);
-        Task DeletePaymentAsync(string userId);
-        Task AddPaymentAsync(Payment payment);
+        Task<Payment> GetPaymentByIdAsync(string Id, CancellationToken cancellationToken);
+        Task<Payment> GetPaymentByUserIdAsync(string userId, CancellationToken cancellationToken);
+        Task UpdatePaymentAsync(Payment payment, CancellationToken cancellationToken);
+        Task AddPaymentAsync(Payment payment, CancellationToken cancellationToken);
     }
 }

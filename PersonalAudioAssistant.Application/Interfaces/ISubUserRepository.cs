@@ -11,6 +11,6 @@ namespace PersonalAudioAssistant.Application.Interfaces
         Task UpdateUser(SubUser user, CancellationToken cancellationToken);
         Task AddUser(SubUser user, CancellationToken cancellationToken);
         Task DeleteUser(string id, CancellationToken cancellationToken);
-        Task<List<SubUser>> GetAllUsers(CancellationToken cancellationToken);
+        Task<List<SubUser>> GetAllUsersByUserId(string userId, CancellationToken cancellationToken);
     }
 }

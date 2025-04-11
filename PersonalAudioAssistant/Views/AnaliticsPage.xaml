@@ -1,15 +1,78 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.AnaliticsPage"
-             Title="AnaliticsPage">
-    <VerticalStackLayout>
-        <Button Text="Історія платежів"
-                Command="{Binding NavigateToHistoryCommand}"
-                BackgroundColor="{StaticResource Primary}"
-                TextColor="White"
-                WidthRequest="300"
-                HeightRequest="50"
-                FontSize="18" />
-    </VerticalStackLayout>
+             Title="Аналітика"
+             xmlns:vm="clr-namespace:PersonalAudioAssistant.ViewModel"
+             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+
+    <ContentPage.BindingContext>
+        <vm:AnaliticsViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid ColumnDefinitions="*,*,*"
+              Padding="20,10"
+              ColumnSpacing="0">
+
+            <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center">
+                <Label Text="Статистика &#x0a;за користувачами"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{Binding IsUserTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
+                       Margin="0,0,0,5">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SelectUserTabCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <BoxView HeightRequest="3"
+                         BackgroundColor="{StaticResource Primary}"
+                         HorizontalOptions="Fill"
+                         IsVisible="{Binding IsUserTabSelected}" />
+            </StackLayout>
+
+            <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="1">
+                <Label Text="Використання &#x0a;токенів"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{Binding IsTokenTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
+                       Margin="0,0,0,5"
+                       HorizontalTextAlignment="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SelectTokenTabCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <BoxView HeightRequest="3"
+                         BackgroundColor="{StaticResource Primary}"
+                         HorizontalOptions="Fill"
+                         IsVisible="{Binding IsTokenTabSelected}" />
+            </StackLayout>
+
+            <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="2">
+                <Label Text="Історія &#x0a;оплати"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{Binding IsPaymentTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
+                       Margin="0,0,0,5"
+                       HorizontalTextAlignment="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SelectPaymentTabCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <BoxView HeightRequest="3"
+                         BackgroundColor="{StaticResource Primary}"
+                         HorizontalOptions="Fill"
+                         IsVisible="{Binding IsPaymentTabSelected}" />
+            </StackLayout>
+        </Grid>
+
+        <BoxView Grid.Row="1"
+                 HeightRequest="1"
+                 Color="#cccccc"
+                 Margin="10,0" />
+
+        <ContentView Content="{Binding CurrentAnalyticsContent}" Grid.Row="2" Padding="20" />
+    </Grid>
 </ContentPage>

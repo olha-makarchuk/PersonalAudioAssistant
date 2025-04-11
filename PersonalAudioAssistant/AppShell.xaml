@@ -48,11 +48,6 @@
         Shell.NavBarIsVisible="False"/>
 
     <ShellContent
-        Title="HistoryPage"
-        ContentTemplate="{DataTemplate view:HistoryPage}"
-        Route="HistoryPage"/>
-
-    <ShellContent
         Title="SettingsPage"
         ContentTemplate="{DataTemplate view:SettingsPage}"
         Route="SettingsPage"/>

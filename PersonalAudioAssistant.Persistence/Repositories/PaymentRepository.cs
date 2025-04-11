@@ -1,33 +1,40 @@
-﻿using PersonalAudioAssistant.Application.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Persistence.Context;
 
 namespace PersonalAudioAssistant.Persistence.Repositories
 {
     public class PaymentRepository : IPaymentRepository
     {
-        public Task AddPaymentAsync(Payment payment)
+        private readonly CosmosDbContext _context;
+        public PaymentRepository(CosmosDbContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task DeletePaymentAsync(string userId)
+        public async Task AddPaymentAsync(Payment payment, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            await _context.Payment.AddAsync(payment, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public Task<Payment> GetPaymentByIdAsync(string userId)
+        public async Task<Payment> GetPaymentByIdAsync(string id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            Guid guidId = Guid.Parse(id);
+            return await _context.Payment.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
         }
 
-        public Task<Payment> GetPaymentByUserIdAsync(string userId)
+        public async Task<Payment> GetPaymentByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var a = await _context.Payment.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            return a;
         }
 
-        public Task UpdatePaymentAsync(Payment payment)
+        public async Task UpdatePaymentAsync(Payment payment, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            _context.Payment.Update(payment);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

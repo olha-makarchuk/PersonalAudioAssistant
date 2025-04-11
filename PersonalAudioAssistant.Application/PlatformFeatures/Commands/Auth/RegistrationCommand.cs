@@ -62,19 +62,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
             string refreshToken = TokenBase.GenerateRefreshToken();
             user.RefreshToken = refreshToken;
 
-            /*
-            var appSettings = new AppSettings()
-            {
-                UserId = user.Id.ToString(),
-                Theme = "Light",
-                Payment = null,
-                MinTokenThreshold = -1,
-                ChargeAmount = -1
-            };
-
-            await _appSettingsRepository.AddSettingsAsync(appSettings, cancellationToken);
             await _mainUserRepository.CreateUser(user, cancellationToken);
-            */
+            
             var userNew = await _mainUserRepository.GetUserByEmailAsync(request.Email, cancellationToken);
 
             return new MainUserRegisterResponse

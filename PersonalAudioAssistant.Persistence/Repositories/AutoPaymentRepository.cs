@@ -1,33 +1,39 @@
-﻿using PersonalAudioAssistant.Application.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Persistence.Context;
 
 namespace PersonalAudioAssistant.Persistence.Repositories
 {
     public class AutoPaymentRepository : IAutoPaymentRepository
     {
-        public Task AddAutoPaymentAsync(AutoPayments autoPayment)
+        private readonly CosmosDbContext _context;
+        public AutoPaymentRepository(CosmosDbContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task DeleteAutoPaymentAsync(string userId)
+        public async Task AddAutoPaymentAsync(AutoPayments autoPayment, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            await _context.AutoPayments.AddAsync(autoPayment, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public Task<AutoPayments> GetAutoPaymentByIdAsync(string userId)
+        public async Task<AutoPayments> GetAutoPaymentByIdAsync(string id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            Guid guidId = Guid.Parse(id);
+            return await _context.AutoPayments.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
         }
 
-        public Task<AutoPayments> GetAutoPaymentByUserIdAsync(string userId)
+        public async Task<AutoPayments> GetAutoPaymentByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return await _context.AutoPayments.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
         }
 
-        public Task UpdateAutoPaymentAsync(AutoPayments autoPayment)
+        public async Task UpdateAutoPaymentAsync(AutoPayments autoPayment, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            _context.AutoPayments.Update(autoPayment);
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

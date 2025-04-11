@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="PlatformFeatures\Commands\MainUserCommands\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.69.0.3703" />
     <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.68.0.1869" />
     <PackageReference Include="MediatR" Version="12.4.1" />

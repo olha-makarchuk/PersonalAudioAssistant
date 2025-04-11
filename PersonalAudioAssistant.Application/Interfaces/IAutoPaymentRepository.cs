@@ -4,10 +4,9 @@ namespace PersonalAudioAssistant.Application.Interfaces
 {
     public interface IAutoPaymentRepository
     {
-        Task<AutoPayments> GetAutoPaymentByIdAsync(string userId);
-        Task<AutoPayments> GetAutoPaymentByUserIdAsync(string userId);
-        Task UpdateAutoPaymentAsync(AutoPayments autoPayment);
-        Task DeleteAutoPaymentAsync(string userId);
-        Task AddAutoPaymentAsync(AutoPayments autoPayment);
+        Task<AutoPayments> GetAutoPaymentByIdAsync(string userId, CancellationToken cancellationToken);
+        Task<AutoPayments> GetAutoPaymentByUserIdAsync(string userId, CancellationToken cancellationToken);
+        Task UpdateAutoPaymentAsync(AutoPayments autoPayment, CancellationToken cancellationToken);
+        Task AddAutoPaymentAsync(AutoPayments autoPayment, CancellationToken cancellationToken);
     }
 }

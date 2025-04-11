@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
-using PersonalAudioAssistant.Application.Services.Api;
+using PersonalAudioAssistant.Application.PlatformFeatures.Queries.VoiceQuery;
 using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
@@ -90,7 +90,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             if (value != null)
             {
-                SelectedVoiceUrl = value.preview_url;
+                SelectedVoiceUrl = value.URL;
             }
         }
 
@@ -158,7 +158,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 StartPhrase = SubUser.StartPhrase,
                 EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : string.Empty,
                 EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : string.Empty,
-                VoiceId = SelectedVoice.voice_id,
+                VoiceId = SelectedVoice.VoiceId,
                 UserVoice = _recordedAudioStream != null ? GetBytesFromStream(_recordedAudioStream) : new byte[0],
                 NewPassword = IsPasswordEnabled ? NewPassword : string.Empty,
                 Password = IsPasswordEnabled ? OldPassword : string.Empty
@@ -205,8 +205,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             try
             {
-                VoicesApi apiClient = new VoicesApi();
-                var voiceList = await apiClient.GetVoicesAsync();
+                var userId = await SecureStorage.GetAsync("user_id");
+
+                var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery() { UserId = await SecureStorage.GetAsync("user_id") });
 
                 if (voiceList != null)
                 {
@@ -216,22 +217,22 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                     if (!string.IsNullOrWhiteSpace(SubUser?.VoiceId))
                     {
-                        var userVoice = Voices.FirstOrDefault(v => v.voice_id == SubUser.VoiceId);
+                        var userVoice = Voices.FirstOrDefault(v => v.VoiceId == SubUser.VoiceId);
                         if (userVoice != null)
                         {
                             SelectedVoice = userVoice;
-                            SelectedVoiceUrl = userVoice.preview_url;
+                            SelectedVoiceUrl = userVoice.URL;
                         }
                         else
                         {
                             SelectedVoice = Voices.FirstOrDefault();
-                            SelectedVoiceUrl = SelectedVoice?.preview_url;
+                            SelectedVoiceUrl = SelectedVoice?.URL;
                         }
                     }
                     else
                     {
                         SelectedVoice = Voices.FirstOrDefault();
-                        SelectedVoiceUrl = SelectedVoice?.preview_url;
+                        SelectedVoiceUrl = SelectedVoice?.URL;
                     }
 
                     InitializeFilterOptions();
@@ -297,46 +298,39 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         private void InitializeFilterOptions()
         {
-            AccentOptions = new ObservableCollection<string>(
-                allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.labels?.accent))
-                    .Select(v => v.labels.accent)
-                    .Distinct()
-                    .OrderBy(x => x)
-            );
-
             DescriptionOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.labels?.description))
-                    .Select(v => v.labels.description)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.Description))
+                    .Select(v => v.Description)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             AgeOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.labels?.age))
-                    .Select(v => v.labels.age)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.Age))
+                    .Select(v => v.Age)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             GenderOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.labels?.gender))
-                    .Select(v => v.labels.gender)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.Gender))
+                    .Select(v => v.Gender)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             UseCaseOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.labels?.use_case))
-                    .Select(v => v.labels.use_case)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.UseCase))
+                    .Select(v => v.UseCase)
                     .Distinct()
                     .OrderBy(x => x)
             );
         }
+
 
         public void OnNavigatedFrom()
         {
@@ -347,11 +341,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsEndPhraseSelected = false;
             IsEndTimeSelected = true;
             SelectedEndTime = 2;
-            IsPasswordEnabled = false; // Reset password enabled state
+            IsPasswordEnabled = false; 
             OldPassword = null;
             NewPassword = null;
 
-            VoiceFilter.ResetAccentFilter();
             VoiceFilter.ResetDescriptionFilter();
             VoiceFilter.ResetAgeFilter();
             VoiceFilter.ResetGenderFilter();
@@ -359,13 +352,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             Voices = new ObservableCollection<Voice>(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
-            SelectedVoiceUrl = SelectedVoice?.preview_url;
+            SelectedVoiceUrl = SelectedVoice?.URL;
         }
 
         [RelayCommand]
         public void ResetAllFilters()
         {
-            VoiceFilter.ResetAccentFilter();
             VoiceFilter.ResetDescriptionFilter();
             VoiceFilter.ResetAgeFilter();
             VoiceFilter.ResetGenderFilter();

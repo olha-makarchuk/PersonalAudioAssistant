@@ -2,6 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -39,7 +42,8 @@ namespace PersonalAudioAssistant.ViewModel
             try
             {
                 await _authTokenManager.SignUpWithPasswordAsync(Email, Password);
-                await Shell.Current.GoToAsync("//ProgramPage");
+                await CreateDbData();
+                await Shell.Current.GoToAsync("//MainPage");
             }
             catch (Exception ex)
             {
@@ -58,7 +62,8 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 IsBusy = true;
                 await _authTokenManager.Sign_In_Up_AsyncGoogle();
-                await Shell.Current.GoToAsync("//ProgramPage");
+                await CreateDbData();
+                await Shell.Current.GoToAsync("//MainPage");
             }
             catch (Exception ex)
             {
@@ -74,6 +79,32 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task SignInAsync()
         {
             await Shell.Current.GoToAsync("//AuthorizationPage");
+        }
+
+        private async Task CreateDbData()
+        {
+            var userId = await SecureStorage.GetAsync("user_id");
+
+            var paymentCommand = new CreatePaymentCommand() 
+            { 
+                UserId = userId,
+            };
+            await _mediator.Send(paymentCommand);
+
+            var autoPaymentCommand = new CreateAutoPaymentCommand()
+            {
+                UserId = userId
+            };
+            await _mediator.Send(autoPaymentCommand);
+
+            var settingsCommand = new CreateAppSettingsCommand()
+            {
+                UserId = userId
+            };
+            await _mediator.Send(settingsCommand);
+
+            //var analiticsCommand = new CreateAnaliticsCommand() { };
+            //await _mediator.Send(analiticsCommand);
         }
 
         public async Task InitializeAsync()

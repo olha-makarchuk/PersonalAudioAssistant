@@ -16,6 +16,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
         public string? VoiceId { get; set; }
         public byte[]? UserVoice { get; set; }
         public string? Password { get; set; }
+        public string? UserId { get; set; }
     }
 
     public class AddSubUserCoomandHandler : IRequestHandler<AddSubUserCoomand>
@@ -48,7 +49,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 VoiceId = request.VoiceId,
                 UserVoice = request.UserVoice,
                 PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt
+                PasswordSalt = passwordSalt,
+                UserId = request.UserId
             };
 
             await _subUserRepository.AddUser(newUser, cancellationToken);

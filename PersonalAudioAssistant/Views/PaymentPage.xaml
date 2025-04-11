@@ -1,51 +1,126 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="PersonalAudioAssistant.Views.PaymentPage">
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="25">
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodel="clr-namespace:PersonalAudioAssistant.ViewModel"
+    x:Class="PersonalAudioAssistant.Views.PaymentPage"
+    Title="Керування оплатою">
 
-            <!-- Заголовок -->
-            <Label Text="Додати картку" 
-                   FontSize="24" 
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center" />
+    <Grid>
+        <!-- Основний контент: блокується, коли IsBusy = true -->
+        <ScrollView IsEnabled="{Binding IsNotBusy}">
+            <VerticalStackLayout Padding="24" Spacing="24">
 
-            <!-- Кнопка LiqPay -->
-            <Button Text="LiqPay>"
-                    BackgroundColor="#00C807"
-                    TextColor="White"
-                    CornerRadius="12"
-                    FontAttributes="Bold"
-                    WidthRequest="100"
-                    FontSize="20"
-                    HeightRequest="50"
-                    HorizontalOptions="Fill" />
+                <!-- Секція картки -->
+                <Frame Padding="16" CornerRadius="20" BackgroundColor="#E8F5E9" HasShadow="True" BorderColor="#C8E6C9">
+                    <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
 
-            <!-- Перемикач автоплатежу -->
-            <Frame BorderColor="LightGray" CornerRadius="10" Padding="15" HasShadow="True">
-                <VerticalStackLayout Spacing="15">
-                    <Label Text="Автоплатіж" FontSize="20" FontAttributes="Bold" />
+                        <Label Text="{Binding CardButtonText}"
+                               FontSize="26"
+                               FontAttributes="Bold"
+                               TextColor="#1B5E20"
+                               HorizontalOptions="Center" />
 
-                    <Grid ColumnDefinitions="Auto, *" VerticalOptions="Center">
-                        <Label Text="Увімкнути автоплатіж" VerticalOptions="Center" />
-                        <Switch IsToggled="False" Grid.Column="1" />
-                    </Grid>
+                        <Button Text="{Binding CardButtonText}"
+                                BackgroundColor="#00C853"
+                                TextColor="White"
+                                CornerRadius="25"
+                                FontSize="18"
+                                FontAttributes="Bold"
+                                WidthRequest="220"
+                                HeightRequest="55"
+                                HorizontalOptions="Center"
+                                Command="{Binding LiqPayCommand}" />
 
-                    <!-- Введення мінімального балансу -->
-                    <VerticalStackLayout>
-                        <Label Text="Мінімальний баланс (₴)" />
-                        <Entry Placeholder="100" Keyboard="Numeric" />
+                        <Label Text="{Binding MaskedCardNumber}"
+                               FontSize="18"
+                               TextColor="#333"
+                               HorizontalOptions="Center"
+                               IsVisible="{Binding IsCardPresent}" />
+
+                        <Button Text="Видалити карту"
+                                BackgroundColor="#FF5252"
+                                TextColor="White"
+                                CornerRadius="25"
+                                FontSize="16"
+                                HeightRequest="45"
+                                WidthRequest="180"
+                                HorizontalOptions="Center"
+                                Command="{Binding DeleteCardCommand}"
+                                IsVisible="{Binding IsCardPresent}" />
+
                     </VerticalStackLayout>
+                </Frame>
 
-                    <!-- Введення суми поповнення -->
-                    <VerticalStackLayout>
-                        <Label Text="Сума поповнення (₴)" />
-                        <Entry Placeholder="200" Keyboard="Numeric" />
+                <BoxView HeightRequest="1" BackgroundColor="#D3D3D3" Margin="0,10" />
+
+                <!-- Секція автопоповнення -->
+                <Frame CornerRadius="20" Padding="20" BackgroundColor="White" BorderColor="#E0E0E0" HasShadow="True">
+                    <VerticalStackLayout Spacing="20">
+
+                        <Label Text="Автоматичне поповнення"
+                               FontSize="22"
+                               FontAttributes="Bold"
+                               TextColor="#444" />
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Text="Увімкнути автоплатіж"
+                                   FontSize="16"
+                                   VerticalOptions="Center"
+                                   TextColor="#666" />
+                            <Switch IsToggled="{Binding IsAutoPaymentEnabled}"
+                                    Grid.Column="1"
+                                    HorizontalOptions="End"
+                                    OnColor="#A5D6A7" />
+                        </Grid>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Мінімальне значення токенів"
+                                   FontSize="16"
+                                   TextColor="#444" />
+                            <Entry Placeholder="100"
+                                   Keyboard="Numeric"
+                                   FontSize="16"
+                                   BackgroundColor="#FAFAFA"
+                                   HeightRequest="45"
+                                   TextColor="#333"
+                                   Text="{Binding MinimumTokenBalance}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Сума поповнення (₴)"
+                                   FontSize="16"
+                                   TextColor="#444" />
+                            <Entry Placeholder="200"
+                                   Keyboard="Numeric"
+                                   FontSize="16"
+                                   BackgroundColor="#FAFAFA"
+                                   HeightRequest="45"
+                                   TextColor="#333"
+                                   Text="{Binding AutoRechargeAmount}" />
+                        </VerticalStackLayout>
+
+                        <Button Text="Зберегти налаштування"
+                                TextColor="White"
+                                CornerRadius="25"
+                                FontSize="18"
+                                FontAttributes="Bold"
+                                HeightRequest="50"
+                                Command="{Binding SaveAutoPaymentSettingsCommand}" />
+
                     </VerticalStackLayout>
-                </VerticalStackLayout>
-            </Frame>
+                </Frame>
 
-        </VerticalStackLayout>
-    </ScrollView>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Спінер завантаження -->
+        <ActivityIndicator
+            IsVisible="{Binding IsBusy}"
+            IsRunning="{Binding IsBusy}"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            WidthRequest="60"
+            HeightRequest="60" />
+    </Grid>
 </ContentPage>

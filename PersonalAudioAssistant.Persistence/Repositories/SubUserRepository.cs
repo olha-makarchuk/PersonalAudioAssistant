@@ -28,9 +28,11 @@ namespace PersonalAudioAssistant.Persistence.Repositories
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<List<SubUser>> GetAllUsers(CancellationToken cancellationToken)
+        public async Task<List<SubUser>> GetAllUsersByUserId(string userId, CancellationToken cancellationToken)
         {
-            return await _context.SubUsers.ToListAsync(cancellationToken);
+            return await _context.SubUsers
+                                 .Where(x => x.UserId == userId)
+                                 .ToListAsync(cancellationToken);
         }
 
         public async Task<SubUser> GetUserByIdAsync(string id, CancellationToken cancellationToken)
