@@ -32,7 +32,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
 
         public async Task Handle(AddSubUserCoomand request, CancellationToken cancellationToken = default)
         {
-            var user = await _subUserRepository.GetUserByStartPhraseAsync(request.StartPhrase, cancellationToken);
+            var user = await _subUserRepository.GetUserByStartPhraseAsync(request.UserId, request.StartPhrase, cancellationToken);
             if (user != null)
             {
                 throw new Exception("User with this start phrase already exists.");

@@ -21,7 +21,17 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private Stream _recordedAudioStream;
         private List<Voice> allVoices = new List<Voice>();
 
-        public VoiceFilterModel VoiceFilter { get; } = new VoiceFilterModel();
+        [ObservableProperty]
+        private string filterDescription;
+
+        [ObservableProperty]
+        private string filterAge;
+
+        [ObservableProperty]
+        private string filterGender;
+
+        [ObservableProperty]
+        private string filterUseCase;
 
         [ObservableProperty]
         private string userName;
@@ -112,7 +122,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         private void ApplyVoiceFilter()
         {
-            Voices = VoiceFilter.ApplyFilter(allVoices);
+            Voices = ApplyFilter(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
         }
 
@@ -148,9 +158,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await Shell.Current.DisplayAlert("Помилка", "Будь ласка, оберіть голос.", "OK");
                 return;
             }
-
-            // The recorded audio is not mandatory for updating, so we don't check for null here.
-            // The backend should handle cases where UserVoice is empty.
 
             var command = new UpdateSubUserCoomand
             {
@@ -331,7 +338,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             );
         }
 
-
         public void OnNavigatedFrom()
         {
             UserName = null;
@@ -345,10 +351,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
             OldPassword = null;
             NewPassword = null;
 
-            VoiceFilter.ResetDescriptionFilter();
-            VoiceFilter.ResetAgeFilter();
-            VoiceFilter.ResetGenderFilter();
-            VoiceFilter.ResetUseCaseFilter();
+            ResetDescriptionFilter();
+            ResetAgeFilter();
+            ResetGenderFilter();
+            ResetUseCaseFilter();
 
             Voices = new ObservableCollection<Voice>(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
@@ -358,10 +364,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [RelayCommand]
         public void ResetAllFilters()
         {
-            VoiceFilter.ResetDescriptionFilter();
-            VoiceFilter.ResetAgeFilter();
-            VoiceFilter.ResetGenderFilter();
-            VoiceFilter.ResetUseCaseFilter();
+            ResetDescriptionFilter();
+            ResetAgeFilter();
+            ResetGenderFilter();
+            ResetUseCaseFilter();
             ApplyVoiceFilter();
         }
 
@@ -384,5 +390,77 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsPasswordEnabled = !string.IsNullOrEmpty(user.PasswordHash.ToString());
             }
         }
+
+        public ObservableCollection<Voice> ApplyFilter(List<Voice> allVoices)
+        {
+            var filtered = allVoices.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(FilterDescription))
+                filtered = filtered.Where(v => v.Description != null &&
+                    v.Description.Contains(FilterDescription, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(FilterAge))
+                filtered = filtered.Where(v => v.Age != null &&
+                    v.Age.Contains(FilterAge, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(FilterGender))
+                filtered = filtered.Where(v => v.Gender != null &&
+                    v.Gender.Contains(FilterGender, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(FilterUseCase))
+                filtered = filtered.Where(v => v.UseCase != null &&
+                    v.UseCase.Contains(FilterUseCase, StringComparison.OrdinalIgnoreCase));
+
+            return new ObservableCollection<Voice>(filtered);
+        }
+
+        [RelayCommand]
+        public void ResetDescriptionFilter()
+        {
+            FilterDescription = null;
+            ApplyVoiceFilter();
+        }
+
+        [RelayCommand]
+        public void ResetAgeFilter()
+        {
+            FilterAge = null;
+            ApplyVoiceFilter();
+        }
+
+        [RelayCommand]
+        public void ResetGenderFilter()
+        {
+            FilterGender = null;
+            ApplyVoiceFilter();
+        }
+
+        [RelayCommand]
+        public void ResetUseCaseFilter()
+        {
+            FilterUseCase = null;
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterDescriptionChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterAgeChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterGenderChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterUseCaseChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
     }
 }

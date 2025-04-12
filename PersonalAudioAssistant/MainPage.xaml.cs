@@ -30,19 +30,6 @@ namespace PersonalAudioAssistant
 
         private async Task InitializeApp()
         {
-            var cmd = new CreateVoiceCommand() 
-            { 
-                Gender = null,
-                Name = null,
-                Description = null,
-                Style = null,
-                Age = null,
-                URL = null,
-                UserId = null,
-                VoiceId = null
-            };
-            await _mediator.Send(cmd);
-
             LoadingProgressBar.IsVisible = true;
             LoadingProgressBar.Progress = 0;
 

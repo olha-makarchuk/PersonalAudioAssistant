@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Java.IO;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
@@ -22,9 +23,19 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private List<Voice> allVoices = new List<Voice>();
 
         [ObservableProperty]
-        private bool isAudioRecorded = false;
+        private string filterDescription;
 
-        public VoiceFilterModel VoiceFilter { get; } = new VoiceFilterModel();
+        [ObservableProperty]
+        private string filterAge;
+
+        [ObservableProperty]
+        private string filterGender;
+
+        [ObservableProperty]
+        private string filterUseCase;
+
+        [ObservableProperty]
+        private bool isAudioRecorded = false;
 
         [ObservableProperty]
         private string userName;
@@ -84,36 +95,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             LoadVoicesAsync();
         }
 
-        partial void OnSelectedVoiceChanged(Voice value)
-        {
-            if (value != null)
-            {
-                SelectedVoiceUrl = value.URL;
-            }
-        }
-
-        partial void OnIsEndPhraseSelectedChanged(bool value)
-        {
-            if (value)
-            {
-                IsEndTimeSelected = false;
-            }
-        }
-
-        partial void OnIsEndTimeSelectedChanged(bool value)
-        {
-            if (value)
-            {
-                IsEndPhraseSelected = false;
-            }
-        }
-
-        private void ApplyVoiceFilter()
-        {
-            Voices = VoiceFilter.ApplyFilter(allVoices);
-            SelectedVoice = Voices.FirstOrDefault();
-        }
-
         [RelayCommand]
         public async Task CreateUserAsync()
         {
@@ -153,7 +134,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 return;
             }
 
-            // Перевірка пароля лише якщо користувач обрав додавання пароля
             if (IsPasswordEnabled && string.IsNullOrWhiteSpace(Password))
             {
                 await Shell.Current.DisplayAlert("Помилка", "Будь ласка, введіть пароль.", "OK");
@@ -162,6 +142,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             var command = new AddSubUserCoomand
             {
+                UserId = await SecureStorage.GetAsync("user_id"),
                 UserName = UserName,
                 Password = IsPasswordEnabled ? Password : string.Empty,
                 StartPhrase = SubUser.StartPhrase,
@@ -307,12 +288,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsEndPhraseSelected = false;
             IsEndTimeSelected = true;
             SelectedEndTime = 2;
-            IsPasswordEnabled = false; // скидаємо властивість для пароля
+            IsPasswordEnabled = false; 
 
-            VoiceFilter.ResetDescriptionFilter();
-            VoiceFilter.ResetAgeFilter();
-            VoiceFilter.ResetGenderFilter();
-            VoiceFilter.ResetUseCaseFilter();
+            ResetDescriptionFilter();
+            ResetAgeFilter();
+            ResetGenderFilter();
+            ResetUseCaseFilter();
 
             Voices = new ObservableCollection<Voice>(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
@@ -322,11 +303,113 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [RelayCommand]
         public void ResetAllFilters()
         {
-            VoiceFilter.ResetDescriptionFilter();
-            VoiceFilter.ResetAgeFilter();
-            VoiceFilter.ResetGenderFilter();
-            VoiceFilter.ResetUseCaseFilter();
+            ResetDescriptionFilter();
+            ResetAgeFilter();
+            ResetGenderFilter();
+            ResetUseCaseFilter();
             ApplyVoiceFilter();
         }
+
+        public ObservableCollection<Voice> ApplyFilter(List<Voice> allVoices)
+        {
+            var filtered = allVoices.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(FilterDescription))
+                filtered = filtered.Where(v => v.Description != null &&
+                    v.Description.Contains(FilterDescription, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(FilterAge))
+                filtered = filtered.Where(v => v.Age != null &&
+                    v.Age.Contains(FilterAge, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(FilterGender))
+                filtered = filtered.Where(v => v.Gender != null &&
+                    v.Gender.Contains(FilterGender, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(FilterUseCase))
+                filtered = filtered.Where(v => v.UseCase != null &&
+                    v.UseCase.Contains(FilterUseCase, StringComparison.OrdinalIgnoreCase));
+
+            return new ObservableCollection<Voice>(filtered);
+        }
+
+        partial void OnSelectedVoiceChanged(Voice value)
+        {
+            if (value != null)
+            {
+                SelectedVoiceUrl = value.URL;
+            }
+        }
+
+        partial void OnIsEndPhraseSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                IsEndTimeSelected = false;
+            }
+        }
+
+        partial void OnIsEndTimeSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                IsEndPhraseSelected = false;
+            }
+        }
+
+        private void ApplyVoiceFilter()
+        {
+            Voices = ApplyFilter(allVoices);
+            SelectedVoice = Voices.FirstOrDefault();
+        }
+
+        [RelayCommand]
+        public void ResetDescriptionFilter()
+        {
+            FilterDescription = null;
+            ApplyVoiceFilter();
+        }
+
+        [RelayCommand]
+        public void ResetAgeFilter()
+        {
+            FilterAge = null;
+            ApplyVoiceFilter();
+        }
+
+        [RelayCommand]
+        public void ResetGenderFilter()
+        {
+            FilterGender = null;
+            ApplyVoiceFilter();
+        }
+
+        [RelayCommand]
+        public void ResetUseCaseFilter()
+        {
+            FilterUseCase = null;
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterDescriptionChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterAgeChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterGenderChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
+        partial void OnFilterUseCaseChanged(string value)
+        {
+            ApplyVoiceFilter();
+        }
+
     }
 }

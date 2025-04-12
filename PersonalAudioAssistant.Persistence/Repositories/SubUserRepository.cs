@@ -46,9 +46,10 @@ namespace PersonalAudioAssistant.Persistence.Repositories
             return await _context.SubUsers.FirstOrDefaultAsync(x => x.UserName == name, cancellationToken);
         }
 
-        public async Task<SubUser> GetUserByStartPhraseAsync(string startPhrase, CancellationToken cancellationToken)
+        public async Task<SubUser> GetUserByStartPhraseAsync(string userId, string startPhrase, CancellationToken cancellationToken)
         {
-            return await _context.SubUsers.FirstOrDefaultAsync(x => x.StartPhrase == startPhrase, cancellationToken);
+            return await _context.SubUsers
+                .FirstOrDefaultAsync(x => x.StartPhrase == startPhrase||x.UserId == userId, cancellationToken);
         }
 
         public async Task UpdateUser(SubUser user, CancellationToken cancellationToken)
