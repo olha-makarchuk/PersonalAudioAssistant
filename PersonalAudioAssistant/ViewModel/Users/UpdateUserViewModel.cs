@@ -105,6 +105,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             try
             {
+                await Task.Delay(10);
+
                 var userId = await SecureStorage.GetAsync("user_id");
                
                 var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery()
@@ -112,13 +114,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     UserId = userId
                 });
 
-                
-                var userQuery = new GetUserByIdQuery()
-                {
-                    UserId = UserIdQueryAttribute
-                };
-
-                var user = await _mediator.Send(userQuery);
+                var users = await _manageCacheData.GetUsersAsync();
+                var user = users.FirstOrDefault(u => u.Id.ToString() == UserIdQueryAttribute);
 
                 UserName = user.UserName;
                 SubUser = user;
