@@ -30,9 +30,10 @@ namespace PersonalAudioAssistant.Persistence.Repositories
 
         public async Task<List<SubUser>> GetAllUsersByUserId(string userId, CancellationToken cancellationToken)
         {
-            return await _context.SubUsers
-                                 .Where(x => x.UserId == userId)
-                                 .ToListAsync(cancellationToken);
+            var a = await _context.SubUsers
+                .Where(x => x.UserId == userId || x.UserId == null)
+                .ToListAsync(cancellationToken);
+            return a;
         }
 
         public async Task<SubUser> GetUserByIdAsync(string id, CancellationToken cancellationToken)
@@ -49,7 +50,7 @@ namespace PersonalAudioAssistant.Persistence.Repositories
         public async Task<SubUser> GetUserByStartPhraseAsync(string userId, string startPhrase, CancellationToken cancellationToken)
         {
             return await _context.SubUsers
-                .FirstOrDefaultAsync(x => x.StartPhrase == startPhrase||x.UserId == userId, cancellationToken);
+                .FirstOrDefaultAsync(x => x.StartPhrase == startPhrase && x.UserId == userId, cancellationToken);
         }
 
         public async Task UpdateUser(SubUser user, CancellationToken cancellationToken)

@@ -19,7 +19,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             _manageCacheData = manageCacheData;
             Users = new ObservableCollection<SubUser>();
-            LoadUsers();
         }
 
         public SubUser SelectedUser
@@ -35,7 +34,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
-        private async void LoadUsers()
+        public async Task LoadUsers()
         {
             var usersList = await _manageCacheData.GetUsersAsync();
 

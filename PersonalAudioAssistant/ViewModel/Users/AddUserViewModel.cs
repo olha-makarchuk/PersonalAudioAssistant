@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Java.IO;
 using MediatR;
+using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.VoiceQuery;
 using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Services;
@@ -15,6 +14,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 {
     public partial class AddUserViewModel : ObservableObject
     {
+        private readonly IApiClient _apiClient;
         private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
@@ -85,12 +85,13 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         private bool isPasswordEnabled = false;
 
-        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData)
+        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
             _mediator = mediator;
             _audioManager = audioManager;
             _audioRecorder = _audioManager.CreateRecorder();
             _manageCacheData = manageCacheData;
+            _apiClient = apiClient;
 
             LoadVoicesAsync();
         }
@@ -140,16 +141,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 return;
             }
 
+            var embedding = await _apiClient.CreateVoiceEmbedding(_recordedAudioStream);
+
             var command = new AddSubUserCoomand
             {
                 UserId = await SecureStorage.GetAsync("user_id"),
                 UserName = UserName,
-                Password = IsPasswordEnabled ? Password : string.Empty,
+                Password = IsPasswordEnabled ? Password : null,
                 StartPhrase = SubUser.StartPhrase,
-                EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : string.Empty,
-                EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : string.Empty,
+                EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : null,
+                EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : null,
                 VoiceId = SelectedVoice.VoiceId,
-                UserVoice = new byte[0]
+                UserVoice = embedding
             };
             await _mediator.Send(command);
 
@@ -158,18 +161,21 @@ namespace PersonalAudioAssistant.ViewModel.Users
             var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
             if (usersListViewModel != null)
             {
-                usersListViewModel.RefreshUsers();
+                //await usersListViewModel.RefreshUsersAsync();
             }
 
             await Shell.Current.GoToAsync("//UsersListPage");
         }
 
-        private async void LoadVoicesAsync()
+        private async Task LoadVoicesAsync()
         {
             try
             {
                 var userId = await SecureStorage.GetAsync("user_id");
-                var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery() { UserId = await SecureStorage.GetAsync("user_id") });
+                var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery() 
+                { 
+                    UserId = userId
+                });
 
                 if (voiceList != null)
                 {
@@ -182,7 +188,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await Shell.Current.DisplayAlert("Помилка", $"Не вдалося завантажити голоси: {ex.Message}", "OK");
             }
         }
-
 
         [RelayCommand]
         public async Task RecordReferenceVoiceAsync()
@@ -288,7 +293,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsEndPhraseSelected = false;
             IsEndTimeSelected = true;
             SelectedEndTime = 2;
-            IsPasswordEnabled = false; 
+            IsPasswordEnabled = false;
+            IsAudioRecorded = false;
+            _recordedAudioStream = null;
 
             ResetDescriptionFilter();
             ResetAgeFilter();
@@ -410,6 +417,5 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             ApplyVoiceFilter();
         }
-
     }
 }

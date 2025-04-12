@@ -11,7 +11,7 @@ public partial class UpdateUserPage : ContentPage
         Shell.SetTitleView(this, null);
         BindingContext = viewModel;
     }
-
+    
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);
@@ -21,5 +21,14 @@ public partial class UpdateUserPage : ContentPage
         }
     }
 
-    public MediaElement MediaElement => mediaElement;
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is UpdateUserViewModel viewModel)
+        {
+            await viewModel.LoadVoicesAsync();
+        }
+    }
+
+    public MediaElement MediaElement => MediaElement;
 }

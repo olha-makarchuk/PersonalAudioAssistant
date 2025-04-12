@@ -14,7 +14,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
         public string? EndPhrase { get; set; }
         public string? EndTime { get; set; }
         public string? VoiceId { get; set; }
-        public byte[]? UserVoice { get; set; }
+        public List<double>? UserVoice { get; set; }
         public string? Password { get; set; }
         public string? UserId { get; set; }
     }
@@ -38,8 +38,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 throw new Exception("User with this start phrase already exists.");
             }
 
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
             var newUser = new SubUser()
             {
                 UserName = request.UserName,
@@ -48,10 +46,15 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 EndTime = request.EndTime,
                 VoiceId = request.VoiceId,
                 UserVoice = request.UserVoice,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt,
                 UserId = request.UserId
             };
+
+            if (request.Password != null)
+            {
+                CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+                newUser.PasswordHash = passwordHash;
+                newUser.PasswordSalt = passwordSalt;
+            }
 
             await _subUserRepository.AddUser(newUser, cancellationToken);
         }

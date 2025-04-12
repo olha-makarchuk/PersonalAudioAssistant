@@ -9,12 +9,13 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
 {
     public class UpdateSubUserCoomand : IRequest
     {
+        public string? UserId { get; set; }
         public string? UserName { get; set; }
         public string? StartPhrase { get; set; }
         public string? EndPhrase { get; set; }
         public string? EndTime { get; set; }
         public string? VoiceId { get; set; }
-        public byte[]? UserVoice { get; set; }
+        public List<double>? UserVoice { get; set; }
         public string? Password { get; set; }
         public string? NewPassword { get; set; }
     }
@@ -32,7 +33,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
 
         public async Task Handle(UpdateSubUserCoomand request, CancellationToken cancellationToken = default)
         {
-            var user = await _subUserRepository.GetUserByStartPhraseAsync(request.StartPhrase, cancellationToken);
+            var user = await _subUserRepository.GetUserByStartPhraseAsync(request.UserId, request.StartPhrase, cancellationToken);
             if (user != null)
             {
                 throw new Exception("User with this start phrase already exists.");
@@ -52,7 +53,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 EndPhrase = request.EndPhrase,
                 EndTime = request.EndTime,
                 VoiceId = request.VoiceId,
-                UserVoice = request.UserVoice,
+                //UserVoice = request.UserVoice,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt
             };

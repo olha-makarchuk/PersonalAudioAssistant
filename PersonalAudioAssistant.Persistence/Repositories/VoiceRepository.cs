@@ -28,9 +28,10 @@ namespace PersonalAudioAssistant.Persistence.Repositories
 
         public async Task<List<Voice>> GetAllVoicesByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            return await _context.Voices
+            var a = await _context.Voices
                 .Where(x => x.UserId == userId || x.UserId == null)
                 .ToListAsync(cancellationToken);
+            return a;
         }
 
         public async Task<Voice> GetVoiceByIdAsync(string id, CancellationToken cancellationToken)

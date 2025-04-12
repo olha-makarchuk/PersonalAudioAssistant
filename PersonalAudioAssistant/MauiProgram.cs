@@ -13,6 +13,8 @@ using PersonalAudioAssistant.ViewModel;
 using PersonalAudioAssistant.Views;
 using PersonalAudioAssistant.Views.Users;
 using PersonalAudioAssistant.ViewModel.Users;
+using PersonalAudioAssistant.Application.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -52,9 +54,10 @@ public static class MauiProgram
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
-        builder.Services.AddTransient<TokenBase>();
-        builder.Services.AddTransient<ManageCacheData>();
+        builder.Services.AddScoped<TokenBase>();
+        builder.Services.AddScoped<ManageCacheData>();
         builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<IApiClient, ApiClient>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();
@@ -79,7 +82,13 @@ public static class MauiProgram
         builder.Services.AddScoped<IVoiceRepository, VoiceRepository>();
 
         // CosmosDb
-        builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");
+        builder.Services.AddDbContext<CosmosDbContext>(options =>
+            options.UseCosmos(
+                _configuration.GetConnectionString("CosmosConnection"),
+                databaseName: "AudioAssistantDB"),
+            ServiceLifetime.Scoped);
+
+        //builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");
 
         return builder.Build();
     }

@@ -16,7 +16,6 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="25" Spacing="25">
-            <!-- Введення імені користувача -->
             <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="Введіть ім'я користувача:" 
@@ -27,7 +26,6 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- Параметри користувача -->
             <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="Індивідуальні параметри:" 
@@ -62,13 +60,6 @@
                             TextColor="#333333" />
                     </StackLayout>
 
-                    <StackLayout>
-                        <Label Text="Змінити зразок вашого голосу:" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 20"/>
-                        <Button Text="Розпочати запис"
-                            Command="{Binding RecordReferenceVoiceCommand}"
-                            HorizontalOptions="Center" />
-                    </StackLayout>
-
                     <StackLayout Orientation="Horizontal" VerticalOptions="Center" Spacing="10">
                         <CheckBox IsChecked="{Binding IsPasswordEnabled}" />
                         <Label Text="Використовувати пароль до історії розмов:" VerticalOptions="Center" TextColor="#333333"/>
@@ -85,14 +76,26 @@
                             <Entry Text="{Binding NewPassword}" Placeholder="Введіть новий пароль" BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
                         </StackLayout>
                     </StackLayout>
+
+                    <StackLayout>
+                        <Label Text="Зразок вашого голосу:" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 20"/>
+                        <HorizontalStackLayout HorizontalOptions="Center">
+                            <Button Text="Розпочати запис"
+                                    Command="{Binding RecordReferenceVoiceCommand}"
+                                    HorizontalOptions="Center" />
+                            <Image Source="checkmark.png"
+                                   WidthRequest="30"
+                                   HeightRequest="30"
+                                   Margin="10, 0, 0, 0"
+                                   IsVisible="{Binding IsAudioRecorded}" />
+                        </HorizontalStackLayout>
+                    </StackLayout>
                     
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- Голосовий вибір разом з фільтрацією -->
             <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
                 <VerticalStackLayout Spacing="15">
-                    <!-- Блок фільтрів -->
                     <Label Text="Фільтрація голосів:" 
                        FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
 
@@ -164,7 +167,6 @@
                             Command="{Binding ResetUseCaseFilterCommand}" />
                     </Grid>
 
-                    <!-- Голосовий вибір -->
                     <Label Text="Виберіть голос:" 
                        FontSize="18" FontAttributes="Bold" TextColor="#333333" Margin="10,20,0,10"/>
                     <Grid ColumnSpacing="10">
