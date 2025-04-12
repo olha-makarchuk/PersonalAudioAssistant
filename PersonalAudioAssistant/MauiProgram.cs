@@ -57,7 +57,7 @@ public static class MauiProgram
         builder.Services.AddScoped<TokenBase>();
         builder.Services.AddScoped<ManageCacheData>();
         builder.Services.AddMemoryCache();
-        builder.Services.AddScoped<IApiClient, ApiClient>();
+        builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();

@@ -1,6 +1,4 @@
-﻿using PersonalAudioAssistant.Application.Services;
-
-namespace PersonalAudioAssistant.Application.Interfaces
+﻿namespace PersonalAudioAssistant.Application.Interfaces
 {
     public interface IApiClient
     {

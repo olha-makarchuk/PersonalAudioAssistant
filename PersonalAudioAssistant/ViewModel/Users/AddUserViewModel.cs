@@ -23,6 +23,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private List<Voice> allVoices = new List<Voice>();
 
         [ObservableProperty]
+        private bool isBusy;
+
+        [ObservableProperty]
         private string filterDescription;
 
         [ObservableProperty]
@@ -99,78 +102,96 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [RelayCommand]
         public async Task CreateUserAsync()
         {
-            if (string.IsNullOrWhiteSpace(UserName))
-            {
-                await Shell.Current.DisplayAlert("Помилка", "Ім'я користувача не може бути порожнім.", "OK");
+            if (IsBusy)
                 return;
-            }
 
-            if (string.IsNullOrWhiteSpace(SubUser.StartPhrase))
+            try
             {
-                await Shell.Current.DisplayAlert("Помилка", "Початкова фраза не може бути порожньою.", "OK");
-                return;
+                IsBusy = true;
+
+                if (string.IsNullOrWhiteSpace(UserName))
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Ім'я користувача не може бути порожнім.", "OK");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(SubUser.StartPhrase))
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Початкова фраза не може бути порожньою.", "OK");
+                    return;
+                }
+
+                if (IsEndPhraseSelected && string.IsNullOrWhiteSpace(SubUser.EndPhrase))
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Кінцева фраза обрана, але не заповнена.", "OK");
+                    return;
+                }
+
+                if (IsEndTimeSelected && SelectedEndTime <= 0)
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Час завершення має бути більше 0.", "OK");
+                    return;
+                }
+
+                if (SelectedVoice == null)
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Будь ласка, оберіть голос.", "OK");
+                    return;
+                }
+
+                if (_recordedAudioStream == null)
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Будь ласка, запишіть голос.", "OK");
+                    return;
+                }
+
+                if (IsPasswordEnabled && string.IsNullOrWhiteSpace(Password))
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Будь ласка, введіть пароль.", "OK");
+                    return;
+                }
+
+                var embedding = await _apiClient.CreateVoiceEmbedding(_recordedAudioStream);
+
+                var command = new AddSubUserCoomand
+                {
+                    UserId = await SecureStorage.GetAsync("user_id"),
+                    UserName = UserName,
+                    Password = IsPasswordEnabled ? Password : null,
+                    StartPhrase = SubUser.StartPhrase,
+                    EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : null,
+                    EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : null,
+                    VoiceId = SelectedVoice.VoiceId,
+                    UserVoice = embedding
+                };
+                await _mediator.Send(command);
+
+                await _manageCacheData.UpdateUsersList();
+
+                var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
+                if (usersListViewModel != null)
+                {
+                    usersListViewModel.RefreshUsers();
+                }
+
+                await Shell.Current.GoToAsync("//UsersListPage");
             }
-
-            if (IsEndPhraseSelected && string.IsNullOrWhiteSpace(SubUser.EndPhrase))
+            catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Помилка", "Кінцева фраза обрана, але не заповнена.", "OK");
-                return;
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
             }
-
-            if (IsEndTimeSelected && SelectedEndTime <= 0)
+            finally
             {
-                await Shell.Current.DisplayAlert("Помилка", "Час завершення має бути більше 0.", "OK");
-                return;
+                IsBusy = false;
             }
-
-            if (SelectedVoice == null)
-            {
-                await Shell.Current.DisplayAlert("Помилка", "Будь ласка, оберіть голос.", "OK");
-                return;
-            }
-
-            if (_recordedAudioStream == null)
-            {
-                await Shell.Current.DisplayAlert("Помилка", "Будь ласка, запишіть голос.", "OK");
-                return;
-            }
-
-            if (IsPasswordEnabled && string.IsNullOrWhiteSpace(Password))
-            {
-                await Shell.Current.DisplayAlert("Помилка", "Будь ласка, введіть пароль.", "OK");
-                return;
-            }
-
-            var embedding = await _apiClient.CreateVoiceEmbedding(_recordedAudioStream);
-
-            var command = new AddSubUserCoomand
-            {
-                UserId = await SecureStorage.GetAsync("user_id"),
-                UserName = UserName,
-                Password = IsPasswordEnabled ? Password : null,
-                StartPhrase = SubUser.StartPhrase,
-                EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : null,
-                EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : null,
-                VoiceId = SelectedVoice.VoiceId,
-                UserVoice = embedding
-            };
-            await _mediator.Send(command);
-
-            await _manageCacheData.UpdateUsersList();
-
-            var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
-            if (usersListViewModel != null)
-            {
-                //await usersListViewModel.RefreshUsersAsync();
-            }
-
-            await Shell.Current.GoToAsync("//UsersListPage");
         }
 
         private async Task LoadVoicesAsync()
         {
             try
             {
+                IsBusy = true;
+
                 var userId = await SecureStorage.GetAsync("user_id");
                 var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery() 
                 { 
@@ -186,6 +207,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
             catch (Exception ex)
             {
                 await Shell.Current.DisplayAlert("Помилка", $"Не вдалося завантажити голоси: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

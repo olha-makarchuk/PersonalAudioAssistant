@@ -1,9 +1,29 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.ProgramPage"
-             Padding="0">
+             xmlns:mauiSpeech="clr-namespace:PersonalAudioAssistant">
 
-    <VerticalStackLayout HorizontalOptions="Start" VerticalOptions="Start">
+    <ScrollView>
+        <VerticalStackLayout
+            Spacing="25"
+            Padding="30,0"
+            VerticalOptions="Center">
 
-    </VerticalStackLayout>
+            <Label
+                Text="{Binding RecognitionText}"
+                FontSize="18"
+                HorizontalOptions="Center" />
+
+            <Button
+                Text="Listen"
+                Command="{Binding ListenCommand}"
+                HorizontalOptions="Center" />
+
+            <Button
+                Text="Listen Cancel"
+                Command="{Binding ListenCancelCommand}"
+                HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

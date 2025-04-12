@@ -1,8 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using IntelliJ.Lang.Annotations;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
@@ -20,7 +17,6 @@ namespace PersonalAudioAssistant.ViewModel
             _mediator = mediator;
         }
 
-        // --- Busy state ---
         [ObservableProperty]
         private bool isBusy;
 
@@ -28,9 +24,8 @@ namespace PersonalAudioAssistant.ViewModel
 
         partial void OnIsBusyChanged(bool value)
         {
-            // Повідомляємо UI, що змінилося IsNotBusy
             OnPropertyChanged(nameof(IsNotBusy));
-            // Оновлюємо стан команд
+            
             LiqPayCommand.NotifyCanExecuteChanged();
             DeleteCardCommand.NotifyCanExecuteChanged();
             SaveAutoPaymentSettingsCommand.NotifyCanExecuteChanged();

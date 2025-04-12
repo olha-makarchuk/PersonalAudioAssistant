@@ -1,15 +1,13 @@
-﻿using System.Net.Http.Headers;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PersonalAudioAssistant.Application.Interfaces;
-using System.Collections.Generic; // Make sure this is included
 
 namespace PersonalAudioAssistant.Application.Services
 {
-    public class ApiClient : IApiClient
+    public class ApiClientVoiceEmbedding : IApiClient
     {
         private readonly HttpClient _httpClient;
 
-        public ApiClient()
+        public ApiClientVoiceEmbedding()
         {
             _httpClient = new HttpClient();
         }
@@ -32,14 +30,11 @@ namespace PersonalAudioAssistant.Application.Services
 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
 
-                // Deserialize the JSON response into the EmbeddingResponse class
                 var embeddingResponse = JsonConvert.DeserializeObject<EmbeddingResponse>(jsonResponse);
 
-                // Check if the embedding was successfully deserialized and is not empty
                 if (embeddingResponse?.Embedding != null && embeddingResponse.Embedding.Count > 0)
                 {
-                    // Flatten the list of lists into a single List<double>
-                    return embeddingResponse.Embedding[0]; // Assuming the API always returns a single embedding vector
+                    return embeddingResponse.Embedding[0]; 
                 }
                 else
                 {
@@ -53,11 +48,12 @@ namespace PersonalAudioAssistant.Application.Services
                 return null;
             }
         }
-    }
 
+
+
+    }
     public class EmbeddingResponse
     {
-        // The "embedding" field in the JSON contains a list of lists of doubles
         [JsonProperty("embedding")]
         public List<List<double>> Embedding { get; set; }
     }

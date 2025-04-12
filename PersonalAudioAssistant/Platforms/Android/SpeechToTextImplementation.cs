@@ -4,6 +4,10 @@ using Android.OS;
 using Android.Runtime;
 using Android.Speech;
 using CommunityToolkit.Maui.Alerts;
+using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Application.Services;
+using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Services;
 using Plugin.Maui.Audio;
 
 namespace PersonalAudioAssistant.Platforms
@@ -26,7 +30,7 @@ namespace PersonalAudioAssistant.Platforms
         {
         }
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<IndividualParameters> allParameters, CancellationToken cancellationToken)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUser> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();
 
@@ -36,23 +40,22 @@ namespace PersonalAudioAssistant.Platforms
 
                 PartialResults = async sentence =>
                 {
-                    /*
                     bool processingCommand = false;
 
                     recognitionResult?.Report(sentence);
 
-                    IndividualParameters? matchedPhrase = null;
+                    SubUser? matchedPhrase = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
 
-                    foreach (var parameter in allParameters)
+                    foreach (var user in listUsers)
                     {
-                        if (string.IsNullOrWhiteSpace(parameter.StartPhrase))
+                        if (string.IsNullOrWhiteSpace(user.StartPhrase))
                             continue;
 
-                        string normalizedPhrase = parameter.StartPhrase.Trim().ToLowerInvariant();
+                        string normalizedPhrase = user.StartPhrase.Trim().ToLowerInvariant();
                         if (normalizedSentence.Contains(normalizedPhrase))
                         {
-                            matchedPhrase = parameter;
+                            matchedPhrase = user;
                             break;
                         }
                     }
@@ -69,14 +72,14 @@ namespace PersonalAudioAssistant.Platforms
                         await audioPlayerViewModel.PlayAudio();
 
                         IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
-                        var transcriber = new AudioTranscriptionClient(wsUrl, audioProvider);
+                        var transcriber = new ApiClientAudio(wsUrl, audioProvider);
 
-                        string answer = await transcriber.StreamAudioDataAsync(matchedPhrase.ApplicationUserId, matchedPhrase.VoiceId, cancellationToken);
+                        string answer = await transcriber.StreamAudioDataAsync(matchedPhrase.UserId, matchedPhrase.VoiceId, cancellationToken);
                         await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
                         await Task.Delay(100);
                         RestartListening(culture);
                     }
-                    processingCommand = false;*/
+                    processingCommand = false;
                 },
                 Results = sentence => taskResult.TrySetResult(sentence)
             };
@@ -210,7 +213,7 @@ namespace PersonalAudioAssistant.Platforms
             audioPlayer.PlaybackEnded += (sender, args) => tcs.TrySetResult();
 
             audioPlayer.Play();
-            await tcs.Task; // Очікуємо завершення
+            await tcs.Task; 
         }
     }
 }

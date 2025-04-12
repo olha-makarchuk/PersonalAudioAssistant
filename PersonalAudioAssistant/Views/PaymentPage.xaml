@@ -114,7 +114,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Спінер завантаження -->
         <ActivityIndicator
             IsVisible="{Binding IsBusy}"
             IsRunning="{Binding IsBusy}"
