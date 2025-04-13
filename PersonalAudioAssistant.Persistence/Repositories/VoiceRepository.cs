@@ -23,23 +23,25 @@ namespace PersonalAudioAssistant.Persistence.Repositories
         {
             Guid guidId = Guid.Parse(id);
             var voice = await _context.Voices.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
-            _context.Remove(voice);
+
+            _context.Remove(voice!);
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<Voice>> GetAllVoicesByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            var a = await _context.Voices
+            var allVoices = await _context.Voices
                 .Where(x => x.UserId == userId || x.UserId == null)
                 .ToListAsync(cancellationToken);
-            return a;
+
+            return allVoices;
         }
 
         public async Task<Voice> GetVoiceByIdAsync(string id, CancellationToken cancellationToken)
         {
             Guid guidId = Guid.Parse(id);
-
-            return await _context.Voices
-                .FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            var voice = await _context.Voices.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            return voice!;
         }
     }
 }

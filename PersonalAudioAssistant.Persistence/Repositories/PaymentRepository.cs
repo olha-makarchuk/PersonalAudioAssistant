@@ -22,13 +22,14 @@ namespace PersonalAudioAssistant.Persistence.Repositories
         public async Task<Payment> GetPaymentByIdAsync(string id, CancellationToken cancellationToken)
         {
             Guid guidId = Guid.Parse(id);
-            return await _context.Payment.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            var payment = await _context.Payment.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            return payment!;
         }
 
         public async Task<Payment> GetPaymentByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            var a = await _context.Payment.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
-            return a;
+            var payment = await _context.Payment.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            return payment;
         }
 
         public async Task UpdatePaymentAsync(Payment payment, CancellationToken cancellationToken)

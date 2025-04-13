@@ -2,9 +2,6 @@
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Persistence.Context;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.Persistence.Repositories
 {
@@ -28,14 +25,18 @@ namespace PersonalAudioAssistant.Persistence.Repositories
             return await _context.MainUsers.ToListAsync(cancellationToken);
         }
 
-        public async Task<MainUser?> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
+        public async Task<MainUser> GetUserByEmailAsync(string email, CancellationToken cancellationToken)
         {
-            return await _context.MainUsers.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+            var user = await _context.MainUsers.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+            return user!;
         }
 
-        public async Task<MainUser?> GetUserByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<MainUser> GetUserByIdAsync(string id, CancellationToken cancellationToken)
         {
-            return await _context.MainUsers.FindAsync(new object[] { id }, cancellationToken);
+            Guid guidId = Guid.Parse(id);
+
+            var user = await _context.MainUsers.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            return user!;
         }
 
         public async Task UpdateUser(MainUser user, CancellationToken cancellationToken)

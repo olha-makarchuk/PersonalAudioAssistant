@@ -66,8 +66,9 @@ async def receive_id(websocket):
             return None
 
         data = json.loads(init_message)
-        id_value = data.get("idUser")
-        id_voice = data.get("voiceId")
+        
+        id_value = data.get("UserId")
+        id_voice = data.get("VoiceId")
         
         if id_value is None:
             await websocket.send_text("Error: missing id")

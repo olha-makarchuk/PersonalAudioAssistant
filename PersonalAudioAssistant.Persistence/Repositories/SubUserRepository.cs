@@ -24,33 +24,38 @@ namespace PersonalAudioAssistant.Persistence.Repositories
         {
             Guid guidId = Guid.Parse(id);
             var user = await _context.SubUsers.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
-            _context.Remove(user);
+            _context.Remove(user!);
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<SubUser>> GetAllUsersByUserId(string userId, CancellationToken cancellationToken)
         {
-            var a = await _context.SubUsers
+            var allUsers = await _context.SubUsers
                 .Where(x => x.UserId == userId || x.UserId == null)
                 .ToListAsync(cancellationToken);
-            return a;
+
+            return allUsers;
         }
 
         public async Task<SubUser> GetUserByIdAsync(string id, CancellationToken cancellationToken)
         {
             Guid guidId = Guid.Parse(id);
-            return await _context.SubUsers.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            var user = await _context.SubUsers.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            return user!;
         }
 
         public async Task<SubUser> GetUserByNameAsync(string name, CancellationToken cancellationToken)
         {
-            return await _context.SubUsers.FirstOrDefaultAsync(x => x.UserName == name, cancellationToken);
+            var user = await _context.SubUsers.FirstOrDefaultAsync(x => x.UserName == name, cancellationToken);
+            return user!;
         }
 
         public async Task<SubUser> GetUserByStartPhraseAsync(string userId, string startPhrase, CancellationToken cancellationToken)
         {
-            return await _context.SubUsers
+            var user = await _context.SubUsers
                 .FirstOrDefaultAsync(x => x.StartPhrase == startPhrase && x.UserId == userId, cancellationToken);
+            return user!;
         }
 
         public async Task UpdateUser(SubUser user, CancellationToken cancellationToken)

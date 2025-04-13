@@ -4,8 +4,8 @@ namespace PersonalAudioAssistant.Domain.Entities
 {
     public class AppSettings: BaseEntity
     {
-        public string? Theme { get; set; }
-        public int Balance { get; set; }
-        public string? UserId { get; set; }
+        public required string Theme { get; set; }
+        public required int Balance { get; set; }
+        public required string? UserId { get; set; }
     }
 }

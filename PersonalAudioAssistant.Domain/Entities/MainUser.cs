@@ -4,10 +4,10 @@ namespace PersonalAudioAssistant.Domain.Entities
 {
     public class MainUser: BaseEntity
     {
-        public string? Email { get; set; }
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
-        public string? RefreshToken { get; set; }
-        public DateTime? RefreshTokenExpiryTime { get; set; }
+        public required string? Email { get; set; }
+        public required byte[] PasswordHash { get; set; }
+        public required byte[] PasswordSalt { get; set; }
+        public required string? RefreshToken { get; set; }
+        public required DateTime RefreshTokenExpiryTime { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System.Globalization;
 using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Platforms;
+using Plugin.Maui.Audio;
 
 namespace PersonalAudioAssistant
 {

@@ -1,11 +1,13 @@
 ﻿using System.Net.WebSockets;
+using System.Text;
 
 namespace PersonalAudioAssistant.Application.Services
 {
-    public class WebSocketService
+    public class WebSocketService : IDisposable
     {
         private readonly string wsUrl;
         private ClientWebSocket ws;
+        private bool disposed = false;
 
         public WebSocketService(string wsUrl)
         {
@@ -13,52 +15,58 @@ namespace PersonalAudioAssistant.Application.Services
             ws = new ClientWebSocket();
         }
 
-        public bool IsConnected => ws.State == WebSocketState.Open;
+        public bool IsConnected => ws != null && ws.State == WebSocketState.Open;
 
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
+            DisposeWebSocket();
             ws = new ClientWebSocket();
             await ws.ConnectAsync(new Uri(wsUrl), cancellationToken);
         }
 
         public async Task SendDataAsync(byte[] buffer, int length, CancellationToken cancellationToken)
         {
+            if (!IsConnected)
+                throw new InvalidOperationException("WebSocket не підключено.");
+
             await ws.SendAsync(new ArraySegment<byte>(buffer, 0, length),
-                WebSocketMessageType.Binary, true, cancellationToken);
+                WebSocketMessageType.Binary, endOfMessage: true, cancellationToken: cancellationToken);
         }
 
         public async Task<string> ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
+            if (!IsConnected)
+                throw new InvalidOperationException("WebSocket не підключено.");
+
             var buffer = new byte[1024];
-            while (ws.State == WebSocketState.Open)
+            try
             {
-                try
+                var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
-                    if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cancellationToken);
-                        break;
-                    }
-                    if (result.Count > 0)
-                    {
-                        string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        Console.WriteLine("Отримано повідомлення: " + message);
-                        return message;
-                    }
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cancellationToken);
+                    throw new WebSocketException("WebSocket закритий віддаленим хостом.");
                 }
-                catch (Exception ex)
+                if (result.Count > 0)
                 {
-                    Console.WriteLine("Помилка при отриманні повідомлення: " + ex.Message);
-                    return "Помилка при отриманні повідомлення";
+                    string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                    //Console.WriteLine("Отримано повідомлення: " + message);
+                    return message;
+                }
+                else
+                {
+                    throw new Exception("Отримано 0 байт даних.");
                 }
             }
-            return "Помилка при отриманні повідомлення";
+            catch (Exception ex)
+            {
+                throw new Exception("Помилка при отриманні повідомлення", ex);
+            }
         }
 
         public async Task CloseConnectionAsync()
         {
-            if (ws.State == WebSocketState.Open)
+            if (ws != null && ws.State == WebSocketState.Open)
             {
                 try
                 {
@@ -69,6 +77,26 @@ namespace PersonalAudioAssistant.Application.Services
                     Console.WriteLine("Exception під час CloseAsync: " + ex.Message);
                 }
             }
+            DisposeWebSocket();
+        }
+
+        private void DisposeWebSocket()
+        {
+            if (ws != null)
+            {
+                ws.Dispose();
+                ws = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                DisposeWebSocket();
+                disposed = true;
+            }
+            GC.SuppressFinalize(this);
         }
     }
 }

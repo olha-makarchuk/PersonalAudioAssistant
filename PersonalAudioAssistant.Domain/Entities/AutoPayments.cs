@@ -4,9 +4,9 @@ namespace PersonalAudioAssistant.Domain.Entities
 {
     public class AutoPayments: BaseEntity
     {
-        public bool IsAutoPayment { get; set; }
-        public int MinTokenThreshold { get; set; }
-        public int ChargeAmount { get; set; }
-        public string? UserId { get; set; }
+        public required bool IsAutoPayment { get; set; }
+        public required int MinTokenThreshold { get; set; }
+        public required int ChargeAmount { get; set; }
+        public required string? UserId { get; set; }
     }
 }

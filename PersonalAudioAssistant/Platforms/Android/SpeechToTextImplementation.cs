@@ -1,7 +1,5 @@
 ﻿using System.Globalization;
 using Android.Content;
-using Android.OS;
-using Android.Runtime;
 using Android.Speech;
 using CommunityToolkit.Maui.Alerts;
 using PersonalAudioAssistant.Application.Interfaces;
@@ -16,19 +14,7 @@ namespace PersonalAudioAssistant.Platforms
     {
         private SpeechRecognitionListener? listener;
         private SpeechRecognizer? speechRecognizer;
-        readonly IAudioManager _audioManager;
-        readonly IAudioRecorder _audioRecorder;
         private string wsUrl = "ws://10.0.2.2:8000/ws/audio";
-
-        public SpeechToTextImplementation(IAudioManager audioManager)
-        {
-            _audioManager = audioManager;
-            _audioRecorder = audioManager.CreateRecorder();
-        }
-
-        public SpeechToTextImplementation()
-        {
-        }
 
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUser> listUsers, CancellationToken cancellationToken)
         {
@@ -41,45 +27,46 @@ namespace PersonalAudioAssistant.Platforms
                 PartialResults = async sentence =>
                 {
                     bool processingCommand = false;
-
                     recognitionResult?.Report(sentence);
 
-                    SubUser? matchedPhrase = null;
+                    SubUser? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
+                    matchedUser = listUsers.FirstOrDefault(user =>
+                        !string.IsNullOrWhiteSpace(user.StartPhrase) &&
+                        normalizedSentence.Contains(user.StartPhrase.Trim().ToLowerInvariant())
+                    );
 
-                    foreach (var user in listUsers)
+                    if (matchedUser != null && !processingCommand)
                     {
-                        if (string.IsNullOrWhiteSpace(user.StartPhrase))
-                            continue;
+                        processingCommand = true;
 
-                        string normalizedPhrase = user.StartPhrase.Trim().ToLowerInvariant();
-                        if (normalizedSentence.Contains(normalizedPhrase))
+                        try
                         {
-                            matchedPhrase = user;
-                            break;
+                            PauseListening();
+
+                            await Toast.Make(matchedUser.StartPhrase).Show(cancellationToken);
+
+                            var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
+                            await audioPlayerHelper.PlayAudio();
+
+                            IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
+                            var transcriber = new ApiClientAudio(wsUrl, audioProvider);
+
+                            string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken);
+                            await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
+
+                            await Task.Delay(100);
+                        }
+                        catch (Exception ex)
+                        {
+                            await Toast.Make("Помилка з listener: " + ex.Message).Show(cancellationToken);
+                        }
+                        finally
+                        {
+                            processingCommand = false;
+                            RestartListening(culture);
                         }
                     }
-                    if (matchedPhrase != null)
-                    {
-                        if (processingCommand)
-                            return;
-
-                        processingCommand = true;
-                        PauseListening();
-                        await Toast.Make(matchedPhrase.StartPhrase).Show(cancellationToken);
-
-                        AudioPlayerHelper audioPlayerViewModel = new AudioPlayerHelper(new AudioManager());
-                        await audioPlayerViewModel.PlayAudio();
-
-                        IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
-                        var transcriber = new ApiClientAudio(wsUrl, audioProvider);
-
-                        string answer = await transcriber.StreamAudioDataAsync(matchedPhrase.UserId, matchedPhrase.VoiceId, cancellationToken);
-                        await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
-                        await Task.Delay(100);
-                        RestartListening(culture);
-                    }
-                    processingCommand = false;
                 },
                 Results = sentence => taskResult.TrySetResult(sentence)
             };
@@ -103,28 +90,6 @@ namespace PersonalAudioAssistant.Platforms
             }
         }
 
-        private void PauseListening()
-        {
-            speechRecognizer?.StopListening();
-        }
-
-        private void RestartListening(CultureInfo culture)
-        {
-            // Якщо speechRecognizer був знищений, створюємо новий
-            if (speechRecognizer == null)
-            {
-                speechRecognizer = SpeechRecognizer.CreateSpeechRecognizer(Android.App.Application.Context);
-                speechRecognizer.SetRecognitionListener(listener);
-            }
-            speechRecognizer.StartListening(CreateSpeechIntent(culture));
-        }
-
-        private void StopRecording()
-        {
-            speechRecognizer?.StopListening();
-            speechRecognizer?.Destroy();
-        }
-
         private Intent CreateSpeechIntent(CultureInfo culture)
         {
             var intent = new Intent(RecognizerIntent.ActionRecognizeSpeech);
@@ -144,76 +109,32 @@ namespace PersonalAudioAssistant.Platforms
             return status == PermissionStatus.Granted && isAvailable;
         }
 
+        private void RestartListening(CultureInfo culture)
+        {
+            if (speechRecognizer == null)
+            {
+                speechRecognizer = SpeechRecognizer.CreateSpeechRecognizer(Android.App.Application.Context);
+                speechRecognizer.SetRecognitionListener(listener);
+            }
+            speechRecognizer.StartListening(CreateSpeechIntent(culture));
+        }
+
         public ValueTask DisposeAsync()
         {
             listener?.Dispose();
             speechRecognizer?.Dispose();
             return ValueTask.CompletedTask;
         }
-    }
 
-    public class SpeechRecognitionListener : Java.Lang.Object, IRecognitionListener
-    {
-        public Action<SpeechRecognizerError>? Error { get; set; }
-        public Action<string>? PartialResults { get; set; }
-        public Action<string>? Results { get; set; }
-
-        public void OnBeginningOfSpeech() { }
-
-        public void OnBufferReceived(byte[]? buffer) { }
-
-        public void OnEndOfSpeech() { }
-
-        public void OnError([GeneratedEnum] SpeechRecognizerError error)
+        private void PauseListening()
         {
-            Error?.Invoke(error);
+            speechRecognizer?.StopListening();
         }
 
-        public void OnEvent(int eventType, Bundle? @params) { }
-
-        public void OnPartialResults(Bundle? partialResults)
+        private void StopRecording()
         {
-            SendResults(partialResults, PartialResults);
-        }
-
-        public void OnReadyForSpeech(Bundle? @params) { }
-
-        public void OnResults(Bundle? results)
-        {
-            SendResults(results, Results);
-        }
-
-        public void OnRmsChanged(float rmsdB) { }
-
-        private void SendResults(Bundle? bundle, Action<string>? action)
-        {
-            var matches = bundle?.GetStringArrayList(SpeechRecognizer.ResultsRecognition);
-            if (matches == null || matches.Count == 0)
-            {
-                return;
-            }
-            action?.Invoke(matches.First());
-        }
-    }
-
-    public class AudioPlayerHelper
-    {
-        readonly IAudioManager audioManager;
-
-        public AudioPlayerHelper(IAudioManager audioManager)
-        {
-            this.audioManager = audioManager;
-        }
-
-        public async Task PlayAudio()
-        {
-            var audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("Resources/Media/Ask.wav"));
-
-            var tcs = new TaskCompletionSource();
-            audioPlayer.PlaybackEnded += (sender, args) => tcs.TrySetResult();
-
-            audioPlayer.Play();
-            await tcs.Task; 
+            speechRecognizer?.StopListening();
+            speechRecognizer?.Destroy();
         }
     }
 }

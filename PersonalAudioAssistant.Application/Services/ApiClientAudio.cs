@@ -1,4 +1,5 @@
 ﻿using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Domain.Entities;
 using System.Text;
 using System.Text.Json;
 
@@ -15,57 +16,51 @@ namespace PersonalAudioAssistant.Application.Services
             this.audioDataProvider = audioDataProvider;
         }
 
-        public async Task<string> StreamAudioDataAsync(string idUser, string voiceId, CancellationToken cancellationToken)
+        public async Task<string> StreamAudioDataAsync(SubUser subUser, CancellationToken cancellationToken)
         {
             try
             {
-                Console.WriteLine("Підключення до сервера для стрімінгу...");
                 await webSocketService.ConnectAsync(cancellationToken);
-                Console.WriteLine("Підключено. Розпочато стрімінг аудіо...");
 
-                var idPayload = JsonSerializer.Serialize(new { idUser, voiceId });
-                var idBytes = Encoding.UTF8.GetBytes(idPayload);
+                var dataPayload = JsonSerializer.Serialize(new { subUser.UserId, subUser.VoiceId });
+                var idBytes = Encoding.UTF8.GetBytes(dataPayload);
                 await webSocketService.SendDataAsync(idBytes, idBytes.Length, cancellationToken);
 
                 string response = await webSocketService.ReceiveMessagesAsync(cancellationToken);
+
                 if (response != "OK")
                 {
-                    Console.WriteLine("Сервер відхилив запит. Перериваємо стрімінг.");
                     await webSocketService.CloseConnectionAsync();
-                    return "Помилка: сервер відхилив запит";
+                    throw new Exception($"Помилка: сервер відхилив запит. Отримано відповідь: {response}");
                 }
 
-                Console.WriteLine("Ідентифікатор прийнято. Розпочато стрімінг аудіо...");
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                var receiveTask = Task.Run(() => webSocketService.ReceiveMessagesAsync(cancellationToken), cancellationToken);
+                var receiveTask = webSocketService.ReceiveMessagesAsync(linkedCts.Token);
+
                 var sendTask = Task.Run(async () =>
                 {
-                    while (!cancellationToken.IsCancellationRequested && webSocketService.IsConnected)
+                    while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
                     {
-                        byte[] buffer = await audioDataProvider.GetAudioDataAsync(cancellationToken);
+                        byte[] buffer = await audioDataProvider.GetAudioDataAsync(linkedCts.Token);
                         if (buffer?.Length > 0)
                         {
-                            await webSocketService.SendDataAsync(buffer, buffer.Length, cancellationToken);
+                            await webSocketService.SendDataAsync(buffer, buffer.Length, linkedCts.Token);
                         }
-                        await Task.Delay(50, cancellationToken);
+                        await Task.Delay(50, linkedCts.Token);
                     }
-                }, cancellationToken);
+                }, linkedCts.Token);
+
+                await Task.WhenAny(sendTask, receiveTask);
 
                 var finishedTask = await Task.WhenAny(sendTask, receiveTask);
 
-                if (finishedTask == receiveTask)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    string finalResponse = await receiveTask;
-                    await webSocketService.CloseConnectionAsync();
-                    return finalResponse;
-                }
-                else
-                {
-                    string finalResponse = await receiveTask;
-                    await webSocketService.CloseConnectionAsync();
-                    return finalResponse;
-                }
+                linkedCts.Cancel();
+
+                string finalResponse = await receiveTask;
+                await webSocketService.CloseConnectionAsync();
+
+                return finalResponse;
             }
             catch (Exception ex)
             {

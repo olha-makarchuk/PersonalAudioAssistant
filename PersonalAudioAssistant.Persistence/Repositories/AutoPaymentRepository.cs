@@ -22,12 +22,14 @@ namespace PersonalAudioAssistant.Persistence.Repositories
         public async Task<AutoPayments> GetAutoPaymentByIdAsync(string id, CancellationToken cancellationToken)
         {
             Guid guidId = Guid.Parse(id);
-            return await _context.AutoPayments.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            var autoPayment = await _context.AutoPayments.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
+            return autoPayment!;
         }
 
         public async Task<AutoPayments> GetAutoPaymentByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            return await _context.AutoPayments.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            var autoPayment = await _context.AutoPayments.FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            return autoPayment!;
         }
 
         public async Task UpdateAutoPaymentAsync(AutoPayments autoPayment, CancellationToken cancellationToken)
