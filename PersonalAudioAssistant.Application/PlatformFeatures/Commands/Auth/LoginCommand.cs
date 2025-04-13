@@ -1,16 +1,15 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Contracts.Auth;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 {
     public class LoginCommand : IRequest<MainUserLoginResponse>
     {
-        public string? Email { get; set; }
-        public string? Password { get; set; }
+        public required string Email { get; set; }
+        public required string Password { get; set; }
     }
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, MainUserLoginResponse>
@@ -18,12 +17,14 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
         private readonly IMainUserRepository _mainUserRepository;
         private readonly TokenBase _tokenApiBase;
         private readonly IConfiguration _configuration;
+        private readonly PasswordManager _passwordManager;
 
-        public LoginCommandHandler(IMainUserRepository mainUserRepository, TokenBase tokenApiBase, IConfiguration configuration)
+        public LoginCommandHandler(IMainUserRepository mainUserRepository, TokenBase tokenApiBase, IConfiguration configuration, PasswordManager passwordManager)
         {
             _mainUserRepository = mainUserRepository;
             _tokenApiBase = tokenApiBase;
             _configuration = configuration;
+            _passwordManager = passwordManager;
         }
 
         public async Task<MainUserLoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -40,7 +41,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                 throw new ApplicationException($"Користувача з таким email не зареєстровано");
             }
 
-            if (!VerifyPasswordHash(request.Password, userExist.PasswordHash, userExist.PasswordSalt))
+            if (!_passwordManager.VerifyPasswordHash(request.Password, userExist.PasswordHash, userExist.PasswordSalt))
             {
                 throw new Exception("Логін або пароль не вірні");
             }
@@ -60,6 +61,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
             return new MainUserLoginResponse
             {
+                Id = userExist.Id.ToString(),
                 UserId = userExist.Id.ToString(),
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
@@ -67,24 +69,5 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
             };
         }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
-            }
-        }
     }
-
-    public class MainUserLoginResponse
-    {
-        public string? UserId { get; set; }
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public DateTime AccessExpiresAt { get; set; }
-        public DateTime RefreshExpiresAt { get; set; }
-    }
-
 }

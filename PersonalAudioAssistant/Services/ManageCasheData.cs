@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
-using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
+using PersonalAudioAssistant.Contracts.SubUser;
+using PersonalAudioAssistant.Contracts.AppSettings;
 
 namespace PersonalAudioAssistant.Services
 {
@@ -21,9 +21,9 @@ namespace PersonalAudioAssistant.Services
             _mediator = mediator;
         }
 
-        public async Task<List<SubUser>> GetUsersAsync(Action<double> progress = null)
+        public async Task<List<SubUserResponse>> GetUsersAsync(Action<double> progress = null)
         {
-            if (!_cache.TryGetValue(UsersCacheKey, out List<SubUser> users))
+            if (!_cache.TryGetValue(UsersCacheKey, out List<SubUserResponse> users))
             {
                 await Task.Delay(1000); 
                 users = await _mediator.Send(new GetAllUsersByUserIdQuery() { UserId = await SecureStorage.GetAsync("user_id")});
@@ -42,9 +42,9 @@ namespace PersonalAudioAssistant.Services
             await GetUsersAsync();
         }
 
-        public async Task<AppSettings> GetAppSettingsAsync(Action<double> progress = null)
+        public async Task<AppSettingsResponse> GetAppSettingsAsync(Action<double> progress = null)
         {
-            if (!_cache.TryGetValue(SettingsCacheKey, out AppSettings settings))
+            if (!_cache.TryGetValue(SettingsCacheKey, out AppSettingsResponse settings))
             {
                 await Task.Delay(800); 
                 var userId = await SecureStorage.GetAsync("user_id");

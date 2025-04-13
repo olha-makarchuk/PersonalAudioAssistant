@@ -1,22 +1,21 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.MainUserQuery;
-using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Contracts.SubUser;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery
 {
-    public class GetUserByIdQuery : IRequest<SubUser>
+    public class GetUserByIdQuery : IRequest<SubUserResponse>
     {
-        public string UserId { get; set; } = null!;
+        public required string UserId { get; set; } 
 
-        public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, SubUser>
+        public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, SubUserResponse>
         {
             private readonly ISubUserRepository _subUserRepository;
             public GetUserByIdQueryHandler(ISubUserRepository subUserRepository)
             {
                 _subUserRepository = subUserRepository;
             }
-            public async Task<SubUser> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
+            public async Task<SubUserResponse> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
             {
                 var user = await _subUserRepository.GetUserByIdAsync(query.UserId, cancellationToken);
                 if (user == null)
@@ -24,7 +23,20 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQue
                     throw new Exception("User not found");
                 }
 
-                return user;
+                var userResponse = new SubUserResponse()
+                {
+                    Id = user.Id.ToString(),
+                    UserName = user.UserName,
+                    UserId = user.UserId,
+                    StartPhrase = user.StartPhrase,
+                    EndPhrase = user.EndPhrase,
+                    EndTime = user.EndTime,
+                    UserVoice = user.UserVoice,
+                    VoiceId = user.VoiceId,
+                    PasswordHash = user.PasswordHash
+                };
+
+                return userResponse;
             }
         }
     }

@@ -1,20 +1,14 @@
 ﻿using MediatR;
-using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Domain.Entities;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands
 {
     public class UpdateSettingsCommand : IRequest
     {
-        public string? UserId { get; set; }
-        public string? Theme { get; set; }
-        public string? Payment { get; set; }
-        public int MinTokenThreshold { get; set; }
-        public int ChargeAmount { get; set; }
+        public required string UserId { get; set; }
+        public required string Theme { get; set; }
+        public required int Balance { get; set; }
     }
 
     public class UpdateSettingsCommandHandler : IRequestHandler<UpdateSettingsCommand>
@@ -33,16 +27,15 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsC
             {
                 throw new Exception("Settings not found");
             }
-            /*
+            
             var newSettings = new AppSettings()
             {
                 Theme = request.Theme,
-                Payment = request.Payment,
-                MinTokenThreshold = request.MinTokenThreshold,
-                ChargeAmount = request.ChargeAmount
+                Balance = request.Balance,
+                UserId = request.UserId
             };
 
-            await _appSettingsRepository.UpdateSettingsAsync(newSettings, cancellationToken);*/
+            await _appSettingsRepository.UpdateSettingsAsync(newSettings, cancellationToken);
         }
     }
 }

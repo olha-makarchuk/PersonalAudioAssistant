@@ -1,4 +1,5 @@
 ﻿using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Domain.Entities;
 using System.Text;
 using System.Text.Json;
@@ -16,7 +17,7 @@ namespace PersonalAudioAssistant.Application.Services
             this.audioDataProvider = audioDataProvider;
         }
 
-        public async Task<string> StreamAudioDataAsync(SubUser subUser, CancellationToken cancellationToken)
+        public async Task<string> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken)
         {
             try
             {

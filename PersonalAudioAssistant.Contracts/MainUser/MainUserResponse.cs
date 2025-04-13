@@ -1,10 +1,9 @@
-﻿using PersonalAudioAssistant.Domain.Common;
-
-namespace PersonalAudioAssistant.Domain.Entities
+﻿namespace PersonalAudioAssistant.Contracts.MainUser
 {
-    public class MainUser: BaseEntity
+    public class MainUserResponse
     {
-        public  string? Email { get; set; }
+        public required string? Id { get; set; }
+        public string? Email { get; set; }
         public byte[]? PasswordHash { get; set; }
         public byte[]? PasswordSalt { get; set; }
         public string? RefreshToken { get; set; }

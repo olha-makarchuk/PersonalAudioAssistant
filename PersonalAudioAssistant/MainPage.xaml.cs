@@ -1,8 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
 using PersonalAudioAssistant.Services;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant
 {
@@ -10,15 +8,13 @@ namespace PersonalAudioAssistant
     {
         private AuthTokenManager _authTokenManager;
         private readonly IMediator _mediator;
-        private readonly IMemoryCache _cache;
         private readonly ManageCacheData _manageCacheData;
 
-        public MainPage(IMediator mediator, GoogleUserService googleUserService, IMemoryCache cache, ManageCacheData manageCacheData)
+        public MainPage(IMediator mediator, GoogleUserService googleUserService, ManageCacheData manageCacheData)
         {
             InitializeComponent();
             _mediator = mediator;
             _authTokenManager = new AuthTokenManager(googleUserService, mediator);
-            _cache = cache;
             _manageCacheData = manageCacheData;
         }
 

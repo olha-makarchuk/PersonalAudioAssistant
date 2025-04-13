@@ -7,8 +7,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 {
     public class LoginWithGoogleCommand : IRequest<string>
     {
-        public string? Email { get; set; }
-        public string? RefreshToken { get; set; }
+        public required string Email { get; set; }
+        public required string RefreshToken { get; set; }
     }
 
     public class LoginWithGoogleCommandHandler : IRequestHandler<LoginWithGoogleCommand, string>
@@ -26,7 +26,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
         public async Task<string> Handle(LoginWithGoogleCommand request, CancellationToken cancellationToken = default)
         {
-            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]);
+            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]!);
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException("Не всі передані поля заповнені", nameof(request.Email));
@@ -37,12 +37,9 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
             if (user is null)
             {
-                mainUser = new()
-                {
-                    Email = request.Email,
-                    RefreshToken = request.RefreshToken,
-                    RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
-                };
+                mainUser.Email = request.Email;
+                mainUser.RefreshToken = request.RefreshToken;
+                mainUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays);
 
                 await _mainUserRepository.CreateUser(mainUser, cancellationToken);
             }
@@ -54,7 +51,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                 await _mainUserRepository.UpdateUser(user, cancellationToken);
             }
 
-            return user.Id.ToString();
+            return user!.Id.ToString();
         }
     }
 }

@@ -15,8 +15,8 @@ public class TokenBase
 
     public string GenerateToken(IEnumerable<Claim> claims)
     {
-        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTKey:Secret"]));
-        var expiryHours = double.Parse(_configuration["JWTKey:ExpiryHours"]);
+        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTKey:Secret"]!));
+        var expiryHours = double.Parse(_configuration["JWTKey:ExpiryHours"]!);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -40,7 +40,7 @@ public class TokenBase
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
-        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTKey:Secret"]));
+        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWTKey:Secret"]!));
 
         var tokenValidationParameters = new TokenValidationParameters
         {

@@ -5,7 +5,6 @@ using System.Reflection;
 using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Persistence.Context;
 using PersonalAudioAssistant.Services;
-using MediatR;
 using PeronalAudioAssistant.Application.PlatformFeatures;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Persistence.Repositories;
@@ -15,6 +14,7 @@ using PersonalAudioAssistant.Views.Users;
 using PersonalAudioAssistant.ViewModel.Users;
 using PersonalAudioAssistant.Application.Services;
 using Microsoft.EntityFrameworkCore;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -25,11 +25,10 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
 
-        // Завантаження конфігурації
         var getAssemebly = Assembly.GetExecutingAssembly();
         using var stream = getAssemebly.GetManifestResourceStream("PersonalAudioAssistant.appsettings.json");
 
-        _configuration = new ConfigurationBuilder().AddJsonStream(stream).Build();
+        _configuration = new ConfigurationBuilder().AddJsonStream(stream!).Build();
         builder.Configuration.AddConfiguration(_configuration);
 
         builder
@@ -56,6 +55,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<GoogleUserService>();
         builder.Services.AddScoped<TokenBase>();
         builder.Services.AddScoped<ManageCacheData>();
+        builder.Services.AddScoped<PasswordManager>();
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
 
@@ -84,7 +84,7 @@ public static class MauiProgram
         // CosmosDb
         builder.Services.AddDbContext<CosmosDbContext>(options =>
             options.UseCosmos(
-                _configuration.GetConnectionString("CosmosConnection"),
+                _configuration.GetConnectionString("CosmosConnection")!,
                 databaseName: "AudioAssistantDB"),
             ServiceLifetime.Scoped);
 

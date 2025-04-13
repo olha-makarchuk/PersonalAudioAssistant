@@ -1,4 +1,3 @@
-using AndroidX.Lifecycle;
 using PersonalAudioAssistant.ViewModel;
 
 namespace PersonalAudioAssistant.Views;

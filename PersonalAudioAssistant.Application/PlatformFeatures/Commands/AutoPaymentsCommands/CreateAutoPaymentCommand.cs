@@ -1,17 +1,12 @@
 ﻿using MediatR;
-using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Domain.Entities;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands
 {
     public class CreateAutoPaymentCommand: IRequest
     {
-        public string? UserId { get; set; }
+        public required string UserId { get; set; }
     }
 
     public class CreateAutoPaymentCommandHandler : IRequestHandler<CreateAutoPaymentCommand>

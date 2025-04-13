@@ -7,7 +7,7 @@ namespace PersonalAudioAssistant.Services
     {
         private const int RATE = 16000;
         private const ChannelIn CHANNEL_CONFIG = ChannelIn.Mono;
-        private const Android.Media.Encoding AUDIO_FORMAT = Android.Media.Encoding.Pcm16bit;
+        private const Encoding AUDIO_FORMAT = Encoding.Pcm16bit;
         private readonly int minBufferSize;
         private AudioRecord audioRecord;
         private bool disposed;

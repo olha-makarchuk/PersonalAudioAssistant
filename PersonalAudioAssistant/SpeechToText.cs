@@ -1,16 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Globalization;
-using Microsoft.Extensions.Configuration;
-using PersonalAudioAssistant.Domain.Entities;
+﻿using System.Globalization;
+using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Platforms;
-using Plugin.Maui.Audio;
 
 namespace PersonalAudioAssistant
 {
     public interface ISpeechToText : IAsyncDisposable
     {
         Task<bool> RequestPermissions();
-        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUser> listUsers, CancellationToken cancellationToken);
+        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken);
     }
 
     public static class SpeechToText
@@ -22,7 +19,7 @@ namespace PersonalAudioAssistant
             return Default.RequestPermissions();
         }
 
-        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUser> listUsers, CancellationToken cancellationToken)
+        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             return Default.Listen(culture, recognitionResult, listUsers, cancellationToken);
         }

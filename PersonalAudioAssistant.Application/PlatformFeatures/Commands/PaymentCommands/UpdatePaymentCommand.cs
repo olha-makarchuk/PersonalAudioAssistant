@@ -5,18 +5,20 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCo
 {
     public class UpdatePaymentCommand : IRequest
     {
-        public string? UserId { get; set; }
-        public string? PaymentGatewayToken { get; set; }
-        public string? MaskedCardNumber { get; set; }
+        public required string UserId { get; set; }
+        public required string PaymentGatewayToken { get; set; }
+        public required string MaskedCardNumber { get; set; }
     }
 
     public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand>
     {
         private readonly IPaymentRepository _paymentRepository;
+
         public UpdatePaymentCommandHandler(IPaymentRepository paymentRepository)
         {
             _paymentRepository = paymentRepository;
         }
+
         public async Task Handle(UpdatePaymentCommand request, CancellationToken cancellationToken)
         {
             try

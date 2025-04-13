@@ -4,7 +4,8 @@ using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.VoiceQuery;
-using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Contracts.SubUser;
+using PersonalAudioAssistant.Contracts.Voice;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
@@ -20,7 +21,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
         private Stream _recordedAudioStream;
-        private List<Voice> allVoices = new List<Voice>();
+        private List<VoiceResponse> allVoices = new List<VoiceResponse>();
 
         [ObservableProperty]
         private bool isBusy;
@@ -47,10 +48,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private string password;
 
         [ObservableProperty]
-        private SubUser subUser = new SubUser();
+        private SubUserResponse subUser = new SubUserResponse();
 
         [ObservableProperty]
-        private Voice selectedVoice;
+        private VoiceResponse selectedVoice;
 
         [ObservableProperty]
         private string selectedVoiceUrl;
@@ -65,7 +66,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private int selectedEndTime = 2;
 
         [ObservableProperty]
-        private ObservableCollection<Voice> voices = new ObservableCollection<Voice>();
+        private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
 
         [ObservableProperty]
         private ObservableCollection<int> endTimeOptions = new ObservableCollection<int>(Enumerable.Range(2, 9));
@@ -312,7 +313,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         public void OnNavigatedFrom()
         {
             UserName = null;
-            SubUser = new SubUser();
+            SubUser = new SubUserResponse();
             SelectedVoice = null;
             SelectedVoiceUrl = null;
             IsEndPhraseSelected = false;
@@ -327,7 +328,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             ResetGenderFilter();
             ResetUseCaseFilter();
 
-            Voices = new ObservableCollection<Voice>(allVoices);
+            Voices = new ObservableCollection<VoiceResponse>(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
             SelectedVoiceUrl = SelectedVoice?.URL;
         }
@@ -342,7 +343,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             ApplyVoiceFilter();
         }
 
-        public ObservableCollection<Voice> ApplyFilter(List<Voice> allVoices)
+        public ObservableCollection<VoiceResponse> ApplyFilter(List<VoiceResponse> allVoices)
         {
             var filtered = allVoices.AsEnumerable();
 
@@ -362,10 +363,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 filtered = filtered.Where(v => v.UseCase != null &&
                     v.UseCase.Contains(FilterUseCase, StringComparison.OrdinalIgnoreCase));
 
-            return new ObservableCollection<Voice>(filtered);
+            return new ObservableCollection<VoiceResponse>(filtered);
         }
 
-        partial void OnSelectedVoiceChanged(Voice value)
+        partial void OnSelectedVoiceChanged(VoiceResponse value)
         {
             if (value != null)
             {

@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
 using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands

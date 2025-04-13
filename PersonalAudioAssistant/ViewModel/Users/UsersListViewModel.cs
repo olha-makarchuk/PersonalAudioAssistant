@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Caching.Memory;
-using PersonalAudioAssistant.Domain.Entities;
+using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using System.Collections.ObjectModel;
 
@@ -9,19 +9,19 @@ namespace PersonalAudioAssistant.ViewModel.Users
 {
     public partial class UsersListViewModel : ObservableObject
     {
-        private SubUser _selectedUser;
+        private SubUserResponse _selectedUser;
         private readonly ManageCacheData _manageCacheData;
 
         [ObservableProperty]
-        ObservableCollection<SubUser> users;
+        ObservableCollection<SubUserResponse> users;
 
         public UsersListViewModel(IMemoryCache cache, ManageCacheData manageCacheData)
         {
             _manageCacheData = manageCacheData;
-            Users = new ObservableCollection<SubUser>();
+            Users = new ObservableCollection<SubUserResponse>();
         }
 
-        public SubUser SelectedUser
+        public SubUserResponse SelectedUser
         {
             get => _selectedUser;
             set
@@ -45,7 +45,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
-        private async void OnUserSelected(SubUser user)
+        private async void OnUserSelected(SubUserResponse user)
         {
             await Shell.Current.GoToAsync($"/UpdateUserPage?userId={user.Id}");
             SelectedUser = null;

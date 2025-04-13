@@ -116,7 +116,7 @@ namespace PersonalAudioAssistant.Services
             };
             await SecureStorage.SetAsync("is_google", "false");
 
-            await SignIn(tokenResponse, response.UserId, response.RefreshExpiresAt);
+            await SignIn(tokenResponse, response.Id, response.RefreshExpiresAt);
         }
 
         public async Task SignOutAsync()
@@ -184,7 +184,6 @@ namespace PersonalAudioAssistant.Services
             }
             catch (Exception ex)
             {
-                //await SignOutAsync();
                 await InitializeAsync();
                 throw new Exception($"Помилка оновлення токену: {ex.Message}");
             }

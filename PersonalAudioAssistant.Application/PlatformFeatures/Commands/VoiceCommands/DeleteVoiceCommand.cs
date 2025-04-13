@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands
+﻿namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands
 {
     class DeleteVoiceCommand
     {

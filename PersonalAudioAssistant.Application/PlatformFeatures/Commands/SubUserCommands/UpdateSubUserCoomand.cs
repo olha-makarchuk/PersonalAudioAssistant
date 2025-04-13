@@ -1,21 +1,18 @@
 ﻿using MediatR;
-using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Domain.Entities;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands
 {
     public class UpdateSubUserCoomand : IRequest
     {
-        public string? UserId { get; set; }
-        public string? UserName { get; set; }
-        public string? StartPhrase { get; set; }
+        public required string UserId { get; set; }
+        public required string UserName { get; set; }
+        public required string StartPhrase { get; set; }
         public string? EndPhrase { get; set; }
         public string? EndTime { get; set; }
-        public string? VoiceId { get; set; }
-        public List<double>? UserVoice { get; set; }
+        public required string VoiceId { get; set; }
+        public required List<double> UserVoice { get; set; }
         public string? Password { get; set; }
         public string? NewPassword { get; set; }
     }
@@ -23,12 +20,12 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
     public class UpdateSubUserCoomandHandler : IRequestHandler<UpdateSubUserCoomand>
     {
         private readonly ISubUserRepository _subUserRepository;
-        private readonly IConfiguration _configuration;
+        private readonly PasswordManager _passwordManager;
 
-        public UpdateSubUserCoomandHandler(ISubUserRepository subUserRepository, IConfiguration configuration)
+        public UpdateSubUserCoomandHandler(ISubUserRepository subUserRepository, PasswordManager passwordManager)
         {
             _subUserRepository = subUserRepository;
-            _configuration = configuration;
+            _passwordManager = passwordManager;
         }
 
         public async Task Handle(UpdateSubUserCoomand request, CancellationToken cancellationToken = default)
@@ -36,45 +33,33 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
             var user = await _subUserRepository.GetUserByStartPhraseAsync(request.UserId, request.StartPhrase, cancellationToken);
             if (user != null)
             {
-                throw new Exception("User with this start phrase already exists.");
+                throw new Exception("Користувач із цією стартовою вразою вже існує");
             }
-
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-            {
-                throw new Exception("Не вірний пароль");
-            }
-
-            CreatePasswordHash(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
 
             var newUser = new SubUser()
             {
+                UserId = request.UserId,
                 UserName = request.UserName,
                 StartPhrase = request.StartPhrase,
                 EndPhrase = request.EndPhrase,
                 EndTime = request.EndTime,
                 VoiceId = request.VoiceId,
-                //UserVoice = request.UserVoice,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt
+                UserVoice = request.UserVoice
             };
 
-            await _subUserRepository.UpdateUser(newUser, cancellationToken);
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using var hmac = new HMACSHA512();
-            passwordSalt = hmac.Key;
-            passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
+            if (request.Password != null && request.NewPassword != null)
             {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
+                if (!_passwordManager.VerifyPasswordHash(request.Password, user!.PasswordHash!, user.PasswordSalt!))
+                {
+                    throw new Exception("Не вірний пароль");
+                }
+                _passwordManager.CreatePasswordHash(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
+
+                newUser.PasswordHash = passwordHash;
+                newUser.PasswordSalt = passwordSalt;
             }
+
+            await _subUserRepository.UpdateUser(newUser, cancellationToken);
         }
     }
 }

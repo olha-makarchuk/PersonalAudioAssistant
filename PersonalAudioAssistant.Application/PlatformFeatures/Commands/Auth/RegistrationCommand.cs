@@ -1,17 +1,16 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Contracts.Auth;
 using PersonalAudioAssistant.Domain.Entities;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 {
     public class RegistrationCommand : IRequest<MainUserRegisterResponse>
     {
-        public string? Email { get; set; }
-        public string? Password { get; set; }
+        public required string Email { get; set; }
+        public required string Password { get; set; }
     }
 
     public class RegistrationCommandHandler : IRequestHandler<RegistrationCommand, MainUserRegisterResponse>
@@ -20,28 +19,30 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
         private readonly TokenBase _tokenApiBase;
         private readonly IConfiguration _configuration;
         private readonly IAppSettingsRepository _appSettingsRepository;
+        private readonly PasswordManager _passwordManager;
 
-        public RegistrationCommandHandler(IMainUserRepository mainUserRepository, TokenBase tokenApiBase, IConfiguration configuration, IAppSettingsRepository appSettingsRepository)
+        public RegistrationCommandHandler(IMainUserRepository mainUserRepository, TokenBase tokenApiBase, IConfiguration configuration, IAppSettingsRepository appSettingsRepository, PasswordManager passwordManager)
         {
             _mainUserRepository = mainUserRepository;
             _tokenApiBase = tokenApiBase;
             _configuration = configuration;
             _appSettingsRepository = appSettingsRepository;
+            _passwordManager = passwordManager;
         }
 
         public async Task<MainUserRegisterResponse> Handle(RegistrationCommand request, CancellationToken cancellationToken = default)
         {
-            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]);
-            var TokenExpiryTimeInHours = double.Parse(_configuration["JWTKey:ExpiryHours"]);
+            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]!);
+            var TokenExpiryTimeInHours = double.Parse(_configuration["JWTKey:ExpiryHours"]!);
 
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Заповніть всі поля");
+                throw new ArgumentException("Не всі поля заповнені");
 
             var existingUser = await _mainUserRepository.GetUserByEmailAsync(request.Email, cancellationToken);
             if (existingUser != null)
                 throw new InvalidOperationException("Користувач з таким email вже існує");
 
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            _passwordManager.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
             var user = new MainUser
             {
@@ -50,7 +51,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                 PasswordSalt = passwordSalt,
                 RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
             };
-
 
             var claims = new List<Claim>
             {
@@ -68,28 +68,12 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
             return new MainUserRegisterResponse
             {
-                UserId = userNew.Id.ToString(),
+                Id = userNew.Id.ToString(),
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 AccessExpiresAt = DateTime.UtcNow.AddHours(TokenExpiryTimeInHours),
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
             };
         }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using var hmac = new HMACSHA512();
-            passwordSalt = hmac.Key;
-            passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        }
-    }
-
-    public class MainUserRegisterResponse
-    {
-        public string UserId { get; set; }
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public DateTime AccessExpiresAt { get; set; }
-        public DateTime RefreshExpiresAt { get; set; }
     }
 }

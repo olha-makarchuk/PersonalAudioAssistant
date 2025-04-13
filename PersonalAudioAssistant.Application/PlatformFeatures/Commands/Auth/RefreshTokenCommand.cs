@@ -1,18 +1,15 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
-using System;
-using System.Collections.Generic;
+using PersonalAudioAssistant.Contracts.Auth;
 using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 {
     public class RefreshTokenCommand : IRequest<TokenApiResponse>
     {
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
+        public required string AccessToken { get; set; }
+        public required string RefreshToken { get; set; }
     }
 
     public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, TokenApiResponse>
@@ -30,7 +27,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
         public async Task<TokenApiResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken = default)
         {
-            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]);
+            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]!);
 
             var principal = _tokenBase.GetPrincipalFromExpiredToken(request.AccessToken);
 
@@ -66,12 +63,5 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
                 RefreshTokenExpiryTime = newRefreshTokenExpiry
             };
         }
-    }
-
-    public class TokenApiResponse
-    {
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
     }
 }

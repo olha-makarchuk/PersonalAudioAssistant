@@ -1,9 +1,8 @@
-﻿using PersonalAudioAssistant.Domain.Common;
-
-namespace PersonalAudioAssistant.Domain.Entities
+﻿namespace PersonalAudioAssistant.Contracts.AutoPayment
 {
-    public class AutoPayments: BaseEntity
+    public class AutoPaymentResponse
     {
+        public required string? Id { get; set; }
         public required bool IsAutoPayment { get; set; }
         public required int MinTokenThreshold { get; set; }
         public required int ChargeAmount { get; set; }

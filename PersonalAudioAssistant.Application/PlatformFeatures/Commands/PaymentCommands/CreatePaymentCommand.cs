@@ -1,13 +1,12 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
 using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands
 {
     public class CreatePaymentCommand : IRequest
     {
-        public string? UserId { get; set; }
+        public required string UserId { get; set; }
     }
 
     public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand>
