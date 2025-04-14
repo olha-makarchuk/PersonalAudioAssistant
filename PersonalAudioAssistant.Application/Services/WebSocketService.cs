@@ -1,17 +1,17 @@
-﻿using System.Net.WebSockets;
+﻿using Microsoft.Extensions.Configuration;
+using System.Net.WebSockets;
 using System.Text;
 
 namespace PersonalAudioAssistant.Application.Services
 {
     public class WebSocketService : IDisposable
     {
-        private readonly string wsUrl;
         private ClientWebSocket ws;
         private bool disposed = false;
+        private string _wsUrl = "ws://10.0.2.2:8000/ws/audio";
 
-        public WebSocketService(string wsUrl)
+        public WebSocketService()
         {
-            this.wsUrl = wsUrl;
             ws = new ClientWebSocket();
         }
 
@@ -21,7 +21,7 @@ namespace PersonalAudioAssistant.Application.Services
         {
             DisposeWebSocket();
             ws = new ClientWebSocket();
-            await ws.ConnectAsync(new Uri(wsUrl), cancellationToken);
+            await ws.ConnectAsync(new Uri(_wsUrl), cancellationToken);
         }
 
         public async Task SendDataAsync(byte[] buffer, int length, CancellationToken cancellationToken)

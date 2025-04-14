@@ -1,15 +1,19 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Contracts.Api;
 
 namespace PersonalAudioAssistant.Application.Services
 {
     public class ApiClientVoiceEmbedding : IApiClient
     {
         private readonly HttpClient _httpClient;
+        private string _serverUrl;
 
-        public ApiClientVoiceEmbedding()
+        public ApiClientVoiceEmbedding(IConfiguration configuration)
         {
             _httpClient = new HttpClient();
+            _serverUrl = configuration["Server:BaseUrl"]!;
         }
 
         public async Task<List<double>> CreateVoiceEmbedding(Stream audioStream)
@@ -19,7 +23,7 @@ namespace PersonalAudioAssistant.Application.Services
                 using var content = new MultipartFormDataContent();
                 content.Add(new StreamContent(audioStream), "file", "recorded.wav");
 
-                var apiUrl = "http://10.0.2.2:8000/embendding";
+                var apiUrl = $"{_serverUrl}/embendding";
                 var response = await _httpClient.PostAsync(apiUrl, content);
 
                 if (!response.IsSuccessStatusCode)
@@ -48,13 +52,5 @@ namespace PersonalAudioAssistant.Application.Services
                 return null;
             }
         }
-
-
-
-    }
-    public class EmbeddingResponse
-    {
-        [JsonProperty("embedding")]
-        public List<List<double>> Embedding { get; set; }
     }
 }

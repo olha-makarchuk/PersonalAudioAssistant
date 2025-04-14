@@ -5,7 +5,6 @@ using CommunityToolkit.Maui.Alerts;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
-using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Services;
 using Plugin.Maui.Audio;
 
@@ -15,9 +14,8 @@ namespace PersonalAudioAssistant.Platforms
     {
         private SpeechRecognitionListener? listener;
         private SpeechRecognizer? speechRecognizer;
-        private string wsUrl = "ws://10.0.2.2:8000/ws/audio";
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
+    public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();
 
@@ -51,7 +49,7 @@ namespace PersonalAudioAssistant.Platforms
                             await audioPlayerHelper.PlayAudio();
 
                             IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
-                            var transcriber = new ApiClientAudio(wsUrl, audioProvider);
+                            var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
                             string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken);
                             await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);

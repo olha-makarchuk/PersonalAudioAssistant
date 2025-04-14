@@ -15,6 +15,7 @@ using PersonalAudioAssistant.ViewModel.Users;
 using PersonalAudioAssistant.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands;
+using PersonalAudioAssistant.Platforms;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -56,6 +57,10 @@ public static class MauiProgram
         builder.Services.AddScoped<TokenBase>();
         builder.Services.AddScoped<ManageCacheData>();
         builder.Services.AddScoped<PasswordManager>();
+        builder.Services.AddScoped<TextToSpeechApi>();
+        builder.Services.AddScoped<ApiClientAudio>();
+        builder.Services.AddScoped<WebSocketService>(); 
+        builder.Services.AddScoped<ApiClientVoiceEmbedding>(); 
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
 
@@ -73,6 +78,7 @@ public static class MauiProgram
         builder.Services.AddScoped<PaymentPage, PaymentViewModel>();
 
         // Repositories
+        builder.Services.AddScoped<IAudioDataProvider, AndroidAudioDataProvider>();
         builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
         builder.Services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
         builder.Services.AddScoped<ISubUserRepository, SubUserRepository>();
@@ -80,6 +86,7 @@ public static class MauiProgram
         builder.Services.AddScoped<IAutoPaymentRepository, AutoPaymentRepository>();
         builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();
         builder.Services.AddScoped<IVoiceRepository, VoiceRepository>();
+        builder.Services.AddScoped<ISpeechToText, SpeechToTextImplementation>();
 
         // CosmosDb
         builder.Services.AddDbContext<CosmosDbContext>(options =>

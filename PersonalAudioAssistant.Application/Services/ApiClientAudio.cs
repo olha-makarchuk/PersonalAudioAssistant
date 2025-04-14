@@ -1,6 +1,6 @@
-﻿using PersonalAudioAssistant.Application.Interfaces;
+﻿using Microsoft.Extensions.Configuration;
+using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Contracts.SubUser;
-using PersonalAudioAssistant.Domain.Entities;
 using System.Text;
 using System.Text.Json;
 
@@ -11,9 +11,9 @@ namespace PersonalAudioAssistant.Application.Services
         private readonly WebSocketService webSocketService;
         private readonly IAudioDataProvider audioDataProvider;
 
-        public ApiClientAudio(string wsUrl, IAudioDataProvider audioDataProvider)
+        public ApiClientAudio(IAudioDataProvider audioDataProvider, WebSocketService webSocketService)
         {
-            webSocketService = new WebSocketService(wsUrl);
+            this.webSocketService = webSocketService;
             this.audioDataProvider = audioDataProvider;
         }
 

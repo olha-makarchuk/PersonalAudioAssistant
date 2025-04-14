@@ -29,8 +29,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth
 
         public async Task<MainUserLoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]);
-            var TokenExpiryTimeInHours = double.Parse(_configuration["JWTKey:ExpiryHours"]);
+            var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]!);
+            var TokenExpiryTimeInHours = double.Parse(_configuration["JWTKey:ExpiryHours"]!);
 
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException("Заповніть всі поля");
