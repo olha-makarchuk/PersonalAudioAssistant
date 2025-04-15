@@ -185,7 +185,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
                 if (usersListViewModel != null)
                 {
-                    usersListViewModel.RefreshUsers();
+                    await usersListViewModel.RefreshUsersAsync();
                 }
 
                 await Shell.Current.GoToAsync("//UsersListPage");

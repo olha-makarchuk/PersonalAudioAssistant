@@ -21,7 +21,7 @@ public partial class UpdateUserPage : ContentPage
         }
     }
 
-    /*
+    
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -29,7 +29,7 @@ public partial class UpdateUserPage : ContentPage
         {
             await viewModel.LoadVoicesAsync();
         }
-    }*/
+    }
 
     public MediaElement MediaElement => mediaElement;
 }

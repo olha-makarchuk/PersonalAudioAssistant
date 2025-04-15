@@ -4,7 +4,8 @@
              x:Class="PersonalAudioAssistant.Views.Users.UsersListPage"
              Title="Список користувачів">
     <Grid>
-        <Label Text="Користувачі" 
+        <Label 
+               Text="Користувачі" 
                FontSize="22"
                FontAttributes="Bold"
                HorizontalOptions="Center"
@@ -23,11 +24,11 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Frame BackgroundColor="White"
-       CornerRadius="10"
-       Padding="15"
-       HasShadow="True"
-       Margin="10,0"
-       InputTransparent="True">
+                           CornerRadius="10"
+                           Padding="15"
+                           HasShadow="True"
+                           Margin="10,0"
+                           InputTransparent="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="60"/>
@@ -88,6 +89,5 @@
                 FontAttributes="Bold"
                 Margin="20,40,20,20"
                 Padding="0"/>
-
     </Grid>
 </ContentPage>

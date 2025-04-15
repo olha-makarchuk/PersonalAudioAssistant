@@ -14,14 +14,34 @@ namespace PersonalAudioAssistant.Platforms
     {
         private SpeechRecognitionListener? listener;
         private SpeechRecognizer? speechRecognizer;
+        private bool isListening = false;
 
-    public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();
 
             listener = new SpeechRecognitionListener
             {
-                Error = ex => taskResult.TrySetException(new Exception("Failure in speech engine - " + ex)),
+                Error = async ex =>
+                {
+                    try
+                    {
+                        await Toast.Make("Помилка: " + ex).Show(cancellationToken);
+                        PauseListening();
+                        if (culture != null)
+                        {
+                            RestartListening(culture);
+                        }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        await Toast.Make("Не вдалося перезапустити: " + innerEx.Message).Show(cancellationToken);
+                    }
+
+                    taskResult.TrySetException(new Exception("Failure in speech engine - " + ex));
+                },
+
+                //Error = ex => taskResult.TrySetException(new Exception("Failure in speech engine - " + ex)),
 
                 PartialResults = async sentence =>
                 {
@@ -67,8 +87,10 @@ namespace PersonalAudioAssistant.Platforms
                         finally
                         {
                             processingCommand = false;
+                            await Task.Delay(1000); 
                             RestartListening(culture);
                         }
+
                     }
                 },
                 Results = sentence => taskResult.TrySetResult(sentence)
@@ -81,16 +103,26 @@ namespace PersonalAudioAssistant.Platforms
             }
 
             speechRecognizer.SetRecognitionListener(listener);
-            speechRecognizer.StartListening(CreateSpeechIntent(culture));
+            StartListening(culture);
 
             await using (cancellationToken.Register(() =>
             {
                 StopRecording();
-                taskResult.TrySetCanceled();
+                taskResult.TrySetResult(string.Empty); // або просто нічого не ставити
             }))
             {
-                return await taskResult.Task;
+                try
+                {
+                    return await taskResult.Task;
+                }
+                catch (OperationCanceledException)
+                {
+                    StopRecording();
+                    await Toast.Make("Розпізнавання зупинено").Show(cancellationToken);
+                    return string.Empty;
+                }
             }
+
         }
 
         private Intent CreateSpeechIntent(CultureInfo culture)
@@ -112,16 +144,6 @@ namespace PersonalAudioAssistant.Platforms
             return status == PermissionStatus.Granted && isAvailable;
         }
 
-        private void RestartListening(CultureInfo culture)
-        {
-            if (speechRecognizer == null)
-            {
-                speechRecognizer = SpeechRecognizer.CreateSpeechRecognizer(Android.App.Application.Context);
-                speechRecognizer.SetRecognitionListener(listener);
-            }
-            speechRecognizer.StartListening(CreateSpeechIntent(culture));
-        }
-
         public ValueTask DisposeAsync()
         {
             listener?.Dispose();
@@ -131,13 +153,42 @@ namespace PersonalAudioAssistant.Platforms
 
         private void PauseListening()
         {
-            speechRecognizer?.StopListening();
+            if (isListening)
+            {
+                speechRecognizer?.StopListening();
+                isListening = false;
+            }
         }
 
         private void StopRecording()
         {
-            speechRecognizer?.StopListening();
+            if (isListening)
+            {
+                speechRecognizer?.StopListening();
+                isListening = false;
+            }
+
             speechRecognizer?.Destroy();
+            speechRecognizer = null;
+        }
+        private void StartListening(CultureInfo culture)
+        {
+            if (speechRecognizer == null)
+            {
+                speechRecognizer = SpeechRecognizer.CreateSpeechRecognizer(Android.App.Application.Context);
+                speechRecognizer.SetRecognitionListener(listener);
+            }
+
+            if (!isListening)
+            {
+                isListening = true;
+                speechRecognizer.StartListening(CreateSpeechIntent(culture));
+            }
+        }
+        private void RestartListening(CultureInfo culture)
+        {
+            StopRecording();
+            StartListening(culture);
         }
     }
 }

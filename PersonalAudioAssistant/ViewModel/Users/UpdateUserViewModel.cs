@@ -115,8 +115,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             _audioRecorder = audioManager.CreateRecorder();
             _manageCacheData = manageCacheData;
             _apiClient = apiClient;
-
-            LoadVoicesAsync();
         }
 
         public async Task LoadVoicesAsync()
@@ -244,7 +242,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await _manageCacheData.UpdateUsersList();
 
                 var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
-                usersListViewModel?.RefreshUsers();
+                await usersListViewModel?.RefreshUsersAsync();
 
                 await Shell.Current.GoToAsync("//UsersListPage");
             }
@@ -278,7 +276,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     await _manageCacheData.UpdateUsersList();
 
                     var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
-                    usersListViewModel?.RefreshUsers();
+                    await usersListViewModel.RefreshUsersAsync();
                     await Shell.Current.GoToAsync("//UsersListPage");
                 }
                 catch (Exception ex)

@@ -15,7 +15,7 @@ router = APIRouter()
 async def websocket_audio(websocket: WebSocket):
     await websocket.accept()
 
-    id_user = await receive_id(websocket)
+    id_user, end_time, user_voice = await receive_id(websocket)
     if id_user is None:
         return
 
@@ -26,7 +26,7 @@ async def websocket_audio(websocket: WebSocket):
         print(f"Спікера з id {id_user} не знайдено.")
         idx = None  
 
-    full_audio = await receive_audio(websocket, idx)
+    full_audio = await receive_audio(websocket, idx, end_time, user_voice)
 
     #sf.write("received_audio.wav", full_audio, RATE)
 

@@ -20,20 +20,16 @@ classifier = EncoderClassifier.from_hparams(
     run_opts={"device": device}
 ).to(device)
 
-
-
-MODEL_PATH = "C:/Users/olama/.cache/huggingface/hub/models--nvidia--diar_sortformer_4spk-v1/snapshots/4cb5954e59a1a6527e6ec061a0568b61efa8babd/diar_sortformer_4spk-v1.nemo"
-
-diar_model = SortformerEncLabelModel.from_pretrained(MODEL_PATH, local_files_only=True)
-
-
-#diar_model = SortformerEncLabelModel.from_pretrained("nvidia/diar_sortformer_4spk-v1")
+diar_model = SortformerEncLabelModel.from_pretrained("nvidia/diar_sortformer_4spk-v1")
 diar_model.eval()
 
 known_speakers = []
 known_speaker_ids = []
 
 def load_known_speakers():
+    global known_speakers, known_speaker_ids
+    known_speakers = []
+    known_speaker_ids = []
     if os.path.exists(SPEAKER_DIR):
         for file in os.listdir(SPEAKER_DIR):
             if file.endswith(".wav"):
@@ -73,9 +69,11 @@ async def receive_id(websocket):
             return None
 
         data = json.loads(init_message)
-        
+
         id_value = data.get("UserId")
-        
+        end_time = data.get("EndTime")
+        user_voice = data.get("UserVoice")
+
         if id_value is None:
             await websocket.send_text("Error: missing id")
             await websocket.close()
@@ -83,19 +81,19 @@ async def receive_id(websocket):
 
         print(f"Отримано id: {id_value}")
         await websocket.send_text("OK")
-        return id_value
+        return id_value, end_time, user_voice
     except Exception as e:
         await websocket.send_text("Invalid id message")
         await websocket.close()
         return None
 
-async def receive_audio(websocket, idx: int):
-    audio_buffer = []          # всі аудіо дані
+async def receive_audio(websocket, idx: int, end_time, user_voice):
+    audio_buffer = []         # всі аудіо дані
     classification_buffer = [] # дані для класифікації
     classification_buffer_duration = 0.0
-    window_duration = 1.0      # тривалість вікна для класифікації (сек)
+    window_duration = 1.0     # тривалість вікна для класифікації (сек)
     last_me_detected_time = 0.0
-    total_duration = 0.0       # загальна тривалість аудіо
+    total_duration = 0.0      # загальна тривалість аудіо
 
     try:
         while True:
@@ -118,13 +116,15 @@ async def receive_audio(websocket, idx: int):
                         classification_buffer = []
                         classification_buffer_duration = 0.0
 
-                        embedding = get_segment_embedding(window_audio)
+                        #embedding = get_segment_embedding(window_audio)
+                        embedding = np.array(user_voice)
+                        
                         me_embedding = known_speakers[idx]
                         distances = cdist(np.atleast_2d(embedding), np.atleast_2d(me_embedding), metric="cosine")
                         if distances.min() < THRESHOLD:
                             last_me_detected_time = total_duration
 
-                    if total_duration - last_me_detected_time >= 5.0 and total_duration > 5.0:
+                    if total_duration - last_me_detected_time >= int(end_time) and total_duration > int(end_time):
                         break
             elif message["type"] == "websocket.disconnect":
                 break
@@ -138,7 +138,7 @@ def process_audio_segments(full_audio, idx: int):
     final_audio_segments = []
     temp_audio_path = "temp_stream.wav"
     sf.write(temp_audio_path, full_audio, RATE)
-    
+
     pred_list_pp = diar_model.diarize(audio=temp_audio_path, postprocessing_yaml=MODEL_CONFIG)[0]
     sorted_segments = sorted(pred_list_pp, key=lambda seg: float(seg.split()[0]))
 
@@ -146,7 +146,7 @@ def process_audio_segments(full_audio, idx: int):
         parts = segment.split()
         if len(parts) < 3:
             continue
-        start_str, end_str, _ = parts 
+        start_str, end_str, _ = parts
         start = float(start_str)
         end = float(end_str)
         start_sample = int(start * RATE)
@@ -158,7 +158,7 @@ def process_audio_segments(full_audio, idx: int):
         distances = cdist(np.atleast_2d(seg_embedding), np.atleast_2d(me_embedding), metric="cosine")
         if distances.min() < THRESHOLD:
             final_audio_segments.append(segment_signal)
-    
+
     os.remove(temp_audio_path)
     return final_audio_segments
 
@@ -170,14 +170,12 @@ def transcribe_audio(final_audio_segments):
         sf.write(final_audio_file, combined_audio, RATE)
         with open(final_audio_file, "rb") as audio_file:
             transcription = client.audio.transcriptions.create(
-                model="whisper-1", 
+                model="whisper-1",
                 file=audio_file,
                 language="uk"
             )
         os.remove(final_audio_file)
     return transcription
 
-known_speakers = []
-known_speaker_ids = []
 load_known_speakers()
 post_processing_params = load_yaml_config()

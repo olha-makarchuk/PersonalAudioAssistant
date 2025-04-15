@@ -16,7 +16,7 @@ public partial class UsersListPage : ContentPage
         base.OnAppearing();
         if (BindingContext is UsersListViewModel viewModel)
         {
-            await viewModel.LoadUsers();
+            await viewModel.LoadUsersAsync();
         }
     }
 }
