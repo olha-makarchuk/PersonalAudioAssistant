@@ -22,6 +22,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly ManageCacheData _manageCacheData;
         private Stream _recordedAudioStream;
         private List<VoiceResponse> allVoices = new List<VoiceResponse>();
+        private string _selectedAudioFilePath;
 
         [ObservableProperty]
         private bool isBusy;
@@ -88,6 +89,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         [ObservableProperty]
         private bool isPasswordEnabled = false;
+
+        [ObservableProperty]
+        private bool isBaseVoiceSelected = true;
+
+        [ObservableProperty]
+        private bool isCloneVoiceSelected = false;
+
+        [ObservableProperty]
+        private string cloneStart;
+
+        [ObservableProperty]
+        private string cloneEnd;
 
         public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
@@ -229,7 +242,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 }
 
                 await _audioRecorder.StartAsync();
-                await Task.Delay(5000);
+                await Task.Delay(10000);
                 var recordedAudio = await _audioRecorder.StopAsync();
 
                 if (recordedAudio == null)
@@ -310,6 +323,35 @@ namespace PersonalAudioAssistant.ViewModel.Users
             SelectedVoiceUrl = SelectedVoice?.URL;
         }
 
+        [RelayCommand]
+        private async Task PickAudioFileAsync()
+        {
+            try
+            {
+                var fileResult = await FilePicker.PickAsync(new PickOptions
+                {
+                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                    {
+                        { DevicePlatform.Android, new[] { "audio/*" } },
+                        { DevicePlatform.iOS, new[] { "public.audio" } },
+                        { DevicePlatform.WinUI, new[] { ".mp3", ".wav", ".aac", ".m4a" } },
+                        { DevicePlatform.Tizen, new[] { "*/*" } },
+                        { DevicePlatform.macOS, new[] { "public.audio" } },
+                    })
+                });
+
+                if (fileResult != null)
+                {
+                    _selectedAudioFilePath = fileResult.FullPath;
+                    OnPropertyChanged(nameof(SelectedAudioFilePath)); // Notify UI
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Помилка при виборі файлу: {ex.Message}", "OK");
+            }
+        }
+
         public void OnNavigatedFrom()
         {
             UserName = null;
@@ -322,6 +364,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsPasswordEnabled = false;
             IsAudioRecorded = false;
             _recordedAudioStream = null;
+            _selectedAudioFilePath = null;
+            CloneStart = null;
+            CloneEnd = null;
+            IsBaseVoiceSelected = true;
+            IsCloneVoiceSelected = false;
 
             ResetDescriptionFilter();
             ResetAgeFilter();
@@ -442,6 +489,27 @@ namespace PersonalAudioAssistant.ViewModel.Users
         partial void OnFilterUseCaseChanged(string value)
         {
             ApplyVoiceFilter();
+        }
+        partial void OnIsBaseVoiceSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                IsCloneVoiceSelected = false;
+            }
+        }
+
+        partial void OnIsCloneVoiceSelectedChanged(bool value)
+        {
+            if (value)
+            {
+                IsBaseVoiceSelected = false;
+            }
+        }
+
+        public string SelectedAudioFilePath
+        {
+            get => _selectedAudioFilePath;
+            set => SetProperty(ref _selectedAudioFilePath, value);
         }
     }
 }

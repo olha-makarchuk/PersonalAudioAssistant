@@ -15,7 +15,7 @@ router = APIRouter()
 async def websocket_audio(websocket: WebSocket):
     await websocket.accept()
 
-    id_user, id_voice = await receive_id(websocket)
+    id_user = await receive_id(websocket)
     if id_user is None:
         return
 

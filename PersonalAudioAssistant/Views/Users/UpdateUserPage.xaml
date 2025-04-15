@@ -95,7 +95,16 @@
                     </VerticalStackLayout>
                 </Frame>
 
-                <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                <Label Text="Виберіть голос:"
+                               FontSize="18" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 10"/>
+                <StackLayout Orientation="Horizontal" Spacing="10">
+                    <RadioButton Content="Базовий голос" GroupName="VoiceOption"
+                                         IsChecked="{Binding IsBaseVoiceSelected}" />
+                    <RadioButton Content="Клонувати голос" GroupName="VoiceOption"
+                                         IsChecked="{Binding IsCloneVoiceSelected}" />
+                </StackLayout>
+
+                <Frame IsVisible="{Binding IsBaseVoiceSelected}" CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
                     <VerticalStackLayout Spacing="15">
                         <Label Text="Фільтрація голосів:" 
                        FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
@@ -176,19 +185,45 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Picker Grid.Column="0" ItemsSource="{Binding Voices}"
-                            ItemDisplayBinding="{Binding Name}" 
-                            SelectedItem="{Binding SelectedVoice}"
-                            BackgroundColor="#F0F0F0" HeightRequest="50"
-                            TextColor="#333333" />
-                            <Button Grid.Column="1" Text="▶" 
-                            Command="{Binding PlaySelectedVoiceCommand}"
-                            FontSize="22" WidthRequest="60" HeightRequest="60"
-                            TextColor="White" 
-                            CornerRadius="30" Margin="10,0,0,0"/>
+                                    ItemDisplayBinding="{Binding Name}" 
+                                    SelectedItem="{Binding SelectedVoice}"
+                                    BackgroundColor="#F0F0F0" HeightRequest="50"
+                                    TextColor="#333333" />
+                            <Button Grid.Column="1"
+                                    Command="{Binding PlaySelectedVoiceCommand}"
+                                    FontSize="22"
+                                    WidthRequest="60"
+                                    HeightRequest="60"
+                                    BorderWidth="0" CornerRadius="30"
+                                    Margin="10,0,0,0"
+                                    ImageSource="playaudio.png"/>
                         </Grid>
                     </VerticalStackLayout>
                 </Frame>
 
+                <Frame IsVisible="{Binding IsCloneVoiceSelected}" CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+
+                        <Label Text="Завантажте файл голосу для клонування:"
+                   FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 10, 0, 10"/>
+                        <Button Text="Обрати файл"
+                    Command="{Binding PickAudioFileCommand}" />
+                        <Label Text="{Binding SelectedAudioFilePath}" TextColor="#555555" />
+
+                        <Label Text="Початок фрагменту (сек):" TextColor="#555555"/>
+                        <Entry Keyboard="Numeric"
+                   Placeholder="Напр. 0"
+                   Text="{Binding CloneStart}"
+                   BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+
+                        <Label Text="Кінець фрагменту (сек):" TextColor="#555555"/>
+                        <Entry Keyboard="Numeric"
+                   Placeholder="Напр. 5"
+                   Text="{Binding CloneEnd}"
+                   BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                    </VerticalStackLayout>
+                </Frame>
+                
                 <toolkit:MediaElement x:Name="mediaElement" 
                               Source="{Binding SelectedVoiceUrl}" 
                               IsVisible="False" />

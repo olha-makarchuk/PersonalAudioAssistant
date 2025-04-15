@@ -23,7 +23,8 @@ namespace PersonalAudioAssistant.Application.Services
             {
                 await webSocketService.ConnectAsync(cancellationToken);
 
-                var dataPayload = JsonSerializer.Serialize(new { subUser.UserId, subUser.VoiceId });
+                var dataPayload = JsonSerializer.Serialize(new { subUser.UserId, subUser.EndTime, subUser.UserVoice });
+
                 var idBytes = Encoding.UTF8.GetBytes(dataPayload);
                 await webSocketService.SendDataAsync(idBytes, idBytes.Length, cancellationToken);
 

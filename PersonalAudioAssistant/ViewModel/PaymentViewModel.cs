@@ -25,10 +25,11 @@ namespace PersonalAudioAssistant.ViewModel
         partial void OnIsBusyChanged(bool value)
         {
             OnPropertyChanged(nameof(IsNotBusy));
-            
+
             LiqPayCommand.NotifyCanExecuteChanged();
             DeleteCardCommand.NotifyCanExecuteChanged();
             SaveAutoPaymentSettingsCommand.NotifyCanExecuteChanged();
+            RechargeBalanceCommand.NotifyCanExecuteChanged(); // Notify CanExecute for the new command
         }
 
         // --- Дані картки ---
@@ -51,6 +52,10 @@ namespace PersonalAudioAssistant.ViewModel
 
         [ObservableProperty]
         private int autoRechargeAmount;
+
+        // --- Поповнення балансу ---
+        [ObservableProperty]
+        private decimal rechargeAmountInput;
 
         // --- Ініціалізація ---
         public async Task InitializeAsync()
@@ -100,6 +105,13 @@ namespace PersonalAudioAssistant.ViewModel
                 if (string.IsNullOrEmpty(userId))
                     return;
 
+                // Тут буде логіка для переходу на платіжний шлюз LiqPay
+                // Вам потрібно буде згенерувати дані для LiqPay (суму, опис, тощо)
+                // і перенаправити користувача на їхню сторінку.
+                // Після успішної оплати LiqPay має повідомити ваш сервер,
+                // і ви оновите дані картки в базі та локально.
+
+                // Для прикладу, імітуємо успішне додавання/зміну картки:
                 var random = new Random();
                 var fakeToken = Guid.NewGuid().ToString();
                 var fakeCardNumber = $"**** **** **** {random.Next(1000, 9999)}";
@@ -184,6 +196,58 @@ namespace PersonalAudioAssistant.ViewModel
                     IsAutoPayment = IsAutoPaymentEnabled,
                     MinTokenThreshold = MinimumTokenBalance,
                 });
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task RechargeBalance()
+        {
+            if (RechargeAmountInput <= 0)
+            {
+                await Shell.Current.DisplayAlert("Помилка", "Будь ласка, введіть суму для поповнення.", "OK");
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                var userId = await SecureStorage.GetAsync("user_id");
+                if (string.IsNullOrEmpty(userId))
+                    return;
+
+                // Тут має бути логіка для ініціації платежу на вказану суму (RechargeAmountInput)
+                // через платіжний шлюз (наприклад, LiqPay).
+                // Зазвичай це включає створення запиту до платіжного шлюзу
+                // з інформацією про платіж (сума, валюта, опис, URL для повернення тощо).
+                // Після успішної оплати платіжний шлюз повідомить ваш сервер,
+                // і ви збільшите баланс токенів користувача.
+
+                // Для прикладу, імітуємо успішне поповнення балансу:
+                // Припустимо, що у вас є команда для оновлення балансу токенів.
+                /*
+                var rechargeCommand = new AddTokensCommand
+                {
+                    UserId = userId,
+                    Amount = (int)RechargeAmountInput // Припускаємо, що RechargeAmountInput - це гривні, і ви якось конвертуєте це в токени
+                };
+                var result = await _mediator.Send(rechargeCommand);
+
+                if (result)
+                {
+                    await Shell.Current.DisplayAlert("Успішно", $"Баланс поповнено на {RechargeAmountInput} ₴.", "OK");
+                    // Можливо, вам захочеться оновити відображення балансу на іншому екрані
+                }
+                else
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Не вдалося поповнити баланс.", "OK");
+                }
+                */
+                // Після успішного поповнення або невдачі, ви можете захотіти очистити поле введення суми
+                RechargeAmountInput = 5;
             }
             finally
             {

@@ -7,11 +7,9 @@
     Title="Керування оплатою">
 
     <Grid>
-        <!-- Основний контент: блокується, коли IsBusy = true -->
         <ScrollView IsEnabled="{Binding IsNotBusy}">
             <VerticalStackLayout Padding="24" Spacing="24">
 
-                <!-- Секція картки -->
                 <Frame Padding="16" CornerRadius="20" BackgroundColor="#E8F5E9" HasShadow="True" BorderColor="#C8E6C9">
                     <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
 
@@ -54,7 +52,6 @@
 
                 <BoxView HeightRequest="1" BackgroundColor="#D3D3D3" Margin="0,10" />
 
-                <!-- Секція автопоповнення -->
                 <Frame CornerRadius="20" Padding="20" BackgroundColor="White" BorderColor="#E0E0E0" HasShadow="True">
                     <VerticalStackLayout Spacing="20">
 
@@ -108,6 +105,38 @@
                                 HeightRequest="50"
                                 Command="{Binding SaveAutoPaymentSettingsCommand}" />
 
+                    </VerticalStackLayout>
+                </Frame>
+
+                <BoxView HeightRequest="1" BackgroundColor="#D3D3D3" Margin="0,10" />
+
+                <Frame CornerRadius="20" Padding="20" BackgroundColor="White" BorderColor="#E0E0E0" HasShadow="True">
+                    <VerticalStackLayout Spacing="20">
+                        <Label Text="Поповнення балансу"
+                               FontSize="22"
+                               FontAttributes="Bold"
+                               TextColor="#444" />
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Введіть суму для поповнення (₴)"
+                                   FontSize="16"
+                                   TextColor="#444" />
+                            <Entry Placeholder="Сума"
+                                   Keyboard="Numeric"
+                                   FontSize="16"
+                                   BackgroundColor="#FAFAFA"
+                                   HeightRequest="45"
+                                   TextColor="#333"
+                                   Text="{Binding RechargeAmountInput}" />
+                        </VerticalStackLayout>
+
+                        <Button Text="Поповнити баланс"
+                                TextColor="White"
+                                CornerRadius="25"
+                                FontSize="18"
+                                FontAttributes="Bold"
+                                HeightRequest="50"
+                                Command="{Binding RechargeBalanceCommand}" />
                     </VerticalStackLayout>
                 </Frame>
 

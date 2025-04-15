@@ -1,4 +1,3 @@
-using AndroidX.Lifecycle;
 using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.ViewModel.Users;
 

@@ -20,7 +20,14 @@ classifier = EncoderClassifier.from_hparams(
     run_opts={"device": device}
 ).to(device)
 
-diar_model = SortformerEncLabelModel.from_pretrained("nvidia/diar_sortformer_4spk-v1")
+
+
+MODEL_PATH = "C:/Users/olama/.cache/huggingface/hub/models--nvidia--diar_sortformer_4spk-v1/snapshots/4cb5954e59a1a6527e6ec061a0568b61efa8babd/diar_sortformer_4spk-v1.nemo"
+
+diar_model = SortformerEncLabelModel.from_pretrained(MODEL_PATH, local_files_only=True)
+
+
+#diar_model = SortformerEncLabelModel.from_pretrained("nvidia/diar_sortformer_4spk-v1")
 diar_model.eval()
 
 known_speakers = []
@@ -68,7 +75,6 @@ async def receive_id(websocket):
         data = json.loads(init_message)
         
         id_value = data.get("UserId")
-        id_voice = data.get("VoiceId")
         
         if id_value is None:
             await websocket.send_text("Error: missing id")
@@ -77,7 +83,7 @@ async def receive_id(websocket):
 
         print(f"Отримано id: {id_value}")
         await websocket.send_text("OK")
-        return id_value, id_voice
+        return id_value
     except Exception as e:
         await websocket.send_text("Invalid id message")
         await websocket.close()

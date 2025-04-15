@@ -52,6 +52,10 @@ namespace PersonalAudioAssistant.Platforms
                             var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
                             string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken);
+
+                            //var textToSpeech = new TextToSpeechApi();
+                            //await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
+
                             await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
 
                             await Task.Delay(100);
