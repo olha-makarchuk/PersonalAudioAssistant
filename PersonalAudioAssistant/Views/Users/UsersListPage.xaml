@@ -2,48 +2,92 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.Users.UsersListPage"
-             Title="Список користувачів"
-             BackgroundColor="White">
-
+             Title="Список користувачів">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <Label Text="Користувачі" 
+               FontSize="22"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               TextColor="Black"
+               Margin="0,20,0,0"/>
 
-        <VerticalStackLayout Grid.Row="0" Padding="0">
-            <Label Text="Користувачі" 
-                   FontSize="22"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="Black" />
+        <!-- CollectionView з вбудованим прокручуванням -->
+        <CollectionView ItemsSource="{Binding Users}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                        Margin="10,70,10,0">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                                   ItemSpacing="10"/>
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BackgroundColor="White"
+       CornerRadius="10"
+       Padding="15"
+       HasShadow="True"
+       Margin="10,0"
+       InputTransparent="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-            <ListView
-                ItemsSource="{Binding Users}"
-                SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                CachingStrategy="RetainElement"
-                HasUnevenRows="False"
-                RowHeight="50"
-                VerticalOptions="FillAndExpand">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextCell Text="{Binding UserName}"
-                                  TextColor="Black" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </VerticalStackLayout>
+                            <!-- Аватар користувача -->
+                            <Frame Grid.Column="0"
+                                   WidthRequest="50"
+                                   HeightRequest="50"
+                                   CornerRadius="25"
+                                   BackgroundColor="#cccccc"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   HasShadow="False">
+                                <Label Text="&#x1F464;" 
+                                       FontSize="24"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       TextColor="White"/>
+                            </Frame>
 
-        <Button Grid.Row="1"
-                Text="+"
+                            <!-- Ім'я користувача -->
+                            <Label Grid.Column="1"
+                                   Text="{Binding UserName}" 
+                                   FontSize="18"
+                                   VerticalOptions="Center"
+                                   TextColor="#333333"
+                                   Margin="10,0"/>
+
+                            <!-- Додаткова інформація -->
+                            <Label Grid.Column="2"
+                                   Text="{Binding StartPhrase}"
+                                   FontSize="14"
+                                   VerticalOptions="Center"
+                                   TextColor="Gray"
+                                   Margin="10,0"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.Footer>
+                <Grid HeightRequest="100"/>
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <!-- Плаваюча кнопка додавання користувача -->
+        <Button Text="＋"
                 Command="{Binding AddUserCommand}"
                 TextColor="White"
-                CornerRadius="10"
+                CornerRadius="30"
                 HorizontalOptions="End"
                 VerticalOptions="End"
                 HeightRequest="60"
                 WidthRequest="60"
                 FontSize="32"
-                Margin="23" />
+                FontAttributes="Bold"
+                Margin="20,40,20,20"
+                Padding="0"/>
+
     </Grid>
 </ContentPage>

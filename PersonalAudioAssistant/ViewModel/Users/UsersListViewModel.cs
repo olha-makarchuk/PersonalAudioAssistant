@@ -21,18 +21,28 @@ namespace PersonalAudioAssistant.ViewModel.Users
             Users = new ObservableCollection<SubUserResponse>();
         }
 
+        private bool _isNavigating = false;
+
         public SubUserResponse SelectedUser
         {
             get => _selectedUser;
             set
             {
-                SetProperty(ref _selectedUser, value);
-                if (value != null)
+                if (SetProperty(ref _selectedUser, value) && value != null && !_isNavigating)
                 {
+                    _isNavigating = true;
                     OnUserSelected(value);
                 }
             }
         }
+
+        private async void OnUserSelected(SubUserResponse user)
+        {
+            await Shell.Current.GoToAsync($"/UpdateUserPage?userId={user.Id}");
+            _isNavigating = false;
+            SelectedUser = null;
+        }
+
 
         public async Task LoadUsers()
         {
@@ -43,12 +53,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 Users.Add(user);
             }
-        }
-
-        private async void OnUserSelected(SubUserResponse user)
-        {
-            await Shell.Current.GoToAsync($"/UpdateUserPage?userId={user.Id}");
-            SelectedUser = null;
         }
 
         [RelayCommand]

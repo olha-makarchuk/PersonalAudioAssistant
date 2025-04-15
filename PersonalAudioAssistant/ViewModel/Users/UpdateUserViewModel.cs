@@ -449,7 +449,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             CloneStart = null;
             CloneEnd = null;
             IsBaseVoiceSelected = true;
-            SelectedAudioFilePath = null;
             IsCloneVoiceSelected = false;
 
             ResetDescriptionFilter();
