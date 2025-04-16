@@ -16,7 +16,6 @@ using PersonalAudioAssistant.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands;
 using PersonalAudioAssistant.Platforms;
-
 namespace PersonalAudioAssistant;
 public static class MauiProgram
 {

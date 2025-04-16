@@ -16,14 +16,14 @@ namespace PersonalAudioAssistant.Application.Services
             this.webSocketService = webSocketService;
             this.audioDataProvider = audioDataProvider;
         }
-
+        
         public async Task<string> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken)
         {
             try
             {
                 await webSocketService.ConnectAsync(cancellationToken);
 
-                var dataPayload = JsonSerializer.Serialize(new { subUser.UserId, subUser.EndTime, subUser.UserVoice });
+                var dataPayload = JsonSerializer.Serialize(new { subUser.UserId, subUser.EndTime, subUser.UserVoice, subUser.EndPhrase});
 
                 var idBytes = Encoding.UTF8.GetBytes(dataPayload);
                 await webSocketService.SendDataAsync(idBytes, idBytes.Length, cancellationToken);

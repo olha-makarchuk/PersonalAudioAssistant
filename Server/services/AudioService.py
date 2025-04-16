@@ -73,6 +73,7 @@ async def receive_id(websocket):
         id_value = data.get("UserId")
         end_time = data.get("EndTime")
         user_voice = data.get("UserVoice")
+        end_phrase = data.get("EndPhrase")
 
         if id_value is None:
             await websocket.send_text("Error: missing id")
@@ -81,13 +82,13 @@ async def receive_id(websocket):
 
         print(f"Отримано id: {id_value}")
         await websocket.send_text("OK")
-        return id_value, end_time, user_voice
+        return id_value, end_time, user_voice, end_phrase
     except Exception as e:
         await websocket.send_text("Invalid id message")
         await websocket.close()
         return None
 
-async def receive_audio(websocket, idx: int, end_time, user_voice):
+async def receive_audio(websocket, idx: int, end_time, user_voice, end_phrase):
     audio_buffer = []         # всі аудіо дані
     classification_buffer = [] # дані для класифікації
     classification_buffer_duration = 0.0
@@ -116,10 +117,10 @@ async def receive_audio(websocket, idx: int, end_time, user_voice):
                         classification_buffer = []
                         classification_buffer_duration = 0.0
 
-                        #embedding = get_segment_embedding(window_audio)
-                        embedding = np.array(user_voice)
+                        embedding = get_segment_embedding(window_audio)
+                        me_embedding = np.array(user_voice)
                         
-                        me_embedding = known_speakers[idx]
+                        #me_embedding = known_speakers[idx]
                         distances = cdist(np.atleast_2d(embedding), np.atleast_2d(me_embedding), metric="cosine")
                         if distances.min() < THRESHOLD:
                             last_me_detected_time = total_duration

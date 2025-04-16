@@ -1,26 +1,21 @@
-from fastapi import APIRouter
-from elevenlabs import ElevenLabs
-from config import ELEVENLABS_API_KEY
+from vosk import Model, KaldiRecognizer
+import pyaudio
 
-elevenlabs_client = ElevenLabs(api_key="sk_27c32e41339106ed731a786439faaf7079426123259cdec4")
-
-class ModelResult:
-    def __init__(self, voiceId: str, name:str, URL: str):
-        self.voiceId = voiceId
-        self.name = name
-        self.URL = URL
+#model = Model(r'vosk-model-uk-v3')
+model = Model(r'vosk-model-uk-v3-lgraph')
 
 
-result = []
-voices = elevenlabs_client.voices.get_all()
-for voice in voices:
-    v = voice[1]
-        
-    for vi in v:
-        fine_tuning_state = vi.fine_tuning.state.get("eleven_flash_v2_5")
-        if fine_tuning_state == "fine_tuned":
-            model = ModelResult(vi.voice_id, vi.name, vi.preview_url)
-            result.append(model)
+recognizer = KaldiRecognizer(model, 16000)
 
-print(result)
+cap = pyaudio.PyAudio()
+stream = cap.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True,frames_per_buffer=8192)
 
+stream.start_stream()
+
+while True:
+    data = stream.read(4096)
+    if len(data) ==0:
+        break
+    
+    if recognizer.AcceptWaveform(data):
+        print(recognizer.Result())
