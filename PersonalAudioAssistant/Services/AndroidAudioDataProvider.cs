@@ -5,7 +5,7 @@ namespace PersonalAudioAssistant.Services
 {
     public class AndroidAudioDataProvider : IAudioDataProvider, IDisposable
     {
-        private const int RATE = 16000;
+        private const int RATE = 44100;
         private const ChannelIn CHANNEL_CONFIG = ChannelIn.Mono;
         private const Encoding AUDIO_FORMAT = Encoding.Pcm16bit;
         private const int BUFFER_MULTIPLIER = 4; // Множник для збільшення розміру буфера

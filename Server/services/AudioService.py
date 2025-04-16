@@ -199,9 +199,9 @@ def process_audio_segments(full_audio, idx: int, user_voice):
         segment_signal = full_audio[start_sample:end_sample]
 
         seg_embedding = get_segment_embedding(segment_signal)
-        #me_embedding = np.array(user_voice)
+        me_embedding = np.array(user_voice)
         
-        me_embedding = known_speakers[idx]
+        #me_embedding = known_speakers[idx]
         distances = cdist(np.atleast_2d(seg_embedding), np.atleast_2d(me_embedding), metric="cosine")
         if distances.min() < THRESHOLD:
             final_audio_segments.append(segment_signal)

@@ -9,11 +9,11 @@ ELEVENLABS_API_KEY = "sk_27c32e41339106ed731a786439faaf7079426123259cdec4"
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-RATE = 16000
+RATE = 44100
 
 DATA_DIR = os.getcwd()
 SPEAKER_DIR = "data/speakers"
-THRESHOLD = 0.8
+THRESHOLD = 0.6
 
 YAML_NAME = "sortformer_diar_4spk-v1_dihard3-dev.yaml"
 MODEL_CONFIG = os.path.join(DATA_DIR, YAML_NAME)

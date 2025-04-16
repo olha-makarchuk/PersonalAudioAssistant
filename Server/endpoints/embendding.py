@@ -3,7 +3,7 @@ import io
 import torch
 import torchaudio
 import numpy as np
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from speechbrain.inference.speaker import EncoderClassifier
 from config import DEVICE  
 
@@ -28,8 +28,19 @@ async def upload_and_get_embedding(file: UploadFile = File(...)):
     if file_extension.lower() != ".wav":
         raise HTTPException(status_code=400, detail="Непідтримуваний формат файлу. Використовуйте WAV.")
     
-    # Зчитування файлу як байтів та завантаження аудіо
+    # Зчитування файлу як байтів
     contents = await file.read()
+    
+    # Створення директорії для збереження аудіо, якщо її немає
+    save_dir = "saved_audio"
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, file.filename)
+    
+    # Збереження аудіофайлу для перевірки правильності
+    with open(save_path, "wb") as f:
+        f.write(contents)
+    
+    # Завантаження аудіо з використанням torchaudio
     with io.BytesIO(contents) as audio_file:
         try:
             waveform, sample_rate = torchaudio.load(audio_file)
@@ -42,4 +53,4 @@ async def upload_and_get_embedding(file: UploadFile = File(...)):
     # Отримання ембеддінгу
     embedding = get_segment_embedding(waveform)
     
-    return {"embedding": embedding.tolist()}
+    return {"embedding": embedding.tolist(), "saved_audio_path": save_path}
