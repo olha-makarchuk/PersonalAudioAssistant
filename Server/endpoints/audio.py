@@ -30,7 +30,7 @@ async def websocket_audio(websocket: WebSocket):
 
     #sf.write("received_audio.wav", full_audio, RATE)
 
-    final_audio_segments = process_audio_segments(full_audio, idx)
+    final_audio_segments = process_audio_segments(full_audio, idx, user_voice)
 
     transcription = transcribe_audio(final_audio_segments)
     transcription_text = transcription.text if hasattr(transcription, "text") else str(transcription)

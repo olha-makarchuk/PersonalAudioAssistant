@@ -11,6 +11,15 @@ from nemo.collections.asr.parts.utils.vad_utils import load_postprocessing_from_
 import torchaudio
 from openai import OpenAI
 from config import OPENAI_API_KEY, THRESHOLD, RATE, MODEL_CONFIG, YAML_NAME, DATA_DIR, SPEAKER_DIR
+from vosk import Model, KaldiRecognizer
+import queue
+import threading
+import pyaudio
+
+model = Model("D:/Diploma/vosk-model-uk-v3-lgraph")
+
+def create_vosk_recognizer():
+    return KaldiRecognizer(model, RATE)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -88,13 +97,33 @@ async def receive_id(websocket):
         await websocket.close()
         return None
 
+def listen_for_phrase(recognizer, stop_event, phrase, audio_q):
+    while not stop_event.is_set():
+        if not audio_q.empty():
+            data = audio_q.get()
+            if recognizer.AcceptWaveform(data):
+                result = json.loads(recognizer.Result())
+                if "text" in result and phrase.lower() in result["text"].lower():
+                    stop_event.set()
+
 async def receive_audio(websocket, idx: int, end_time, user_voice, end_phrase):
-    audio_buffer = []         # всі аудіо дані
-    classification_buffer = [] # дані для класифікації
+    audio_buffer = []
+    classification_buffer = []
     classification_buffer_duration = 0.0
-    window_duration = 1.0     # тривалість вікна для класифікації (сек)
+    window_duration = 1.0
     last_me_detected_time = 0.0
-    total_duration = 0.0      # загальна тривалість аудіо
+    total_duration = 0.0
+
+    stop_event = threading.Event()
+    audio_q = queue.Queue()
+
+    if end_phrase:
+        recognizer = create_vosk_recognizer()
+        listener_thread = threading.Thread(
+            target=listen_for_phrase,
+            args=(recognizer, stop_event, end_phrase, audio_q)
+        )
+        listener_thread.start()
 
     try:
         while True:
@@ -112,30 +141,45 @@ async def receive_audio(websocket, idx: int, end_time, user_voice, end_phrase):
                     classification_buffer.append(chunk)
                     classification_buffer_duration += chunk_duration
 
-                    if classification_buffer_duration >= window_duration:
-                        window_audio = np.concatenate(classification_buffer)
-                        classification_buffer = []
-                        classification_buffer_duration = 0.0
+                    # Якщо використовується end_time:
+                    if end_time != None:
+                        if classification_buffer_duration >= window_duration:
+                            window_audio = np.concatenate(classification_buffer)
+                            classification_buffer = []
+                            classification_buffer_duration = 0.0
 
-                        embedding = get_segment_embedding(window_audio)
-                        me_embedding = np.array(user_voice)
-                        
-                        #me_embedding = known_speakers[idx]
-                        distances = cdist(np.atleast_2d(embedding), np.atleast_2d(me_embedding), metric="cosine")
-                        if distances.min() < THRESHOLD:
-                            last_me_detected_time = total_duration
+                            embedding = get_segment_embedding(window_audio)
+                            me_embedding = np.array(user_voice)
+                            distances = cdist(np.atleast_2d(embedding), np.atleast_2d(me_embedding), metric="cosine")
+                            if distances.min() < THRESHOLD:
+                                last_me_detected_time = total_duration
 
-                    if total_duration - last_me_detected_time >= int(end_time) and total_duration > int(end_time):
-                        break
+                        if total_duration - last_me_detected_time >= int(end_time) and total_duration > int(end_time):
+                            break
+
+                    # Якщо використовується end_phrase:
+                    elif end_phrase != None:
+                        if recognizer.AcceptWaveform(data):
+                            result = recognizer.Result()
+                            result_dict = json.loads(result)
+                            recognized_text = result_dict.get("text", "")
+                            print("Розпізнаний текст:", recognized_text)
+                            if end_phrase.lower() in recognized_text.lower():
+                                break
             elif message["type"] == "websocket.disconnect":
                 break
+
     except Exception as e:
         print("WebSocket відключено клієнтом або сталася помилка:", e)
+    finally:
+        if end_phrase:
+            stop_event.set()
+            listener_thread.join()
 
     full_audio = np.concatenate(audio_buffer)
     return full_audio
 
-def process_audio_segments(full_audio, idx: int):
+def process_audio_segments(full_audio, idx: int, user_voice):
     final_audio_segments = []
     temp_audio_path = "temp_stream.wav"
     sf.write(temp_audio_path, full_audio, RATE)
@@ -155,6 +199,8 @@ def process_audio_segments(full_audio, idx: int):
         segment_signal = full_audio[start_sample:end_sample]
 
         seg_embedding = get_segment_embedding(segment_signal)
+        #me_embedding = np.array(user_voice)
+        
         me_embedding = known_speakers[idx]
         distances = cdist(np.atleast_2d(seg_embedding), np.atleast_2d(me_embedding), metric="cosine")
         if distances.min() < THRESHOLD:

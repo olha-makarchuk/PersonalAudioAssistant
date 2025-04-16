@@ -8,25 +8,32 @@ namespace PersonalAudioAssistant.Services
         private const int RATE = 16000;
         private const ChannelIn CHANNEL_CONFIG = ChannelIn.Mono;
         private const Encoding AUDIO_FORMAT = Encoding.Pcm16bit;
+        private const int BUFFER_MULTIPLIER = 4; // Множник для збільшення розміру буфера
         private readonly int minBufferSize;
+        private readonly int largeBufferSize;
         private AudioRecord audioRecord;
         private bool disposed;
 
         public AndroidAudioDataProvider()
         {
+            // Отримуємо мінімальний розмір буфера
             minBufferSize = AudioRecord.GetMinBufferSize(RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
+            // Визначаємо великий розмір буфера
+            largeBufferSize = minBufferSize * BUFFER_MULTIPLIER;
+
             audioRecord = new AudioRecord(
                 AudioSource.Mic,
                 RATE,
                 CHANNEL_CONFIG,
                 AUDIO_FORMAT,
-                minBufferSize);
+                largeBufferSize);
             audioRecord.StartRecording();
         }
 
         public Task<byte[]> GetAudioDataAsync(CancellationToken cancellationToken)
         {
-            byte[] buffer = new byte[minBufferSize];
+            // Використовуємо розширений буфер для зчитування даних
+            byte[] buffer = new byte[largeBufferSize];
             int bytesRead = audioRecord.Read(buffer, 0, buffer.Length);
             if (bytesRead > 0)
             {
