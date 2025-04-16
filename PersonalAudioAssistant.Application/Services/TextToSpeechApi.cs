@@ -9,14 +9,6 @@ namespace PersonalAudioAssistant.Application.Services
         private string _baseUrl = "https://api.elevenlabs.io";
         private string _model = "eleven_flash_v2_5";
 
-        /*
-        public TextToSpeechApi(IConfiguration configuration)
-        {
-            _apiKey = configuration["ElevenLabsApi:ApiKey"]!;
-            _baseUrl = configuration["ElevenLabsApi:BaseUrl"]!;
-            _model = configuration["ElevenLabsApi:Model"]!;
-        }*/
-
         public async Task<byte[]> ConvertTextToSpeechAsync(string voiceId, string text)
         {
             var client = new RestClient(_baseUrl);

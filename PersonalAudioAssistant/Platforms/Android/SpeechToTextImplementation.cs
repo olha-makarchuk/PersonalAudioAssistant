@@ -66,31 +66,39 @@ namespace PersonalAudioAssistant.Platforms
                             await Toast.Make(matchedUser.StartPhrase).Show(cancellationToken);
 
                             var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
-                            await audioPlayerHelper.PlayAudio();
+                            await audioPlayerHelper.PlayAudio(cancellationToken);
 
                             IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                             var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
-                            string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken);
+                            try
+                            {
+                                string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken);
 
-                            //var textToSpeech = new TextToSpeechApi();
-                            //await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
+                                await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
 
-                            await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
+                                var textToSpeech = new TextToSpeechApi();
+                                var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
 
-                            await Task.Delay(100);
+                                await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+
+                                await Task.Delay(100);
+                            }
+                            catch
+                            {
+                                StopRecording();
+                                return;
+                            }
                         }
                         catch (Exception ex)
                         {
+                            StopRecording();
                             await Toast.Make("Помилка з listener: " + ex.Message).Show(cancellationToken);
-                        }
-                        finally
-                        {
-                            processingCommand = false;
-                            await Task.Delay(1000); 
-                            RestartListening(culture);
+                            return; 
                         }
 
+                        await Task.Delay(1000);
+                        RestartListening(culture);
                     }
                 },
                 Results = sentence => taskResult.TrySetResult(sentence)
@@ -108,7 +116,7 @@ namespace PersonalAudioAssistant.Platforms
             await using (cancellationToken.Register(() =>
             {
                 StopRecording();
-                taskResult.TrySetResult(string.Empty); // або просто нічого не ставити
+                taskResult.TrySetResult(string.Empty); 
             }))
             {
                 try

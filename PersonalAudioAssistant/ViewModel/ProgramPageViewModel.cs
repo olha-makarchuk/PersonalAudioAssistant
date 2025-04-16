@@ -13,6 +13,7 @@ namespace PersonalAudioAssistant.ViewModel
         private readonly ITextToSpeech textToSpeech;
         private readonly ISpeechToText speechToText;
         private readonly ManageCacheData _manageCacheData;
+        private CancellationTokenSource? _listenCts;
 
         [ObservableProperty]
         private List<Locale>? locales;
@@ -22,6 +23,10 @@ namespace PersonalAudioAssistant.ViewModel
 
         [ObservableProperty]
         private string? recognitionText;
+
+        // New property for the listening state.
+        [ObservableProperty]
+        private bool isListening;
 
         public ProgramPageViewModel(ITextToSpeech textToSpeech, ISpeechToText speechToText, IMediator mediator, ManageCacheData manageCacheData)
         {
@@ -43,34 +48,45 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand(IncludeCancelCommand = true)]
         async Task Listen(CancellationToken cancellationToken)
         {
+            _listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var isAuthorized = await speechToText.RequestPermissions();
             var usersList = await _manageCacheData.GetUsersAsync();
+
+            // Start animating / showing the indicator.
+            IsListening = true;
 
             if (isAuthorized)
             {
                 try
                 {
                     RecognitionText = string.Empty;
-                    // Отримання остаточного результату розпізнавання
                     RecognitionText = await speechToText.Listen(
                         CultureInfo.GetCultureInfo(Locale?.Language ?? "en-us"),
                         new Progress<string>(partialText =>
                         {
                             RecognitionText += partialText + " ";
-                        }), usersList, cancellationToken);
+                        }),
+                        usersList,
+                        _listenCts.Token);
                 }
                 catch (OperationCanceledException)
                 {
-                    // Скасування очікуване, тому не показуємо помилку.
+                    // Operation was canceled: do nothing special.
                 }
                 catch (Exception ex)
                 {
                     await Toast.Make(ex.Message).Show(cancellationToken);
                 }
+                finally
+                {
+                    // Stop showing the listening indicator.
+                    IsListening = false;
+                }
             }
             else
             {
                 await Toast.Make("Permission denied").Show(cancellationToken);
+                IsListening = false;
             }
         }
     }

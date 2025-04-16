@@ -210,7 +210,7 @@ def process_audio_segments(full_audio, idx: int, user_voice):
     return final_audio_segments
 
 def transcribe_audio(final_audio_segments):
-    transcription = {"text": "No audio segments detected for transcription."}
+    transcription = {"text": ""}
     if final_audio_segments:
         combined_audio = np.concatenate(final_audio_segments)
         final_audio_file = "final_audio.wav"

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, WebSocket
 import soundfile as sf
-from config import RATE
+from config import RATE, OPENAI_API_KEY
+from openai import OpenAI
 from services.AudioService import (
     receive_id,
     receive_audio,
@@ -10,6 +11,7 @@ from services.AudioService import (
 )
 
 router = APIRouter()
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 @router.websocket("/audio")
 async def websocket_audio(websocket: WebSocket):
@@ -36,5 +38,16 @@ async def websocket_audio(websocket: WebSocket):
     transcription_text = transcription.text if hasattr(transcription, "text") else str(transcription)
 
     print(transcription_text)
-    await websocket.send_json({"transcripts": transcription_text})
+    
+    completion = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {
+            "role": "user",
+            "content": transcription_text,
+        }]
+    )
+    print(completion.choices[0].message.content)
+
+    await websocket.send_json({"transcripts": completion.choices[0].message.content})
     await websocket.close()

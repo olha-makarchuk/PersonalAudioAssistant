@@ -16,9 +16,7 @@ namespace PersonalAudioAssistant.Services
 
         public AndroidAudioDataProvider()
         {
-            // Отримуємо мінімальний розмір буфера
             minBufferSize = AudioRecord.GetMinBufferSize(RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
-            // Визначаємо великий розмір буфера
             largeBufferSize = minBufferSize * BUFFER_MULTIPLIER;
 
             audioRecord = new AudioRecord(
@@ -32,18 +30,29 @@ namespace PersonalAudioAssistant.Services
 
         public Task<byte[]> GetAudioDataAsync(CancellationToken cancellationToken)
         {
-            // Використовуємо розширений буфер для зчитування даних
-            byte[] buffer = new byte[largeBufferSize];
-            int bytesRead = audioRecord.Read(buffer, 0, buffer.Length);
-            if (bytesRead > 0)
+            try
             {
-                if (bytesRead < buffer.Length)
+                byte[] buffer = new byte[largeBufferSize];
+                int bytesRead = audioRecord.Read(buffer, 0, buffer.Length);
+                if (bytesRead > 0)
                 {
-                    byte[] result = new byte[bytesRead];
-                    Array.Copy(buffer, result, bytesRead);
-                    return Task.FromResult(result);
+                    if (bytesRead < buffer.Length)
+                    {
+                        byte[] result = new byte[bytesRead];
+                        Array.Copy(buffer, result, bytesRead);
+                        return Task.FromResult(result);
+                    }
+                    return Task.FromResult(buffer);
                 }
-                return Task.FromResult(buffer);
+                return Task.FromResult(new byte[0]);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Отримання даних скасовано.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Помилка");
             }
             return Task.FromResult(new byte[0]);
         }
