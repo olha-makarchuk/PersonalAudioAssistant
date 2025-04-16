@@ -73,7 +73,7 @@ async def receive_id(websocket):
         id_value = data.get("UserId")
         end_time = data.get("EndTime")
         user_voice = data.get("UserVoice")
-        #end_phrase = data.get("EndPhrase")
+        end_phrase = data.get("EndPhrase")
 
         if id_value is None:
             await websocket.send_text("Error: missing id")
@@ -82,7 +82,7 @@ async def receive_id(websocket):
 
         print(f"Отримано id: {id_value}")
         await websocket.send_text("OK")
-        return id_value, end_time, user_voice#, end_phrase
+        return id_value, end_time, user_voice, end_phrase
     except Exception as e:
         await websocket.send_text("Invalid id message")
         await websocket.close()
