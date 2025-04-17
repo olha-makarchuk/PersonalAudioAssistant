@@ -4,7 +4,7 @@ using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands
 {
-   public class CreateVoiceCommand : IRequest
+   public class CreateVoiceCommand : IRequest<string>
     {
         public string VoiceId { get; set; }
         public string Name { get; set; }
@@ -20,9 +20,9 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
             _voiceRepository = voiceRepository;
         }
 
-        public async Task Handle(CreateVoiceCommand request, CancellationToken cancellationToken = default)
+        public async Task<string> Handle(CreateVoiceCommand request, CancellationToken cancellationToken = default)
         {
-            /*
+            
             var user = await _voiceRepository.GetVoiceByIdAsync(request.UserId, cancellationToken);
             if (user != null)
             {
@@ -36,7 +36,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
                 UserId = request.UserId
             };
             await _voiceRepository.CreateVoice(newVoice, cancellationToken);
-            */
+
+            return newVoice.Id.ToString();
             /*
             var newVoice = new Voice()
             {

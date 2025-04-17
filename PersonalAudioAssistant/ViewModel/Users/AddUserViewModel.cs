@@ -150,6 +150,15 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     var voiceCloneModel = new ElevenlabsApi();
                     var cloneVoice = await voiceCloneModel.CloneVoiceAsync("назва", _selectedAudioFilePath!);
                     voiceId = cloneVoice.VoiceId;
+                    if (CloneVoiceModel.IsCloneVoiceSelected)
+                    {
+                        var commandVoice = new CreateVoiceCommand()
+                        {
+                            Name = "name",
+                            VoiceId = voiceId
+                        };
+                        var userId = await _mediator.Send(commandVoice);
+                    }
                 }
                 else
                 {
@@ -171,15 +180,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 await _manageCacheData.UpdateUsersList();
 
-                if (CloneVoiceModel.IsCloneVoiceSelected)
-                {
-                    var commandVoice = new CreateVoiceCommand()
-                    {
-                        Name = "name",
-                        UserId = userId,
-                        VoiceId = voiceId
-                    };
-                }
+
                 var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
                 if (usersListViewModel != null)
                 {
