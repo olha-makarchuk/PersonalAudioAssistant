@@ -56,7 +56,7 @@ public static class MauiProgram
         builder.Services.AddScoped<TokenBase>();
         builder.Services.AddScoped<ManageCacheData>();
         builder.Services.AddScoped<PasswordManager>();
-        builder.Services.AddScoped<TextToSpeechApi>();
+        builder.Services.AddScoped<ElevenlabsApi>();
         builder.Services.AddScoped<ApiClientAudio>();
         builder.Services.AddScoped<WebSocketService>(); 
         builder.Services.AddScoped<ApiClientVoiceEmbedding>(); 

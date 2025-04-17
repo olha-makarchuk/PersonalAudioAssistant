@@ -13,7 +13,7 @@ RATE = 44100
 
 DATA_DIR = os.getcwd()
 SPEAKER_DIR = "data/speakers"
-THRESHOLD = 0.4
+THRESHOLD = 0.5
 
 YAML_NAME = "sortformer_diar_4spk-v1_dihard3-dev.yaml"
 MODEL_CONFIG = os.path.join(DATA_DIR, YAML_NAME)

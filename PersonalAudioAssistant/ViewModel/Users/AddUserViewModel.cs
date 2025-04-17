@@ -1,15 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.VoiceQuery;
+using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Contracts.Voice;
+using System.Collections.ObjectModel;
+using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
-using System.Collections.ObjectModel;
+using MediatR;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -19,34 +21,28 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
-        private readonly ManageCacheData _manageCacheData;
         private Stream _recordedAudioStream;
-        private List<VoiceResponse> allVoices = new List<VoiceResponse>();
         private string _selectedAudioFilePath;
+        private string _cloneVoiceId;
+        private readonly ManageCacheData _manageCacheData;
+
+        private List<VoiceResponse> allVoices = new List<VoiceResponse>();
+        public VoiceFilterModel Filter { get; }
+        public EndOptionsModel EndOptionsModel { get; }
+        public CredentialsModel CredentialsModel { get; }
+        public CloneVoiceModel CloneVoiceModel { get; }
+
+        [ObservableProperty]
+        private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
 
         [ObservableProperty]
         private bool isBusy;
 
         [ObservableProperty]
-        private string filterDescription;
-
-        [ObservableProperty]
-        private string filterAge;
-
-        [ObservableProperty]
-        private string filterGender;
-
-        [ObservableProperty]
-        private string filterUseCase;
+        private bool isBaseVoiceSelected = true;
 
         [ObservableProperty]
         private bool isAudioRecorded = false;
-
-        [ObservableProperty]
-        private string userName;
-
-        [ObservableProperty]
-        private string password;
 
         [ObservableProperty]
         private SubUserResponse subUser = new SubUserResponse();
@@ -57,51 +53,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         private string selectedVoiceUrl;
 
-        [ObservableProperty]
-        private bool isEndPhraseSelected = false;
-
-        [ObservableProperty]
-        private bool isEndTimeSelected = true;
-
-        [ObservableProperty]
-        private int selectedEndTime = 2;
-
-        [ObservableProperty]
-        private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
-
-        [ObservableProperty]
-        private ObservableCollection<int> endTimeOptions = new ObservableCollection<int>(Enumerable.Range(2, 9));
-
-        [ObservableProperty]
-        private ObservableCollection<string> accentOptions = new ObservableCollection<string>();
-
-        [ObservableProperty]
-        private ObservableCollection<string> descriptionOptions = new ObservableCollection<string>();
-
-        [ObservableProperty]
-        private ObservableCollection<string> ageOptions = new ObservableCollection<string>();
-
-        [ObservableProperty]
-        private ObservableCollection<string> genderOptions = new ObservableCollection<string>();
-
-        [ObservableProperty]
-        private ObservableCollection<string> useCaseOptions = new ObservableCollection<string>();
-
-        [ObservableProperty]
-        private bool isPasswordEnabled = false;
-
-        [ObservableProperty]
-        private bool isBaseVoiceSelected = true;
-
-        [ObservableProperty]
-        private bool isCloneVoiceSelected = false;
-
-        [ObservableProperty]
-        private string cloneStart;
-
-        [ObservableProperty]
-        private string cloneEnd;
-
         public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
             _mediator = mediator;
@@ -109,8 +60,43 @@ namespace PersonalAudioAssistant.ViewModel.Users
             _audioRecorder = _audioManager.CreateRecorder();
             _manageCacheData = manageCacheData;
             _apiClient = apiClient;
+            Filter = new VoiceFilterModel();
+            Filter.PropertyChanged += (_, __) => ApplyVoiceFilter();
+            EndOptionsModel = new EndOptionsModel();
+            CredentialsModel = new CredentialsModel();
+            CloneVoiceModel = new CloneVoiceModel();
 
             LoadVoicesAsync();
+        }
+
+        [RelayCommand]
+        public async Task CreateVoiceCloneAsync()
+        {
+            if (_selectedAudioFilePath == null)
+            {
+                await Shell.Current.DisplayAlert("Помилка", "Будь ласка, виберіть файл для клонування.", "OK");
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                var tts = new ElevenlabsApi();
+                var result = await tts.CloneVoiceAsync(
+                    filePath: _selectedAudioFilePath,
+                    voiceName: $"{CredentialsModel.UserName}_Clone"
+                );
+                _cloneVoiceId = result.VoiceId;
+                CloneVoiceModel.IsCloneGenerated = true;
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Не вдалося клонувати голос: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]
@@ -123,7 +109,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 IsBusy = true;
 
-                if (string.IsNullOrWhiteSpace(UserName))
+                if (string.IsNullOrWhiteSpace(CredentialsModel.UserName))
                 {
                     await Shell.Current.DisplayAlert("Помилка", "Ім'я користувача не може бути порожнім.", "OK");
                     return;
@@ -135,19 +121,25 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     return;
                 }
 
-                if (IsEndPhraseSelected && string.IsNullOrWhiteSpace(SubUser.EndPhrase))
+                if (EndOptionsModel.IsEndPhraseSelected && string.IsNullOrWhiteSpace(SubUser.EndPhrase))
                 {
                     await Shell.Current.DisplayAlert("Помилка", "Кінцева фраза обрана, але не заповнена.", "OK");
                     return;
                 }
 
-                if (IsEndTimeSelected && SelectedEndTime <= 0)
+                if (EndOptionsModel.IsEndTimeSelected && EndOptionsModel.SelectedEndTime <= 0)
                 {
                     await Shell.Current.DisplayAlert("Помилка", "Час завершення має бути більше 0.", "OK");
                     return;
                 }
 
-                if (SelectedVoice == null)
+                if (CloneVoiceModel.IsCloneVoiceSelected && !CloneVoiceModel.IsCloneGenerated)
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Будь ласка, спочатку створіть клон голосу.", "OK");
+                    return;
+                }
+
+                if (SelectedVoice == null && !CloneVoiceModel.IsCloneVoiceSelected)
                 {
                     await Shell.Current.DisplayAlert("Помилка", "Будь ласка, оберіть голос.", "OK");
                     return;
@@ -159,7 +151,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     return;
                 }
 
-                if (IsPasswordEnabled && string.IsNullOrWhiteSpace(Password))
+                if (CredentialsModel.IsPasswordEnabled && string.IsNullOrWhiteSpace(CredentialsModel.Password))
                 {
                     await Shell.Current.DisplayAlert("Помилка", "Будь ласка, введіть пароль.", "OK");
                     return;
@@ -167,15 +159,17 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 var embedding = await _apiClient.CreateVoiceEmbedding(_recordedAudioStream);
 
+                var voiceIdToUse = CloneVoiceModel.IsCloneVoiceSelected ? _cloneVoiceId : SelectedVoice.VoiceId;
+
                 var command = new AddSubUserCoomand
                 {
                     UserId = await SecureStorage.GetAsync("user_id"),
-                    UserName = UserName,
-                    Password = IsPasswordEnabled ? Password : null,
+                    UserName = CredentialsModel.UserName,
+                    Password = CredentialsModel.IsPasswordEnabled ? CredentialsModel.Password : null,
                     StartPhrase = SubUser.StartPhrase,
-                    EndPhrase = IsEndPhraseSelected ? SubUser.EndPhrase : null,
-                    EndTime = IsEndTimeSelected ? SelectedEndTime.ToString() : null,
-                    VoiceId = SelectedVoice.VoiceId,
+                    EndPhrase = EndOptionsModel.IsEndPhraseSelected ? SubUser.EndPhrase : null,
+                    EndTime = EndOptionsModel.IsEndTimeSelected ? EndOptionsModel.SelectedEndTime.ToString() : null,
+                    VoiceId = voiceIdToUse,
                     UserVoice = embedding
                 };
                 await _mediator.Send(command);
@@ -286,7 +280,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         private void InitializeFilterOptions()
         {
-            DescriptionOptions = new ObservableCollection<string>(
+            Filter.DescriptionOptions = new ObservableCollection<string>(
                 allVoices
                     .Where(v => !string.IsNullOrWhiteSpace(v.Description))
                     .Select(v => v.Description)
@@ -294,7 +288,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     .OrderBy(x => x)
             );
 
-            AgeOptions = new ObservableCollection<string>(
+            Filter.AgeOptions = new ObservableCollection<string>(
                 allVoices
                     .Where(v => !string.IsNullOrWhiteSpace(v.Age))
                     .Select(v => v.Age)
@@ -302,7 +296,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     .OrderBy(x => x)
             );
 
-            GenderOptions = new ObservableCollection<string>(
+            Filter.GenderOptions = new ObservableCollection<string>(
                 allVoices
                     .Where(v => !string.IsNullOrWhiteSpace(v.Gender))
                     .Select(v => v.Gender)
@@ -310,7 +304,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     .OrderBy(x => x)
             );
 
-            UseCaseOptions = new ObservableCollection<string>(
+            Filter.UseCaseOptions = new ObservableCollection<string>(
                 allVoices
                     .Where(v => !string.IsNullOrWhiteSpace(v.UseCase))
                     .Select(v => v.UseCase)
@@ -331,19 +325,50 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 var fileResult = await FilePicker.PickAsync(new PickOptions
                 {
                     FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                    {
-                        { DevicePlatform.Android, new[] { "audio/*" } },
-                        { DevicePlatform.iOS, new[] { "public.audio" } },
-                        { DevicePlatform.WinUI, new[] { ".mp3", ".wav", ".aac", ".m4a" } },
-                        { DevicePlatform.Tizen, new[] { "*/*" } },
-                        { DevicePlatform.macOS, new[] { "public.audio" } },
-                    })
+            {
+                { DevicePlatform.Android, new[] { "audio/*" } },
+                { DevicePlatform.iOS, new[] { "public.audio" } },
+                { DevicePlatform.WinUI, new[] { ".mp3", ".wav", ".aac", ".m4a" } },
+                { DevicePlatform.Tizen, new[] { "*/*" } },
+                { DevicePlatform.macOS, new[] { "public.audio" } },
+            })
                 });
 
                 if (fileResult != null)
                 {
+                    // 1) Зберігаємо шлях і ім'я
                     _selectedAudioFilePath = fileResult.FullPath;
-                    OnPropertyChanged(nameof(SelectedAudioFilePath)); // Notify UI
+                    SelectedAudioFilePath = fileResult.FileName;
+                    OnPropertyChanged(nameof(SelectedAudioFilePath));
+
+                    var cacheFile = Path.Combine(FileSystem.CacheDirectory, fileResult.FileName);
+                    using (var inStream = await fileResult.OpenReadAsync())
+                    using (var outFs = File.OpenWrite(cacheFile))
+                        await inStream.CopyToAsync(outFs);
+
+                    var player = _audioManager.CreatePlayer(cacheFile);
+                    var durationSec = player.Duration;
+
+                    CloneVoiceModel.IsFragmentSelectionVisible = durationSec > 30;
+                    player.Dispose();
+
+                    if (durationSec > 30)
+                    {
+                        var ts = TimeSpan.FromSeconds(durationSec);
+
+                        CloneVoiceModel.HourOptions.Clear();
+                        for (int h = 0; h <= ts.Hours; h++)
+                            CloneVoiceModel.HourOptions.Add(h);
+
+                        CloneVoiceModel.MinuteOptions.Clear();
+                        CloneVoiceModel.SecondOptions.Clear();
+                        for (int i = 0; i < 60; i++)
+                        {
+                            CloneVoiceModel.MinuteOptions.Add(i);
+                            CloneVoiceModel.SecondOptions.Add(i);
+                        }
+
+                    }
                 }
             }
             catch (Exception ex)
@@ -352,23 +377,27 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
+
         public void OnNavigatedFrom()
         {
-            UserName = null;
+            CredentialsModel.UserName = null;
             SubUser = new SubUserResponse();
             SelectedVoice = null;
             SelectedVoiceUrl = null;
-            IsEndPhraseSelected = false;
-            IsEndTimeSelected = true;
-            SelectedEndTime = 2;
-            IsPasswordEnabled = false;
+            EndOptionsModel.IsEndPhraseSelected = false;
+            EndOptionsModel.IsEndTimeSelected = true;
+            EndOptionsModel.SelectedEndTime = 2;
+            CredentialsModel.IsPasswordEnabled = false;
             IsAudioRecorded = false;
             _recordedAudioStream = null;
             _selectedAudioFilePath = null;
-            CloneStart = null;
-            CloneEnd = null;
+            SelectedAudioFilePath = null;
             IsBaseVoiceSelected = true;
-            IsCloneVoiceSelected = false;
+            CloneVoiceModel.IsRecordSelected = false;
+            CloneVoiceModel.IsCloneAudioRecorded = false;
+            CloneVoiceModel.IsCloneVoiceSelected = false;
+            CloneVoiceModel.IsCloneGenerated = false;
+            CloneVoiceModel.IsFragmentSelectionVisible = false;
 
             ResetDescriptionFilter();
             ResetAgeFilter();
@@ -394,21 +423,21 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             var filtered = allVoices.AsEnumerable();
 
-            if (!string.IsNullOrWhiteSpace(FilterDescription))
+            if (!string.IsNullOrWhiteSpace(Filter.Description))
                 filtered = filtered.Where(v => v.Description != null &&
-                    v.Description.Contains(FilterDescription, StringComparison.OrdinalIgnoreCase));
+                    v.Description.Contains(Filter.Description, StringComparison.OrdinalIgnoreCase));
 
-            if (!string.IsNullOrWhiteSpace(FilterAge))
+            if (!string.IsNullOrWhiteSpace(Filter.Age))
                 filtered = filtered.Where(v => v.Age != null &&
-                    v.Age.Contains(FilterAge, StringComparison.OrdinalIgnoreCase));
+                    v.Age.Contains(Filter.Age, StringComparison.OrdinalIgnoreCase));
 
-            if (!string.IsNullOrWhiteSpace(FilterGender))
+            if (!string.IsNullOrWhiteSpace(Filter.Gender))
                 filtered = filtered.Where(v => v.Gender != null &&
-                    v.Gender.Contains(FilterGender, StringComparison.OrdinalIgnoreCase));
+                    v.Gender.Contains(Filter.Gender, StringComparison.OrdinalIgnoreCase));
 
-            if (!string.IsNullOrWhiteSpace(FilterUseCase))
+            if (!string.IsNullOrWhiteSpace(Filter.UseCase))
                 filtered = filtered.Where(v => v.UseCase != null &&
-                    v.UseCase.Contains(FilterUseCase, StringComparison.OrdinalIgnoreCase));
+                    v.UseCase.Contains(Filter.UseCase, StringComparison.OrdinalIgnoreCase));
 
             return new ObservableCollection<VoiceResponse>(filtered);
         }
@@ -421,22 +450,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
-        partial void OnIsEndPhraseSelectedChanged(bool value)
-        {
-            if (value)
-            {
-                IsEndTimeSelected = false;
-            }
-        }
-
-        partial void OnIsEndTimeSelectedChanged(bool value)
-        {
-            if (value)
-            {
-                IsEndPhraseSelected = false;
-            }
-        }
-
         private void ApplyVoiceFilter()
         {
             Voices = ApplyFilter(allVoices);
@@ -446,70 +459,77 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [RelayCommand]
         public void ResetDescriptionFilter()
         {
-            FilterDescription = null;
+            Filter.Description = null;
             ApplyVoiceFilter();
         }
 
         [RelayCommand]
         public void ResetAgeFilter()
         {
-            FilterAge = null;
+            Filter.Age = null;
             ApplyVoiceFilter();
         }
 
         [RelayCommand]
         public void ResetGenderFilter()
         {
-            FilterGender = null;
+            Filter.Gender = null;
             ApplyVoiceFilter();
         }
 
         [RelayCommand]
         public void ResetUseCaseFilter()
         {
-            FilterUseCase = null;
+            Filter.UseCase = null;
             ApplyVoiceFilter();
         }
-
-        partial void OnFilterDescriptionChanged(string value)
-        {
-            ApplyVoiceFilter();
-        }
-
-        partial void OnFilterAgeChanged(string value)
-        {
-            ApplyVoiceFilter();
-        }
-
-        partial void OnFilterGenderChanged(string value)
-        {
-            ApplyVoiceFilter();
-        }
-
-        partial void OnFilterUseCaseChanged(string value)
-        {
-            ApplyVoiceFilter();
-        }
-        partial void OnIsBaseVoiceSelectedChanged(bool value)
-        {
-            if (value)
-            {
-                IsCloneVoiceSelected = false;
-            }
-        }
-
-        partial void OnIsCloneVoiceSelectedChanged(bool value)
-        {
-            if (value)
-            {
-                IsBaseVoiceSelected = false;
-            }
-        }
-
+       
         public string SelectedAudioFilePath
         {
             get => _selectedAudioFilePath;
             set => SetProperty(ref _selectedAudioFilePath, value);
+        }
+
+        [RelayCommand]
+        public async Task RecordCloneVoiceAsync()
+        {
+            try
+            {
+                CloneVoiceModel.IsCloneAudioRecorded = false;
+                /*
+                if (await Permissions.RequestAsync<Permissions.Microphone>() != PermissionStatus.Granted)
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Мікрофон не доступний", "OK");
+                    return;
+                }
+
+                await _audioRecorder.StartAsync();
+
+                if (int.TryParse(CloneVoiceModel.CloneStart, out var start) &&
+                    int.TryParse(CloneVoiceModel.CloneEnd, out var end) &&
+                    start >= 0 && end > start)
+                {
+                    await Task.Delay((end - start) * 1000);
+                }
+                else
+                {
+                    await Task.Delay(10000);
+                }
+
+                var recordedAudio = await _audioRecorder.StopAsync();
+                if (recordedAudio == null)
+                {
+                    await Shell.Current.DisplayAlert("Помилка", "Запис для клонування не вдалося завершити", "OK");
+                    return;
+                }
+
+                _cloneRecordedAudioStream = recordedAudio.GetAudioStream();*/
+                CloneVoiceModel.IsCloneAudioRecorded = true;
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка при записі для клонування: {ex.Message}", "OK");
+            }
         }
     }
 }
