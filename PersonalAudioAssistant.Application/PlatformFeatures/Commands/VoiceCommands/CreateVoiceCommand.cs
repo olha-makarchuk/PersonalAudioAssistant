@@ -1,10 +1,6 @@
 ﻿using MediatR;
-using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Domain.Entities;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands
 {
@@ -12,11 +8,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
     {
         public string VoiceId { get; set; }
         public string Name { get; set; }
-        public string URL { get; set; }
-        public string Gender { get; set; }
-        public string Age { get; set; }
-        public string Style { get; set; }
-        public string Description { get; set; }
         public string? UserId { get; set; }
    }
 
@@ -36,23 +27,17 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
             if (user != null)
             {
                 throw new Exception("Voice already exists.");
-            }*/
-            /*
+            }
+            
             var newVoice = new Voice()
             {
                 VoiceId = request.VoiceId,
                 Name = request.Name,
-                URL = request.URL,
-                Gender = request.Gender,
-                Age = request.Age,
-                Style = request.Style,
-                Description = request.Description,
                 UserId = request.UserId
             };
-            await _voiceRepository.CreateVoice(newVoice, cancellationToken);*/
-
-            ///////////////
-            ///
+            await _voiceRepository.CreateVoice(newVoice, cancellationToken);
+            */
+            /*
             var newVoice = new Voice()
             {
                 VoiceId = "knrPHWnBmmDHMoiMeP3l",
@@ -66,8 +51,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
             };
             await _voiceRepository.CreateVoice(newVoice, cancellationToken);
 
-            ///////////////
-            /// 
+
 
             newVoice = new Voice()
             {
@@ -297,7 +281,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
                 UserId = request.UserId
             };
             await _voiceRepository.CreateVoice(newVoice, cancellationToken);
-
+            */
         }
     }
 }

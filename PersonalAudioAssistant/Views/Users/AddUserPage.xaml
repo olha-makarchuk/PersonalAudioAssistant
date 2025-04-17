@@ -16,14 +16,14 @@
     <Grid>
         <ScrollView IsEnabled="{Binding IsNotBusy}">
             <VerticalStackLayout Padding="25" Spacing="25">
-                <!-- Введення імені користувача -->
                 <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
                     <VerticalStackLayout Spacing="15">
                         <Label Text="Введіть ім'я користувача:" 
                            FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
-                        <Entry Text="{Binding CredentialsModel.UserName}" 
+                        <Entry Text="{Binding SubUser.UserName}" 
                            Placeholder="Ім'я користувача"
                            BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                        <Label Text="Введіть ім’я користувача" TextColor="Red" IsVisible="{Binding IsNotValid.IsUserNameNotValid}"/>
                     </VerticalStackLayout>
                 </Frame>
 
@@ -33,11 +33,14 @@
                         <Label Text="Індивідуальні параметри:" 
                            FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
 
-                        <Label Text="Початкова фраза:" TextColor="#555555"/>
-                        <Entry Text="{Binding SubUser.StartPhrase}"
-                           Placeholder="Початкова фраза" 
-                           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
-
+                        <StackLayout>
+                            <Label Text="Початкова фраза:" TextColor="#555555"/>
+                            <Entry Text="{Binding SubUser.StartPhrase}"
+                                   Placeholder="Початкова фраза" 
+                                   BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                            <Label Text="Введіть початкову фразу" TextColor="Red" IsVisible="{Binding IsNotValid.IsStartPhraseNotValid}"/>
+                        </StackLayout>
+                        
                         <Label Text="Оберіть спосіб завершення:" FontSize="16" FontAttributes="Bold" TextColor="#333333"/>
                         <StackLayout Orientation="Horizontal" Spacing="10">
                             <RadioButton Content="Кінцева фраза" GroupName="CompletionOption" 
@@ -51,6 +54,8 @@
                             <Entry Text="{Binding SubUser.EndPhrase}"
                                Placeholder="Кінцева фраза" 
                                BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                            <Label Text="Введіть кінцеву фразу" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid}"/>
+
                         </StackLayout>
 
                         <StackLayout IsVisible="{Binding EndOptionsModel.IsEndTimeSelected}">
@@ -62,18 +67,18 @@
                                 TextColor="#333333" />
                         </StackLayout>
 
-                        <!-- Додано блок для вибору додавання пароля -->
                         <StackLayout Orientation="Horizontal" VerticalOptions="Center" Spacing="10">
-                            <CheckBox IsChecked="{Binding CredentialsModel.IsPasswordEnabled}" />
+                            <CheckBox IsChecked="{Binding SubUser.IsPasswordEnabled}" />
                             <Label Text="Додати пароль до історії розмов:" VerticalOptions="Center" TextColor="#333333"/>
                         </StackLayout>
 
                         <!-- Відображення поля пароля лише коли користувач обрав його додавання -->
-                        <StackLayout IsVisible="{Binding CredentialsModel.IsPasswordEnabled}">
+                        <StackLayout IsVisible="{Binding SubUser.IsPasswordEnabled}">
                             <Label Text="Пароль до історії розмов:" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 10"/>
-                            <Entry Text="{Binding CredentialsModel.Password}"
+                            <Entry Text="{Binding SubUser.Password}"
                                Placeholder="Пароль"
                                BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                            <Label Text="Введіть коректний пароль" TextColor="Red" IsVisible="{Binding IsNotValid.IsPasswordNotValid}"/>                         <!--пароль -->
                         </StackLayout>
 
                         <StackLayout>
@@ -95,6 +100,7 @@
                                        Margin="10, 0, 0, 0"
                                        IsVisible="{Binding IsAudioRecorded}" />
                             </HorizontalStackLayout>
+                            <Label Text="Запишіть зразок вашого голосу" TextColor="Red" IsVisible="{Binding IsNotValid.IsUserVoiceNotValid}"/>
                         </StackLayout>
                     </VerticalStackLayout>
                 </Frame>
@@ -242,7 +248,7 @@
                             <HorizontalStackLayout VerticalOptions="Center">
                                 <Label Text="Виберіть файл:" TextColor="#555555" VerticalOptions="Center"/>
                                 <Button BackgroundColor="Transparent" TextColor="White" FontAttributes="Bold"
-                                        HeightRequest="60" FontSize="16"
+                                        HeightRequest="70" FontSize="16"
                                         Command="{Binding PickAudioFileCommand}"
                                         ImageSource="fileaudio.png"/>
                             </HorizontalStackLayout>
@@ -252,7 +258,9 @@
                                         IsVisible="{Binding CloneVoiceModel.IsFragmentSelectionVisible}"
                                         Spacing="10"
                                         Margin="0,20,0,0">
-                                <Label Text="Аудіо більше 30 секунд, виберіть, будь ласка, діапазон:" TextColor="Red"/>
+                                <Label 
+                                        Text="{Binding CloneVoiceModel.TotalDuration, StringFormat='Аудіо триває {0}, що є більше 30 секунд, виберіть, будь ласка, діапазон:'}" 
+                                        TextColor="Red"/>
 
                                 <Label Text="Тривалість аудіо:" 
                                        FontAttributes="Bold" 
@@ -300,7 +308,8 @@
                                             FontSize="14"
                                             BackgroundColor="#F0F0F0" />
                                 </HorizontalStackLayout>
-                                
+
+                                <Label Text="Будь ласка, виберіть фрагмент аудіо тривалістю від 5 до 30 секунд" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid!}"/>            <!--аудіо час-->
                             </StackLayout>
 
                         </StackLayout>
@@ -323,11 +332,10 @@
                                        WidthRequest="30" HeightRequest="30"
                                        IsVisible="{Binding CloneVoiceModel.IsCloneAudioRecorded}"/>
                             </HorizontalStackLayout>
-                            
                         </StackLayout>
-
                     </VerticalStackLayout>
                 </Frame>
+                
                 <toolkit:MediaElement x:Name="mediaElement" 
                                   Source="{Binding SelectedVoiceUrl}" 
                                   IsVisible="False" />

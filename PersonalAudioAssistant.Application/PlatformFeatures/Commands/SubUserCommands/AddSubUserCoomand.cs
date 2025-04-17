@@ -5,7 +5,7 @@ using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands
 {
-    public class AddSubUserCoomand : IRequest
+    public class AddSubUserCoomand : IRequest<string>
     {
         public required string UserName { get; set; }
         public required string StartPhrase { get; set; }
@@ -17,7 +17,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
         public required string UserId { get; set; }
     }
 
-    public class AddSubUserCoomandHandler : IRequestHandler<AddSubUserCoomand>
+    public class AddSubUserCoomandHandler : IRequestHandler<AddSubUserCoomand, string>
     {
         private readonly ISubUserRepository _subUserRepository;
         private readonly IConfiguration _configuration;
@@ -30,7 +30,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
             _passwordManager = passwordManager;
         }
 
-        public async Task Handle(AddSubUserCoomand request, CancellationToken cancellationToken = default)
+        public async Task<string> Handle(AddSubUserCoomand request, CancellationToken cancellationToken = default)
         {
             var user = await _subUserRepository.GetUserByStartPhraseAsync(request.UserId, request.StartPhrase, cancellationToken);
             if (user != null)
@@ -55,8 +55,9 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 newUser.PasswordHash = passwordHash;
                 newUser.PasswordSalt = passwordSalt;
             }
-
             await _subUserRepository.AddUser(newUser, cancellationToken);
+
+            return newUser.Id.ToString();
         }
     }
 }

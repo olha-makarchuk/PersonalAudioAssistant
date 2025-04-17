@@ -77,5 +77,6 @@ namespace PersonalAudioAssistant.Application.Services
     {
         public string VoiceId { get; set; }
         public string VoiceName { get; set; }
+        public string Description { get; set; }
     }
 }

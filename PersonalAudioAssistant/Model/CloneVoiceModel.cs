@@ -15,20 +15,15 @@ namespace PersonalAudioAssistant.Model
         private bool isRecordSelected = false;
 
         [ObservableProperty]
-        private bool isCloneGenerated = false;
-
-        [ObservableProperty]
         private bool isCloneAudioRecorded = false;
 
         [ObservableProperty]
         private bool isFragmentSelectionVisible;
 
-        // 1) Списки опцій
         public ObservableCollection<int> HourOptions { get; } = new ObservableCollection<int>();
         public ObservableCollection<int> MinuteOptions { get; } = new ObservableCollection<int>();
         public ObservableCollection<int> SecondOptions { get; } = new ObservableCollection<int>();
 
-        // 2) Вибрані значення
         [ObservableProperty]
         private int selectedEndHour;
 
@@ -46,5 +41,8 @@ namespace PersonalAudioAssistant.Model
 
         [ObservableProperty]
         private int selectedStartSecond;
+
+        [ObservableProperty]
+        private TimeSpan totalDuration;
     }
 }
