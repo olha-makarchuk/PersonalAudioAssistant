@@ -36,7 +36,7 @@ namespace PersonalAudioAssistant.Application.Services
         }
 
 
-        public async Task<ElevenlabsApiResponse> CloneVoiceAsync(string voiceName, string filePath, string description)
+        public async Task<ElevenlabsApiResponse> CloneVoiceAsync(string voiceName, string filePath)
         {
             bool removeBackgroundNoise = true;
             var client = new RestClient(_baseUrl);
@@ -46,7 +46,6 @@ namespace PersonalAudioAssistant.Application.Services
             request.AlwaysMultipartFormData = true;
             request.AddParameter("name", voiceName);
             request.AddParameter("remove_background_noise", removeBackgroundNoise.ToString().ToLower());
-            request.AddParameter("description", description);
 
             request.AddFile("files", filePath, "audio/mpeg");
 

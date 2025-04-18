@@ -16,25 +16,31 @@ namespace PersonalAudioAssistant.Platforms
         // Метод для відтворення аудіо з вбудованого ресурсу (залишаємо)
         public async Task PlayAudio(CancellationToken cancellationToken)
         {
-            var audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("Resources/Media/Ask.wav"));
-
-            var tcs = new TaskCompletionSource();
-
-            audioPlayer.PlaybackEnded += (sender, args) => tcs.TrySetResult();
-
-            using (cancellationToken.Register(() =>
+            try
             {
-                if (audioPlayer.IsPlaying)
+                var audioPlayer = audioManager.CreatePlayer(await FileSystem.OpenAppPackageFileAsync("Resources/Media/Ask.wav"));
+                var tcs = new TaskCompletionSource();
+                audioPlayer.PlaybackEnded += (sender, args) => tcs.TrySetResult();
+                using (cancellationToken.Register(() =>
                 {
-                    audioPlayer.Stop();
+                    if (audioPlayer.IsPlaying)
+                    {
+                        audioPlayer.Stop();
+                    }
+                    tcs.TrySetCanceled();
+                }))
+                {
+                    audioPlayer.Play();
+                    await tcs.Task;
                 }
-                tcs.TrySetCanceled();
-            }))
+                audioPlayer.Dispose();
+            }
+            catch (Exception ex)
             {
-                audioPlayer.Play();
-                await tcs.Task;
+                Console.WriteLine($"Error playing audio: {ex.Message}");
             }
         }
+
 
         public async Task PlayAudioFromBytesAsync(byte[] audioData, CancellationToken cancellationToken)
         {

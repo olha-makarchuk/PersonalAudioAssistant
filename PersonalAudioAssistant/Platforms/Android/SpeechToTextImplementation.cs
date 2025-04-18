@@ -77,10 +77,10 @@ namespace PersonalAudioAssistant.Platforms
 
                                 await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
 
-                                //var textToSpeech = new TextToSpeechApi();
-                                //var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
+                                var textToSpeech = new ElevenlabsApi();
+                                var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
 
-                                //await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+                                await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
 
                                 await Task.Delay(100);
                             }

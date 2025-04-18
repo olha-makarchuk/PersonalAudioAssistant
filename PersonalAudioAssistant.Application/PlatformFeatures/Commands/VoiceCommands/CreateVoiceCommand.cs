@@ -9,7 +9,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
         public string VoiceId { get; set; }
         public string Name { get; set; }
         public string? UserId { get; set; }
-        public string? Description { get; set; }
    }
 
     public class CreateVoiceCommandHandler : IRequestHandler<CreateVoiceCommand, string>

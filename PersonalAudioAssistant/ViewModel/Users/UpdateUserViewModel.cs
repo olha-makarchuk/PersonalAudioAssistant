@@ -26,11 +26,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         [ObservableProperty]
         private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
+
         [ObservableProperty]
-        private ObservableCollection<VoiceResponse> cloneVoices = new();
+        private VoiceResponse cloneVoice = new();
 
         private List<VoiceResponse> allVoices = new List<VoiceResponse>();
-        private List<VoiceResponse> allCloneVoices;
 
         public VoiceFilterModel Filter { get; }
         public EndOptionsModel EndOptionsModel { get; }
@@ -56,6 +56,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         private VoiceResponse selectedCloneVoice;
 
+        [ObservableProperty]
+        private bool isVoiceColone;
+
+        [ObservableProperty]
+        private bool isVoiceBase;
 
         public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
@@ -104,20 +109,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         public async Task LoadVoicesAsync()
         {
+            IsBusy = true;
+
             try
             {
-                IsBusy = true; 
-
-                await Task.Delay(10);
-                var userId = await SecureStorage.GetAsync("user_id");
+                var appUserId = await SecureStorage.GetAsync("user_id");
+                var users = await _manageCacheData.GetUsersAsync();
+                var user = users.FirstOrDefault(u => u.Id.ToString() == UserIdQueryAttribute);
 
                 var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery()
                 {
-                    UserId = userId
+                    UserId = user.Id.ToString()
                 });
-
-                var users = await _manageCacheData.GetUsersAsync();
-                var user = users.FirstOrDefault(u => u.Id.ToString() == UserIdQueryAttribute);
 
                 SubUser.UserName = user?.UserName;
                 SubUser.StartPhrase = user.StartPhrase;
@@ -126,7 +129,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 SubUser.VoiceId = user.VoiceId;
                 SubUser.PasswordHash = user.PasswordHash;
                 SubUser.Id = user.Id;
-
                 SubUser.IsPasswordEnabled = SubUser.PasswordHash != null;
 
                 if (voiceList != null)
@@ -134,19 +136,34 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     allVoices = voiceList;
                     Voices = new ObservableCollection<VoiceResponse>(allVoices);
 
-                    // клонвані
-                    allCloneVoices = voiceList.Where(u => u.UserId == userId).ToList();
-                    CloneVoices = new ObservableCollection<VoiceResponse>(allCloneVoices);
+                    CloneVoice = voiceList.FirstOrDefault(u => u.UserId == user.Id);
+
+                    var userVoiceCommand = new GetVoiceByIdQuery()
+                    {
+                        VoiceId = user.VoiceId
+                    };
+                    var userVoice = await _mediator.Send(userVoiceCommand);
+
+                    if (userVoice.UserId == user.Id)
+                    {
+                        IsVoiceColone = true;
+                        IsVoiceBase = false;
+                    }
+                    else
+                    {
+                        IsVoiceColone = false;
+                        IsVoiceBase = true;
+                    }
 
                     InitializeFilterOptions();
 
                     if (!string.IsNullOrWhiteSpace(SubUser?.VoiceId))
                     {
-                        var userVoice = Voices.FirstOrDefault(v => v.VoiceId == SubUser.VoiceId);
-                        if (userVoice != null)
+                        var userVoiceselected = Voices.FirstOrDefault(v => v.VoiceId == SubUser.VoiceId);
+                        if (userVoiceselected != null)
                         {
-                            SelectedVoice = userVoice;
-                            SelectedVoiceUrl = userVoice.URL;
+                            SelectedVoice = userVoiceselected;
+                            SelectedVoiceUrl = userVoiceselected.URL;
                         }
                         else
                         {

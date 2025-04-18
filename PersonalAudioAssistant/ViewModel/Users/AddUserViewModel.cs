@@ -104,7 +104,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             if (e.PropertyName == nameof(CloneVoiceModel.IsCloneAudioRecorded)
                 || e.PropertyName == nameof(SelectedAudioFilePath)
                 || e.PropertyName == nameof(CloneVoiceModel.Name)
-                || e.PropertyName == nameof(CloneVoiceModel.Description)
                 || e.PropertyName == nameof(CloneVoiceModel.IsUploadSelected)
                 || e.PropertyName == nameof(CloneVoiceModel.IsRecordSelected))
             {
@@ -122,7 +121,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsNotValid.IsCloneVoiceNotValid =
                     CloneVoiceModel.IsCloneVoiceSelected &&
                     (string.IsNullOrWhiteSpace(CloneVoiceModel.Name) ||
-                     string.IsNullOrWhiteSpace(CloneVoiceModel.Description) ||
                      isAudioInvalid);
             }
         }
@@ -202,8 +200,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 var clonedVoiceId = await elevenLabsApi.CloneVoiceAsync(
                     CloneVoiceModel.Name,
-                    audioPath,
-                    CloneVoiceModel.Description
+                    audioPath
                 );
 
                 if (!string.IsNullOrEmpty(clonedVoiceId.VoiceId))
@@ -280,7 +277,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     {
                         Name = "name",
                         VoiceId = _cloneVoiceId,
-                        Description = CloneVoiceModel.Description,
                         UserId = ""
                     };
                     voiceId = await _mediator.Send(commandVoice);

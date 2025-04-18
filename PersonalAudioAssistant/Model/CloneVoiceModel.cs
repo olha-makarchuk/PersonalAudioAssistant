@@ -10,10 +10,7 @@ namespace PersonalAudioAssistant.Model
         private bool isCloneGenerated = false;
 
         [ObservableProperty]
-        private string name;
-
-        [ObservableProperty]
-        private string description;        
+        private string name;      
         
         [ObservableProperty]
         private bool isCloneVoiceSelected;
@@ -36,7 +33,7 @@ namespace PersonalAudioAssistant.Model
         [ObservableProperty]
         private string cloneSourceButtonText = "Зклонувати новий голос";
 
-        private Color _cloneSourceButtonColor;
+        private Color _cloneSourceButtonColor = Color.FromArgb("#4CAF50");
         public Color CloneSourceButtonColor
         {
             get => _cloneSourceButtonColor;
@@ -53,8 +50,8 @@ namespace PersonalAudioAssistant.Model
                 : "Зклонувати новий голос";
 
             CloneSourceButtonColor = IsCreateCloneVoiceMode
-                ? Colors.Red
-                : Colors.Green;
+                ? Color.FromArgb("#ae2f2f")
+                : Color.FromArgb("#4CAF50"); 
 
             if (IsCreateCloneVoiceMode)
             {
@@ -67,7 +64,5 @@ namespace PersonalAudioAssistant.Model
                 IsRecordSelected = false;
             }
         }
-
-
     }
 }
