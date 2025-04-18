@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 
 namespace PersonalAudioAssistant.Model
@@ -6,13 +7,16 @@ namespace PersonalAudioAssistant.Model
     public partial class CloneVoiceModel : ObservableObject
     {
         [ObservableProperty]
+        private bool isCloneGenerated = false;
+
+        [ObservableProperty]
+        private string name;
+
+        [ObservableProperty]
+        private string description;        
+        
+        [ObservableProperty]
         private bool isCloneVoiceSelected;
-
-        [ObservableProperty]
-        private bool isUploadSelected = true;
-
-        [ObservableProperty]
-        private bool isRecordSelected = false;
 
         [ObservableProperty]
         private bool isCloneAudioRecorded = false;
@@ -20,29 +24,50 @@ namespace PersonalAudioAssistant.Model
         [ObservableProperty]
         private bool isFragmentSelectionVisible;
 
-        public ObservableCollection<int> HourOptions { get; } = new ObservableCollection<int>();
-        public ObservableCollection<int> MinuteOptions { get; } = new ObservableCollection<int>();
-        public ObservableCollection<int> SecondOptions { get; } = new ObservableCollection<int>();
+        [ObservableProperty]
+        private bool isUploadSelected = false;
 
         [ObservableProperty]
-        private int selectedEndHour;
+        private bool isRecordSelected = false;
 
         [ObservableProperty]
-        private int selectedEndMinute;
+        private bool isCreateCloneVoiceMode = false;
 
         [ObservableProperty]
-        private int selectedEndSecond;
+        private string cloneSourceButtonText = "Зклонувати новий голос";
 
-        [ObservableProperty]
-        private int selectedStartHour;
+        private Color _cloneSourceButtonColor;
+        public Color CloneSourceButtonColor
+        {
+            get => _cloneSourceButtonColor;
+            set => SetProperty(ref _cloneSourceButtonColor, value);
+        }
 
-        [ObservableProperty]
-        private int selectedStartMinute;
+        [RelayCommand]
+        private void ToggleCloneSource()
+        {
+            IsCreateCloneVoiceMode = !IsCreateCloneVoiceMode;
 
-        [ObservableProperty]
-        private int selectedStartSecond;
+            CloneSourceButtonText = IsCreateCloneVoiceMode
+                ? "Скасувати"
+                : "Зклонувати новий голос";
 
-        [ObservableProperty]
-        private TimeSpan totalDuration;
+            CloneSourceButtonColor = IsCreateCloneVoiceMode
+                ? Colors.Red
+                : Colors.Green;
+
+            if (IsCreateCloneVoiceMode)
+            {
+                IsUploadSelected = true;
+                IsRecordSelected = false;
+            }
+            else
+            {
+                IsUploadSelected = false;
+                IsRecordSelected = false;
+            }
+        }
+
+
     }
 }

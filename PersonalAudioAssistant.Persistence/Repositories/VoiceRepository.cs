@@ -43,5 +43,11 @@ namespace PersonalAudioAssistant.Persistence.Repositories
             var voice = await _context.Voices.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
             return voice!;
         }
+
+        public Task UpdateVoiceAsync(Voice voice, CancellationToken cancellationToken)
+        {
+            _context.Voices.Update(voice);
+            return _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

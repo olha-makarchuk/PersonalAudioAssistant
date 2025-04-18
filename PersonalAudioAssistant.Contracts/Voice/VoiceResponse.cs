@@ -2,14 +2,14 @@
 {
     public class VoiceResponse
     {
-        public required string Id { get; set; }
-        public required string VoiceId { get; set; }
-        public required string Name { get; set; }
-        public required string URL { get; set; }
-        public required string Gender { get; set; }
-        public required string Age { get; set; }
-        public required string UseCase { get; set; }
-        public required string Description { get; set; }
-        public required string UserId { get; set; }
+        public  string Id { get; set; }
+        public  string VoiceId { get; set; }
+        public  string Name { get; set; }
+        public  string URL { get; set; }
+        public  string Gender { get; set; }
+        public  string Age { get; set; }
+        public  string UseCase { get; set; }
+        public  string Description { get; set; }
+        public  string UserId { get; set; }
     }
 }

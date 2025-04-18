@@ -236,12 +236,45 @@
                     <VerticalStackLayout Spacing="15">
                         <Label Text="Клонування голосу" FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
 
+                        <!-- Список клонованих голосів -->
+                        <Label Text="Виберіть клонований голос:" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#333333"
+                               Margin="10,20,0,0"/>
+                        <Picker ItemsSource="{Binding CloneVoices}"
+                                ItemDisplayBinding="{Binding Name}"
+                                SelectedItem="{Binding SelectedCloneVoice}"
+                                BackgroundColor="#F0F0F0"
+                                HeightRequest="50"
+                                TextColor="#333333"
+                                Margin="10,0,10,30"/>
+
                         <!-- Вибір способу надходження аудіо -->
-                        <StackLayout Orientation="Horizontal" Spacing="20">
-                            <RadioButton Content="Завантажити файл" GroupName="CloneSourceOption"
+                        <StackLayout
+                            Spacing="20"
+                            IsVisible="{Binding CloneVoiceModel.IsCreateCloneVoiceMode}">
+
+                            <StackLayout Orientation="Horizontal" Spacing="20">
+                                <RadioButton Content="Завантажити файл" GroupName="CloneSourceOption"
                                          IsChecked="{Binding CloneVoiceModel.IsUploadSelected}" />
-                            <RadioButton Content="Записати голос" GroupName="CloneSourceOption"
+                                <RadioButton Content="Записати голос" GroupName="CloneSourceOption"
                                          IsChecked="{Binding CloneVoiceModel.IsRecordSelected}" />
+                            </StackLayout>
+                            <StackLayout>
+                                <Label Text="Введіть назву голосу:" 
+                                       FontAttributes="Bold" TextColor="#333333"/>
+                                <Entry Text="{Binding CloneVoiceModel.Name}" 
+                                        Placeholder="Назву голосу"
+                                        BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+
+                                <Label Text="Введіть про що голос:" 
+                                       FontAttributes="Bold" TextColor="#333333"/>
+                                <Entry Text="{Binding CloneVoiceModel.Description}" 
+                                        Placeholder="Про що голос"
+                                        BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+
+                            </StackLayout>
                         </StackLayout>
 
                         <!-- Блок завантаження файлу -->
@@ -269,52 +302,8 @@
                                        TextColor="#333333"/>
 
                                 <Label Text="Початок фрагменту:" TextColor="#555555"/>
-                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Center">
-                                    <Picker Title="Год."
-                                         ItemsSource="{Binding CloneVoiceModel.HourOptions}"
-                                         SelectedItem="{Binding CloneVoiceModel.SelectedStartHour}"
-                                         WidthRequest="50"
-                                         BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Хв."
-                                         ItemsSource="{Binding CloneVoiceModel.MinuteOptions}"
-                                         SelectedItem="{Binding CloneVoiceModel.SelectedStartMinute}"
-                                         WidthRequest="50"
-                                         BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Сек."
-                                             ItemsSource="{Binding CloneVoiceModel.SecondOptions}"
-                                             SelectedItem="{Binding CloneVoiceModel.SelectedStartSecond}"
-                                             WidthRequest="50"
-                                             BackgroundColor="#F0F0F0" />
-                                </HorizontalStackLayout>
-
-                                <Label Text="Кінець фрагменту:" TextColor="#555555" Margin="0,10,0,0" />
-                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Center">
-                                    <Picker Title="Год."
-                                            ItemsSource="{Binding CloneVoiceModel.HourOptions}"
-                                            SelectedItem="{Binding CloneVoiceModel.SelectedEndHour}"
-                                            WidthRequest="50"
-                                            BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Хв."
-                                            ItemsSource="{Binding CloneVoiceModel.MinuteOptions}"
-                                            SelectedItem="{Binding CloneVoiceModel.SelectedEndMinute}"
-                                            WidthRequest="50"
-                                            BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Сек."
-                                            ItemsSource="{Binding CloneVoiceModel.SecondOptions}"
-                                            SelectedItem="{Binding CloneVoiceModel.SelectedEndSecond}"
-                                            WidthRequest="50"
-                                            FontSize="14"
-                                            BackgroundColor="#F0F0F0" />
-                                </HorizontalStackLayout>
-
                                 <Label Text="Будь ласка, виберіть фрагмент аудіо тривалістю від 5 до 30 секунд" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid!}"/>
-                                <!--аудіо час-->
                             </StackLayout>
-
                         </StackLayout>
 
                         <!-- Блок запису голосу -->
@@ -336,9 +325,27 @@
                                        IsVisible="{Binding CloneVoiceModel.IsCloneAudioRecorded}"/>
                             </HorizontalStackLayout>
                         </StackLayout>
+                        <Button
+                            Text="Підтвердити"
+                            Command="{Binding CreateCloneVoiceCommand}"
+                            IsVisible="{Binding CloneVoiceModel.IsCreateCloneVoiceMode}"
+                            FontSize="16"
+                            CornerRadius="20"
+                            HeightRequest="45"
+                            Margin="10,0" />
+
+                        <Button
+                            Text="{Binding CloneVoiceModel.CloneSourceButtonText}"
+                            BackgroundColor="{Binding CloneVoiceModel.CloneSourceButtonColor}"
+                            Command="{Binding CloneVoiceModel.ToggleCloneSourceCommand}"
+                            FontSize="16"
+                            CornerRadius="20"
+                            HeightRequest="45"
+                            Margin="10,0" />
+
                     </VerticalStackLayout>
                 </Frame>
-
+                
                 <toolkit:MediaElement x:Name="mediaElement" 
                               Source="{Binding SelectedVoiceUrl}" 
                               IsVisible="False" />

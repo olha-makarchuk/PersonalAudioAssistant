@@ -26,8 +26,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         [ObservableProperty]
         private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
+        [ObservableProperty]
+        private ObservableCollection<VoiceResponse> cloneVoices = new();
 
         private List<VoiceResponse> allVoices = new List<VoiceResponse>();
+        private List<VoiceResponse> allCloneVoices;
 
         public VoiceFilterModel Filter { get; }
         public EndOptionsModel EndOptionsModel { get; }
@@ -49,6 +52,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         [ObservableProperty]
         private string selectedVoiceUrl;
+
+        [ObservableProperty]
+        private VoiceResponse selectedCloneVoice;
+
 
         public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
@@ -126,6 +133,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 {
                     allVoices = voiceList;
                     Voices = new ObservableCollection<VoiceResponse>(allVoices);
+
+                    // клонвані
+                    allCloneVoices = voiceList.Where(u => u.UserId == userId).ToList();
+                    CloneVoices = new ObservableCollection<VoiceResponse>(allCloneVoices);
+
                     InitializeFilterOptions();
 
                     if (!string.IsNullOrWhiteSpace(SubUser?.VoiceId))
@@ -396,24 +408,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     CloneVoiceModel.IsFragmentSelectionVisible = durationSec > 30;
                     player.Dispose();
 
-                    if (durationSec > 30)
-                    {
-                        var ts = TimeSpan.FromSeconds(Math.Floor(durationSec));
-                        CloneVoiceModel.TotalDuration = ts;
-
-                        CloneVoiceModel.HourOptions.Clear();
-                        for (int h = 0; h <= ts.Hours; h++)
-                            CloneVoiceModel.HourOptions.Add(h);
-
-                        CloneVoiceModel.MinuteOptions.Clear();
-                        CloneVoiceModel.SecondOptions.Clear();
-                        for (int i = 0; i < 60; i++)
-                        {
-                            CloneVoiceModel.MinuteOptions.Add(i);
-                            CloneVoiceModel.SecondOptions.Add(i);
-                        }
-
-                    }
                 }
             }
             catch (Exception ex)

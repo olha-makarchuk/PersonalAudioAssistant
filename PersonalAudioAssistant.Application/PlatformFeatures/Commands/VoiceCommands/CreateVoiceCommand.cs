@@ -9,9 +9,10 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
         public string VoiceId { get; set; }
         public string Name { get; set; }
         public string? UserId { get; set; }
+        public string? Description { get; set; }
    }
 
-    public class CreateVoiceCommandHandler : IRequestHandler<CreateVoiceCommand>
+    public class CreateVoiceCommandHandler : IRequestHandler<CreateVoiceCommand, string>
     {
         private readonly IVoiceRepository _voiceRepository;
 
@@ -22,6 +23,24 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
 
         public async Task<string> Handle(CreateVoiceCommand request, CancellationToken cancellationToken = default)
         {
+            /*
+            var user = await _voiceRepository.GetVoiceByIdAsync(request.UserId, cancellationToken);
+            if (user != null)
+            {
+                throw new Exception("Voice already exists.");
+            }*/
+
+            var newVoice = new Voice()
+            {
+                VoiceId = request.VoiceId,
+                Name = request.Name,
+                UserId = request.UserId
+            };
+            await _voiceRepository.CreateVoice(newVoice, cancellationToken);
+            return newVoice.Id.ToString();
+
+
+            /*
             
             var user = await _voiceRepository.GetVoiceByIdAsync(request.UserId, cancellationToken);
             if (user != null)
@@ -38,7 +57,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceComm
             await _voiceRepository.CreateVoice(newVoice, cancellationToken);
 
             return newVoice.Id.ToString();
-            /*
             var newVoice = new Voice()
             {
                 VoiceId = "knrPHWnBmmDHMoiMeP3l",

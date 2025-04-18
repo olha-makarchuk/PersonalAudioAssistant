@@ -36,7 +36,7 @@ namespace PersonalAudioAssistant.Application.Services
         }
 
 
-        public async Task<ElevenlabsApiResponse> CloneVoiceAsync(string voiceName, string filePath)
+        public async Task<ElevenlabsApiResponse> CloneVoiceAsync(string voiceName, string filePath, string description)
         {
             bool removeBackgroundNoise = true;
             var client = new RestClient(_baseUrl);
@@ -46,6 +46,7 @@ namespace PersonalAudioAssistant.Application.Services
             request.AlwaysMultipartFormData = true;
             request.AddParameter("name", voiceName);
             request.AddParameter("remove_background_noise", removeBackgroundNoise.ToString().ToLower());
+            request.AddParameter("description", description);
 
             request.AddFile("files", filePath, "audio/mpeg");
 
@@ -70,6 +71,22 @@ namespace PersonalAudioAssistant.Application.Services
             }
 
             throw new Exception("voice_id not found in the response.");
+        }
+
+        public async Task DeleteVoiceAsync(string voiceId)
+        {
+            var client = new RestClient($"{_baseUrl}/v1/voices/{voiceId}");
+            var request = new RestRequest();
+            request.Method = Method.Delete;
+
+            request.AddHeader("xi-api-key", _apiKey);
+
+            var response = await client.ExecuteAsync(request);
+
+            if (!response.IsSuccessful)
+            {
+                throw new Exception($"Failed to delete voice: {response.StatusCode} - {response.Content}");
+            }
         }
     }
 

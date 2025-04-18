@@ -235,11 +235,24 @@
                         <Label Text="Клонування голосу" FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
 
                         <!-- Вибір способу надходження аудіо -->
-                        <StackLayout Orientation="Horizontal" Spacing="20">
-                            <RadioButton Content="Завантажити файл" GroupName="CloneSourceOption"
-                                         IsChecked="{Binding CloneVoiceModel.IsUploadSelected}" />
-                            <RadioButton Content="Записати голос" GroupName="CloneSourceOption"
-                                         IsChecked="{Binding CloneVoiceModel.IsRecordSelected}" />
+                        <StackLayout
+                            Spacing="20"
+                            IsVisible="True">
+
+                            <StackLayout>
+                                <Label Text="Введіть назву голосу:" 
+                                       FontAttributes="Bold" TextColor="#333333"/>
+                                <Entry Text="{Binding CloneVoiceModel.Name}" 
+                                        Placeholder="Назву голосу"
+                                        BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+
+                                <Label Text="Введіть про що голос:" 
+                                       FontAttributes="Bold" TextColor="#333333"/>
+                                <Entry Text="{Binding CloneVoiceModel.Description}" 
+                                        Placeholder="Про що голос"
+                                        BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                                
+                            </StackLayout>
                         </StackLayout>
 
                         <!-- Блок завантаження файлу -->
@@ -265,53 +278,10 @@
                                 <Label Text="Тривалість аудіо:" 
                                        FontAttributes="Bold" 
                                        TextColor="#333333"/>
-                                
+
                                 <Label Text="Початок фрагменту:" TextColor="#555555"/>
-                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Center">
-                                    <Picker Title="Год."
-                                         ItemsSource="{Binding CloneVoiceModel.HourOptions}"
-                                         SelectedItem="{Binding CloneVoiceModel.SelectedStartHour}"
-                                         WidthRequest="50"
-                                         BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Хв."
-                                         ItemsSource="{Binding CloneVoiceModel.MinuteOptions}"
-                                         SelectedItem="{Binding CloneVoiceModel.SelectedStartMinute}"
-                                         WidthRequest="50"
-                                         BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Сек."
-                                             ItemsSource="{Binding CloneVoiceModel.SecondOptions}"
-                                             SelectedItem="{Binding CloneVoiceModel.SelectedStartSecond}"
-                                             WidthRequest="50"
-                                             BackgroundColor="#F0F0F0" />
-                                </HorizontalStackLayout>
-                                
-                                <Label Text="Кінець фрагменту:" TextColor="#555555" Margin="0,10,0,0" />
-                                <HorizontalStackLayout Spacing="10" VerticalOptions="Center" HorizontalOptions="Center">
-                                    <Picker Title="Год."
-                                            ItemsSource="{Binding CloneVoiceModel.HourOptions}"
-                                            SelectedItem="{Binding CloneVoiceModel.SelectedEndHour}"
-                                            WidthRequest="50"
-                                            BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Хв."
-                                            ItemsSource="{Binding CloneVoiceModel.MinuteOptions}"
-                                            SelectedItem="{Binding CloneVoiceModel.SelectedEndMinute}"
-                                            WidthRequest="50"
-                                            BackgroundColor="#F0F0F0" />
-                                    <Label Text=":" TextColor="#555555" VerticalOptions="Center" FontSize="20" FontAttributes="Bold"/>
-                                    <Picker Title="Сек."
-                                            ItemsSource="{Binding CloneVoiceModel.SecondOptions}"
-                                            SelectedItem="{Binding CloneVoiceModel.SelectedEndSecond}"
-                                            WidthRequest="50"
-                                            FontSize="14"
-                                            BackgroundColor="#F0F0F0" />
-                                </HorizontalStackLayout>
-
-                                <Label Text="Будь ласка, виберіть фрагмент аудіо тривалістю від 5 до 30 секунд" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid!}"/>            <!--аудіо час-->
+                                <Label Text="Будь ласка, виберіть фрагмент аудіо тривалістю від 5 до 30 секунд" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid!}"/>
                             </StackLayout>
-
                         </StackLayout>
 
                         <!-- Блок запису голосу -->
@@ -333,6 +303,38 @@
                                        IsVisible="{Binding CloneVoiceModel.IsCloneAudioRecorded}"/>
                             </HorizontalStackLayout>
                         </StackLayout>
+
+                        <!-- Вибір способу надходження аудіо -->
+                        <StackLayout
+                                    Spacing="20"
+                                    IsVisible="True">
+
+                            <StackLayout Orientation="Horizontal" Spacing="20">
+                                <RadioButton Content="Завантажити файл" GroupName="CloneSourceOption"
+                                                IsChecked="{Binding CloneVoiceModel.IsUploadSelected}" />
+                                <RadioButton Content="Записати голос" GroupName="CloneSourceOption"
+                                                IsChecked="{Binding CloneVoiceModel.IsRecordSelected}" />
+                            </StackLayout>
+                        </StackLayout>
+                        
+                        <Button
+                            Text="Клонувати"
+                            Command="{Binding CreateCloneVoiceCommand}"
+                            FontSize="16"
+                            CornerRadius="20"
+                            HeightRequest="45"
+                            Margin="10,0" />
+
+                        <StackLayout
+                            Spacing="20"
+                            HorizontalOptions="Center"
+                            IsVisible="{Binding CloneVoiceModel.IsCloneGenerated}">
+
+                            <Label Text="Голос склоновано!" TextColor="Green" FontSize="16" FontAttributes="Bold"/>
+                        </StackLayout>
+
+                        <Label IsVisible="{Binding IsNotValid.IsCloneVoiceNotValid}" Text="Заповніть усі поня та запишіть/завантажте аудіо" TextColor="Red"/>
+
                     </VerticalStackLayout>
                 </Frame>
                 
