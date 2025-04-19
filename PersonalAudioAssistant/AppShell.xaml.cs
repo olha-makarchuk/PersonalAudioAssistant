@@ -23,6 +23,7 @@ namespace PersonalAudioAssistant
             Routing.RegisterRoute(nameof(AnaliticsPage), typeof(AnaliticsPage));
             Routing.RegisterRoute(nameof(PaymentPage), typeof(PaymentPage));
             Routing.RegisterRoute(nameof(GetAccessToHistoryModalPage), typeof(GetAccessToHistoryModalPage));
+            Routing.RegisterRoute(nameof(HistoryPage), typeof(HistoryPage));
         }
 
         private async void SignOut_Clicked(object sender, EventArgs e)

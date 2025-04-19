@@ -75,5 +75,12 @@
     <ShellContent
         Title="GetAccessToHistoryModalPage"
         ContentTemplate="{DataTemplate view:GetAccessToHistoryModalPage}"
-        Route="GetAccessToHistoryModalPage"/>
+        Route="GetAccessToHistoryModalPage"/>    
+    
+    <ShellContent
+        Title="HistoryPage"
+        ContentTemplate="{DataTemplate view:HistoryPage}"
+        Route="HistoryPage"/>
+
+    
 </Shell>

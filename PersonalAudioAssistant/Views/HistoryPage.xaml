@@ -3,10 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.HistoryPage"
              Title="HistoryPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <Grid>
+        <ScrollView>
+            <Label Text="{Binding User.UserName}"
+               FontSize="18" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, -20"/>
+        </ScrollView>
+        
+        <ActivityIndicator
+                IsVisible="{Binding IsBusy}"
+                IsRunning="{Binding IsBusy}"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                WidthRequest="60"
+                HeightRequest="60" />
+    </Grid>
 </ContentPage>

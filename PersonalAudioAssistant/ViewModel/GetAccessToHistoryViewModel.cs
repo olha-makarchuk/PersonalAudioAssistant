@@ -34,34 +34,29 @@ namespace PersonalAudioAssistant.ViewModel
         {
             _mediator = mediator;
             _manageCacheData = manageCacheData;
-
-            LoadUsersAsync();
         }
 
         partial void OnSelectedUserChanged(SubUserResponse value)
         {
-            if (value.PasswordHash == null)
-            {
-                IsPasswordExists = false;
-            }
-            else
-            {
-                IsPasswordExists = true;
-            }
+            if (value == null)
+                return;
 
+            IsPasswordExists = value.PasswordHash != null;
             IsPasswordCorrect = true;
-            passwordEntry = string.Empty;
+            PasswordEntry = string.Empty;
         }
 
-        public async Task RefreshUsersAsync() => await LoadUsersAsync();
 
-        private async Task LoadUsersAsync()
+        public async Task LoadUsersAsync()
         {
+            SelectedUser = null; 
             var cached = await _manageCacheData.GetUsersAsync();
             Users.Clear();
             foreach (var u in cached)
                 Users.Add(u);
         }
+
+
 
         [RelayCommand]
         private async Task CheckPasswordAsync()
@@ -93,10 +88,9 @@ namespace PersonalAudioAssistant.ViewModel
 
         private async Task OpenHistoryAsync()
         {
-            /*
-            // тут вкажіть ваш маршрут до сторінки історії
-            await Shell.Current.GoToAsync($"userhistory?userId={SelectedUser.Id}");
-            await MopupService.Instance.PopAsync();*/
+            await MopupService.Instance.PopAsync();
+
+            await Shell.Current.GoToAsync($"//HistoryPage?userId={SelectedUser.Id}");
         }
 
         [RelayCommand]

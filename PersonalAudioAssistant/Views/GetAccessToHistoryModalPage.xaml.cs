@@ -1,4 +1,5 @@
 using PersonalAudioAssistant.ViewModel;
+using PersonalAudioAssistant.ViewModel.Users;
 
 namespace PersonalAudioAssistant.Views;
 
@@ -8,7 +9,14 @@ public partial class GetAccessToHistoryModalPage
     {
         InitializeComponent();
         BindingContext = viewModel;
+    }
 
-        this.Appearing += async (_, __) => await viewModel.RefreshUsersAsync();
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is GetAccessToHistoryViewModel viewModel)
+        {
+            await viewModel.LoadUsersAsync();
+        }
     }
 }

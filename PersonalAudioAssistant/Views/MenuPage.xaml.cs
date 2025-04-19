@@ -43,12 +43,20 @@ public partial class MenuPage : Popup
         await Shell.Current.GoToAsync("//AnaliticsPage");
         Close();
     }
-    
+
     private async void HistoryModalPageClicked(object sender, EventArgs e)
     {
-        Close();
-        // Resolve the GetAccessModalPage from the service provider
-        var modal = Microsoft.Maui.Controls.Application.Current.Handler.MauiContext.Services.GetRequiredService<GetAccessToHistoryModalPage>();
-        await _popupNavigation.PushAsync(modal);
+        try
+        {
+            Close();
+
+            var modal = Microsoft.Maui.Controls.Application.Current.Handler.MauiContext.Services.GetRequiredService<GetAccessToHistoryModalPage>();
+            await _popupNavigation.PushAsync(modal);
+        }
+        catch (Exception ex)
+        {
+            await Microsoft.Maui.Controls.Application.Current.MainPage.DisplayAlert("Error", ex.ToString(), "OK");
+        }
     }
+
 }

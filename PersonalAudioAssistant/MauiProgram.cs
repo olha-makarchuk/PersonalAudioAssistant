@@ -81,6 +81,7 @@ public static class MauiProgram
         builder.Services.AddScoped<AnaliticsPage, AnaliticsViewModel>();
         builder.Services.AddScoped<PaymentPage, PaymentViewModel>();
         builder.Services.AddScoped<GetAccessToHistoryModalPage, GetAccessToHistoryViewModel>();
+        builder.Services.AddScoped<HistoryPage, HistoryViewModel>();
         builder.Services.AddScoped<MenuPage>();
 
         // Repositories
