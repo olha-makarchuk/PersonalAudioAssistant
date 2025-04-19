@@ -72,4 +72,8 @@
         ContentTemplate="{DataTemplate view:AnaliticsPage}"
         Route="AnaliticsPage"/>
 
+    <ShellContent
+        Title="GetAccessToHistoryModalPage"
+        ContentTemplate="{DataTemplate view:GetAccessToHistoryModalPage}"
+        Route="GetAccessToHistoryModalPage"/>
 </Shell>

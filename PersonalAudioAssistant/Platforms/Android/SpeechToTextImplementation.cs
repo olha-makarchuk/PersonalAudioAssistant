@@ -15,7 +15,7 @@ namespace PersonalAudioAssistant.Platforms
         private SpeechRecognitionListener? listener;
         private SpeechRecognizer? speechRecognizer;
         private bool isListening = false;
-
+        private bool ContinueConversation; 
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();

@@ -16,6 +16,9 @@ using PersonalAudioAssistant.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands;
 using PersonalAudioAssistant.Platforms;
+using Mopups.Hosting;
+using Mopups.Interfaces;
+using Mopups.Services;
 namespace PersonalAudioAssistant;
 public static class MauiProgram
 {
@@ -34,6 +37,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
+            .ConfigureMopups()
             .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
@@ -46,6 +50,7 @@ public static class MauiProgram
 #endif
 
         // Services
+        builder.Services.AddSingleton<IPopupNavigation>(MopupService.Instance);
         builder.Services.AddApplication();
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton(TextToSpeech.Default);
@@ -75,6 +80,8 @@ public static class MauiProgram
         builder.Services.AddScoped<UpdateUserPage, UpdateUserViewModel>();
         builder.Services.AddScoped<AnaliticsPage, AnaliticsViewModel>();
         builder.Services.AddScoped<PaymentPage, PaymentViewModel>();
+        builder.Services.AddScoped<GetAccessToHistoryModalPage, GetAccessToHistoryViewModel>();
+        builder.Services.AddScoped<MenuPage>();
 
         // Repositories
         builder.Services.AddScoped<IAudioDataProvider, AndroidAudioDataProvider>();

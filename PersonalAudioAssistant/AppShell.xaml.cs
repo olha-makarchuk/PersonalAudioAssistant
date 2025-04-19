@@ -22,9 +22,10 @@ namespace PersonalAudioAssistant
             Routing.RegisterRoute(nameof(UpdateUserPage), typeof(UpdateUserPage));
             Routing.RegisterRoute(nameof(AnaliticsPage), typeof(AnaliticsPage));
             Routing.RegisterRoute(nameof(PaymentPage), typeof(PaymentPage));
+            Routing.RegisterRoute(nameof(GetAccessToHistoryModalPage), typeof(GetAccessToHistoryModalPage));
         }
 
-        private void SignOut_Clicked(object sender, EventArgs e)
+        private async void SignOut_Clicked(object sender, EventArgs e)
         {
             this.ShowPopup(new MenuPage());
         }

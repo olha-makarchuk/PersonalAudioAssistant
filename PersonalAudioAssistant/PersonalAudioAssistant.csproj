@@ -19,6 +19,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NullabilityInfoContextSupport>true</NullabilityInfoContextSupport>
+		<LangVersion>latest</LangVersion>
 
 		<!-- Display name -->
 		<ApplicationTitle>PersonalAudioAssistant</ApplicationTitle>
@@ -74,6 +75,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Maui.Graphics.Skia" Version="8.0.100" />
+		<PackageReference Include="Mopups" Version="1.3.2" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="3.1.0" />
 		<PackageReference Include="Syncfusion.Maui.Popup" Version="29.1.35" />
 	</ItemGroup>
@@ -89,6 +91,12 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\AuthorizationPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\GetAccessToHistoryModalPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\HistoryPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\MenuPage.xaml">
