@@ -2,54 +2,126 @@
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:viewmodel="clr-namespace:PersonalAudioAssistant.ViewModel"
     x:Class="PersonalAudioAssistant.Views.PaymentPage"
     Title="Керування оплатою">
 
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    
     <Grid>
         <ScrollView IsEnabled="{Binding IsNotBusy}">
             <VerticalStackLayout Padding="24" Spacing="24">
 
-                <Frame Padding="16" CornerRadius="20" BackgroundColor="#E8F5E9" HasShadow="True" BorderColor="#C8E6C9">
-                    <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                <Label Text="Введіть ваші дані:"
+                                   FontSize="16"
+                       FontAttributes="Bold"
+                       IsVisible="{Binding IsCardPreset, Converter={StaticResource InvertedBoolConverter}}"
 
-                        <Label Text="{Binding CardButtonText}"
-                               FontSize="26"
-                               FontAttributes="Bold"
-                               TextColor="#1B5E20"
-                               HorizontalOptions="Center" />
+                       TextColor="#444" 
+                       HorizontalOptions="Center"/>
+                <!-- Card container: always visible, shows edit or masked view -->
+                <Frame Padding="16" CornerRadius="20" BackgroundColor="#3966c8" HasShadow="True" WidthRequest="320" HorizontalOptions="Center">
+                    <Grid>
+                        <!-- Edit/New entry form -->
+                        <StackLayout Spacing="16"
+                                     IsVisible="{Binding IsCardPreset, Converter={StaticResource InvertedBoolConverter}}"
+                                     BindingContext="{Binding .}">
+                            <Label Text="Нова картка" FontSize="14" TextColor="White" HorizontalOptions="Center" />
+                            <Entry Text="{Binding CardNumber}"
+                                   Placeholder="0000 0000 0000 0000"
+                                   Keyboard="Numeric"
+                                   FontSize="18"
+                                   BackgroundColor="Transparent"
+                                   TextColor="White" />
+                            <HorizontalStackLayout Spacing="10">
+                                <Entry Text="{Binding DateExpirience}"
+                                       Placeholder="MM/YY"
+                                       WidthRequest="100"
+                                       FontSize="16"
+                                       BackgroundColor="Transparent"
+                                       TextColor="White" />
+                                <Entry Text="{Binding CVV_number}"
+                                       Placeholder="CVV"
+                                       WidthRequest="100"
+                                       FontSize="16"
+                                       IsPassword="True"
+                                       BackgroundColor="Transparent"
+                                       TextColor="White" />
+                            </HorizontalStackLayout>
+                        </StackLayout>
 
-                        <Button Text="{Binding CardButtonText}"
-                                BackgroundColor="#00C853"
-                                TextColor="White"
-                                CornerRadius="25"
-                                FontSize="18"
-                                FontAttributes="Bold"
-                                WidthRequest="220"
-                                HeightRequest="55"
-                                HorizontalOptions="Center"
-                                Command="{Binding LiqPayCommand}" />
+                        <!-- Masked card view -->
+                        <StackLayout Spacing="16"
+                                     IsVisible="{Binding IsCardPreset}">
+                            <Label Text="Ваша картка" FontSize="14" TextColor="White" HorizontalOptions="Center" />
+                            <Entry Text="{Binding MaskedCardNumber}"
+                                   IsReadOnly="True"
+                                   Keyboard="Numeric"
+                                   FontSize="18"
+                                   BackgroundColor="Transparent"
+                                   TextColor="White" />
+                            <HorizontalStackLayout Spacing="10">
+                                <Entry Text="{Binding DateExpirience}"
+                                       IsReadOnly="True"
+                                       Placeholder="MM/YY"
+                                       WidthRequest="100"
+                                       FontSize="16"
+                                       BackgroundColor="Transparent"
+                                       TextColor="White" />
+                                <Entry Text="{Binding CVV_number}"
+                                       IsReadOnly="True"
+                                       Placeholder="CVV"
+                                       WidthRequest="100"
+                                       FontSize="16"
+                                       IsPassword="True"
+                                       BackgroundColor="Transparent"
+                                       TextColor="White" />
+                            </HorizontalStackLayout>
+                        </StackLayout>
 
-                        <Label Text="{Binding MaskedCardNumber}"
-                               FontSize="18"
-                               TextColor="#333"
-                               HorizontalOptions="Center"
-                               IsVisible="{Binding IsCardPresent}" />
-
-                        <Button Text="Видалити карту"
-                                BackgroundColor="#FF5252"
-                                TextColor="White"
-                                CornerRadius="25"
-                                FontSize="16"
-                                HeightRequest="45"
-                                WidthRequest="180"
-                                HorizontalOptions="Center"
-                                Command="{Binding DeleteCardCommand}"
-                                IsVisible="{Binding IsCardPresent}" />
-
-                    </VerticalStackLayout>
+                    </Grid>
                 </Frame>
 
+                <!-- Card actions -->
+                <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
+                    <Button Text="Зберегти картку"
+                            Command="{Binding AddCardCommand}"
+                            IsVisible="{Binding IsCardPreset, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="#43A047"
+                            TextColor="White"
+                            CornerRadius="25"
+                            WidthRequest="160"
+                            HeightRequest="45" />
+                    <Button Text="Скасувати"
+                            Command="{Binding CancelUpdateCardCommand}"
+                            IsVisible="{Binding IsUpdatingCard}"
+                            BackgroundColor="#E53935"
+                            TextColor="White"
+                            CornerRadius="25"
+                            WidthRequest="160"
+                            HeightRequest="45" />
+                    <Button Text="Змінити картку"
+                            Command="{Binding UpdateCardCommand}"
+                            IsVisible="{Binding IsCardPreset}"
+                            BackgroundColor="#43A047"
+                            TextColor="White"
+                            CornerRadius="25"
+                            WidthRequest="180"
+                            HeightRequest="45" />
+                    <Button Text="Видалити картку"
+                            Command="{Binding DeleteCardCommand}"
+                            IsVisible="{Binding IsUpdatingCard, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="#FF5252"
+                            TextColor="White"
+                            CornerRadius="25"
+                            WidthRequest="180"
+                            HeightRequest="45" />
+                </HorizontalStackLayout>
                 <BoxView HeightRequest="1" BackgroundColor="#D3D3D3" Margin="0,10" />
 
                 <Frame CornerRadius="20" Padding="20" BackgroundColor="White" BorderColor="#E0E0E0" HasShadow="True">

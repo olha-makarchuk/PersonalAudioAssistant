@@ -5,6 +5,7 @@ using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsC
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.AutoPaymentsQuery;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentQuery;
+using System.Text.RegularExpressions;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -26,22 +27,30 @@ namespace PersonalAudioAssistant.ViewModel
         {
             OnPropertyChanged(nameof(IsNotBusy));
 
-            LiqPayCommand.NotifyCanExecuteChanged();
             DeleteCardCommand.NotifyCanExecuteChanged();
             SaveAutoPaymentSettingsCommand.NotifyCanExecuteChanged();
-            RechargeBalanceCommand.NotifyCanExecuteChanged(); // Notify CanExecute for the new command
+            RechargeBalanceCommand.NotifyCanExecuteChanged(); 
         }
 
-        // --- Дані картки ---
         [ObservableProperty]
         private string maskedCardNumber;
 
         [ObservableProperty]
-        private string paymentGatewayToken;
+        public string cardNumber;
 
-        public bool HasCard => !string.IsNullOrWhiteSpace(PaymentGatewayToken) && PaymentGatewayToken != "null";
-        public string CardButtonText => HasCard ? "Змінити карту" : "Додати карту";
-        public bool IsCardPresent => HasCard;
+        [ObservableProperty]
+        private string cVV_number;
+
+        [ObservableProperty]
+        private string dateExpirience;
+
+        [ObservableProperty]
+        private bool isCardPreset;
+
+        [ObservableProperty]
+        private bool isUpdatingCard;
+
+        private string paymentGatewayToken;
 
         // --- Налаштування автоплатежів ---
         [ObservableProperty]
@@ -57,7 +66,6 @@ namespace PersonalAudioAssistant.ViewModel
         [ObservableProperty]
         private decimal rechargeAmountInput;
 
-        // --- Ініціалізація ---
         public async Task InitializeAsync()
         {
             if (IsBusy)
@@ -82,55 +90,83 @@ namespace PersonalAudioAssistant.ViewModel
 
             var paymentResult = await _mediator.Send(new GetPaymentByUserIdQuery { UserId = userId });
             MaskedCardNumber = paymentResult.MaskedCardNumber;
-            PaymentGatewayToken = paymentResult.PaymentGatewayToken;
+            DateExpirience = paymentResult.DataExpired;
+            IsCardPreset = !string.IsNullOrEmpty(MaskedCardNumber);
 
             var autoPaymentResult = await _mediator.Send(new GetAutoPaymentsByUserIdQuery { UserId = userId });
             IsAutoPaymentEnabled = autoPaymentResult.IsAutoPayment;
             MinimumTokenBalance = autoPaymentResult.MinTokenThreshold;
             AutoRechargeAmount = autoPaymentResult.ChargeAmount;
+        }
 
-            OnPropertyChanged(nameof(HasCard));
-            OnPropertyChanged(nameof(CardButtonText));
-            OnPropertyChanged(nameof(IsCardPresent));
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task UpdateCard()
+        {
+            IsCardPreset = false;
+            IsUpdatingCard = true;
+        }
+
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task CancelUpdateCard()
+        {
+            IsCardPreset = true;
+            IsUpdatingCard = false;
+        }
+
+        private async Task Validate()
+        {
+            // Валідація полів
+            if (!Regex.IsMatch(CardNumber ?? string.Empty, @"^\d{16}$"))
+            {
+                await Shell.Current.DisplayAlert("Помилка", "Невірний формат номера картки. Має бути 16 цифр.", "OK");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(DateExpirience) || !Regex.IsMatch(DateExpirience, @"^(0[1-9]|1[0-2])\/\d{2}$"))
+            {
+                await Shell.Current.DisplayAlert("Помилка", "Невірний формат терміну дії. Формат MM/YY.", "OK");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(CVV_number) || !Regex.IsMatch(CVV_number, "^\\d{3,4}$"))
+            {
+                await Shell.Current.DisplayAlert("Помилка", "CVV має містити 3 або 4 цифри.", "OK");
+                return;
+            }
         }
 
         // --- Команди ---
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
-        private async Task LiqPay()
+        private async Task AddCard()
         {
             IsBusy = true;
             try
             {
+                await Validate();
+
                 var userId = await SecureStorage.GetAsync("user_id");
                 if (string.IsNullOrEmpty(userId))
                     return;
 
-                // Тут буде логіка для переходу на платіжний шлюз LiqPay
-                // Вам потрібно буде згенерувати дані для LiqPay (суму, опис, тощо)
-                // і перенаправити користувача на їхню сторінку.
-                // Після успішної оплати LiqPay має повідомити ваш сервер,
-                // і ви оновите дані картки в базі та локально.
 
-                // Для прикладу, імітуємо успішне додавання/зміну картки:
                 var random = new Random();
                 var fakeToken = Guid.NewGuid().ToString();
-                var fakeCardNumber = $"**** **** **** {random.Next(1000, 9999)}";
+
+                var lastFourDigits = CardNumber.Substring(CardNumber.Length - 4);
+
+                var fakeCardNumber = $"**** **** **** {lastFourDigits}";
 
                 MaskedCardNumber = fakeCardNumber;
-                PaymentGatewayToken = fakeToken; // Update the PaymentGatewayToken
 
                 var command = new UpdatePaymentCommand
                 {
                     UserId = userId,
                     MaskedCardNumber = fakeCardNumber,
-                    PaymentGatewayToken = fakeToken
+                    PaymentGatewayToken = fakeToken,
+                    DataExpired = DateExpirience
                 };
                 await _mediator.Send(command);
-
-                // Explicitly notify the UI that these properties have changed
-                OnPropertyChanged(nameof(HasCard));
-                OnPropertyChanged(nameof(CardButtonText));
-                OnPropertyChanged(nameof(IsCardPresent));
+                IsCardPreset = true;
             }
             finally
             {
@@ -144,6 +180,8 @@ namespace PersonalAudioAssistant.ViewModel
             IsBusy = true;
             try
             {
+                await Validate();
+
                 // Запит на підтвердження
                 var confirm = await Shell.Current.DisplayAlert(
                     "Підтвердження",
@@ -163,15 +201,12 @@ namespace PersonalAudioAssistant.ViewModel
                 {
                     UserId = userId,
                     MaskedCardNumber = null,
-                    PaymentGatewayToken = null
+                    PaymentGatewayToken = null,
+                    DataExpired = null
                 });
 
                 MaskedCardNumber = null;
-                PaymentGatewayToken = null;
-
-                OnPropertyChanged(nameof(HasCard));
-                OnPropertyChanged(nameof(CardButtonText));
-                OnPropertyChanged(nameof(IsCardPresent));
+                IsCardPreset = false;
             }
             finally
             {
@@ -219,34 +254,6 @@ namespace PersonalAudioAssistant.ViewModel
                 if (string.IsNullOrEmpty(userId))
                     return;
 
-                // Тут має бути логіка для ініціації платежу на вказану суму (RechargeAmountInput)
-                // через платіжний шлюз (наприклад, LiqPay).
-                // Зазвичай це включає створення запиту до платіжного шлюзу
-                // з інформацією про платіж (сума, валюта, опис, URL для повернення тощо).
-                // Після успішної оплати платіжний шлюз повідомить ваш сервер,
-                // і ви збільшите баланс токенів користувача.
-
-                // Для прикладу, імітуємо успішне поповнення балансу:
-                // Припустимо, що у вас є команда для оновлення балансу токенів.
-                /*
-                var rechargeCommand = new AddTokensCommand
-                {
-                    UserId = userId,
-                    Amount = (int)RechargeAmountInput // Припускаємо, що RechargeAmountInput - це гривні, і ви якось конвертуєте це в токени
-                };
-                var result = await _mediator.Send(rechargeCommand);
-
-                if (result)
-                {
-                    await Shell.Current.DisplayAlert("Успішно", $"Баланс поповнено на {RechargeAmountInput} ₴.", "OK");
-                    // Можливо, вам захочеться оновити відображення балансу на іншому екрані
-                }
-                else
-                {
-                    await Shell.Current.DisplayAlert("Помилка", "Не вдалося поповнити баланс.", "OK");
-                }
-                */
-                // Після успішного поповнення або невдачі, ви можете захотіти очистити поле введення суми
                 RechargeAmountInput = 5;
             }
             finally

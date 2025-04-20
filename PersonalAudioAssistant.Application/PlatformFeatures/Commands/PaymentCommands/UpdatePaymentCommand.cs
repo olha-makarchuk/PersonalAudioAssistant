@@ -8,6 +8,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCo
         public required string UserId { get; set; }
         public required string PaymentGatewayToken { get; set; }
         public required string MaskedCardNumber { get; set; }
+        public required string DataExpired { get; set; }
     }
 
     public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand>
@@ -23,17 +24,18 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCo
         {
             try
             {
-                var autoPayment = await _paymentRepository.GetPaymentByUserIdAsync(request.UserId, cancellationToken);
+                var payment = await _paymentRepository.GetPaymentByUserIdAsync(request.UserId, cancellationToken);
 
-                if (autoPayment == null)
+                if (payment == null)
                 {
                     throw new Exception("Payment not found");
                 }
 
-                autoPayment.PaymentGatewayToken = request.PaymentGatewayToken;
-                autoPayment.MaskedCardNumber = request.MaskedCardNumber;
+                payment.PaymentGatewayToken = request.PaymentGatewayToken;
+                payment.MaskedCardNumber = request.MaskedCardNumber;
+                payment.DataExpired = request.DataExpired;
 
-                await _paymentRepository.UpdatePaymentAsync(autoPayment, cancellationToken);
+                await _paymentRepository.UpdatePaymentAsync(payment, cancellationToken);
             }
             catch (Exception ex)
             {

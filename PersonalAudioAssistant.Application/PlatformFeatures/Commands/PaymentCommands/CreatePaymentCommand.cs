@@ -24,7 +24,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCo
             {
                 UserId = request.UserId,
                 PaymentGatewayToken = string.Empty,
-                MaskedCardNumber = string.Empty
+                MaskedCardNumber = string.Empty,
+                DataExpired = string.Empty
             };
 
             await _paymentRepository.AddPaymentAsync(payment, cancellationToken);
