@@ -2,6 +2,7 @@
 using Android.Content;
 using Android.Speech;
 using CommunityToolkit.Maui.Alerts;
+using Newtonsoft.Json;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
@@ -15,7 +16,10 @@ namespace PersonalAudioAssistant.Platforms
         private SpeechRecognitionListener? listener;
         private SpeechRecognizer? speechRecognizer;
         private bool isListening = false;
-        private bool ContinueConversation; 
+        private bool IsContinueConversation; 
+
+        private bool IsFirstRequest; 
+        private string PreviousResponseId;
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();
@@ -68,26 +72,36 @@ namespace PersonalAudioAssistant.Platforms
                             var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
                             await audioPlayerHelper.PlayAudio(cancellationToken);
 
-                            IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
-                            var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
+                            IsContinueConversation = true;
+                            IsFirstRequest = true;
 
-                            try
+                            while (IsContinueConversation)
                             {
-                                string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken);
+                                try
+                                {
+                                    IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
+                                    var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
-                                await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
+                                    string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
 
-                                var textToSpeech = new ElevenlabsApi();
-                                var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
+                                    await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
 
-                                await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+                                    TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(answer);
+                                    IsContinueConversation = response.IsContinuous;
+                                    IsFirstRequest = false;
+                                    /*
+                                    var textToSpeech = new ElevenlabsApi();
+                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
 
-                                await Task.Delay(100);
-                            }
-                            catch
-                            {
-                                StopRecording();
-                                return;
+                                    await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+                                    */
+                                    await Task.Delay(100);
+                                }
+                                catch
+                                {
+                                    StopRecording();
+                                    return;
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -199,4 +213,15 @@ namespace PersonalAudioAssistant.Platforms
             StartListening(culture);
         }
     }
+
+
+    public class TranscriptionResponse
+    {
+        public string Request { get; set; }
+        public string Transcripts { get; set; }
+        public bool IsContinuous { get; set; }
+        public string ConversationId { get; set; }
+        public string AIconversationId { get; set; }
+    }
+
 }

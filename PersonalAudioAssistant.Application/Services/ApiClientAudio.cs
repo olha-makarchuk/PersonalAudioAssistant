@@ -10,20 +10,19 @@ namespace PersonalAudioAssistant.Application.Services
     {
         private readonly WebSocketService webSocketService;
         private readonly IAudioDataProvider audioDataProvider;
-
         public ApiClientAudio(IAudioDataProvider audioDataProvider, WebSocketService webSocketService)
         {
             this.webSocketService = webSocketService;
             this.audioDataProvider = audioDataProvider;
         }
         
-        public async Task<string> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken)
+        public async Task<string> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
         {
             try
             {
                 await webSocketService.ConnectAsync(cancellationToken);
 
-                var dataPayload = JsonSerializer.Serialize(new { subUser.UserId, subUser.EndTime, subUser.UserVoice, subUser.EndPhrase});
+                var dataPayload = JsonSerializer.Serialize(new {subUser.EndTime, subUser.UserVoice, subUser.EndPhrase, IsFirstRequest, PreviousResponseId});
 
                 var idBytes = Encoding.UTF8.GetBytes(dataPayload);
                 await webSocketService.SendDataAsync(idBytes, idBytes.Length, cancellationToken);

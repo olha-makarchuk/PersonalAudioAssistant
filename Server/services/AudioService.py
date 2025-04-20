@@ -79,19 +79,14 @@ async def receive_id(websocket):
 
         data = json.loads(init_message)
 
-        id_value = data.get("UserId")
         end_time = data.get("EndTime")
         user_voice = data.get("UserVoice")
         end_phrase = data.get("EndPhrase")
-
-        if id_value is None:
-            await websocket.send_text("Error: missing id")
-            await websocket.close()
-            return None
-
-        print(f"Отримано id: {id_value}")
-        await websocket.send_text("OK")
-        return id_value, end_time, user_voice, end_phrase
+        isFirstRequest = data.get("IsFirstRequest")
+        previousResponseId = data.get("PreviousResponseId")
+        
+        await websocket.send_text("OK")# якщо все необхідне є
+        return end_time, user_voice, end_phrase, isFirstRequest, previousResponseId
     except Exception as e:
         await websocket.send_text("Invalid id message")
         await websocket.close()
@@ -106,80 +101,137 @@ def listen_for_phrase(recognizer, stop_event, phrase, audio_q):
                 if "text" in result and phrase.lower() in result["text"].lower():
                     stop_event.set()
 
-async def receive_audio(websocket, idx: int, end_time, user_voice, end_phrase):
-    audio_buffer = []
+
+import time
+
+async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequest):
+    audio_buffer = []                  # сюди накопичуємо весь потік
     classification_buffer = []
     classification_buffer_duration = 0.0
     window_duration = 1.0
     last_me_detected_time = 0.0
     total_duration = 0.0
 
-    stop_event = threading.Event()
-    audio_q = queue.Queue()
+    # Якщо перший запит — вважати, що ми вже “вловили” голос
+    speech_detected = isFirstRequest
 
+    # 1) При isFirstRequest=False: чекаємо до 10 с на старт вашого голосу
+    if not isFirstRequest:
+        init_timeout = 10.0
+        init_start = time.monotonic()
+        init_buffer = []
+        init_buffer_dur = 0.0
+
+        while time.monotonic() - init_start < init_timeout:
+            msg = await websocket.receive()
+            if msg.get("type") != "websocket.receive" or "bytes" not in msg:
+                continue
+
+            data = msg["bytes"]
+            chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+            chunk_duration = len(chunk) / RATE
+            total_duration += chunk_duration
+
+            # 1.1) Зберігаємо весь потік
+            audio_buffer.append(chunk)
+            # 1.2) Окремо для первинної перевірки
+            init_buffer.append(chunk)
+            init_buffer_dur += chunk_duration
+
+            # Кожен раз, коли набираємо window_duration, перевіряємо embedding
+            if init_buffer_dur >= window_duration:
+                seg = np.concatenate(init_buffer)
+                init_buffer = []
+                init_buffer_dur = 0.0
+
+                emb = get_segment_embedding(seg)
+                me_emb = np.array(user_voice)
+                dist = cdist(
+                    np.atleast_2d(emb),
+                    np.atleast_2d(me_emb),
+                    metric="cosine"
+                ).min()
+
+                if dist < THRESHOLD:
+                    speech_detected = True
+                    break
+
+        if not speech_detected:
+            print(f"Timeout: no speech detected in {init_timeout} s")
+            return np.array([]), False
+
+    # 2) Основний цикл: збираємо весь потік + перевіряємо end_time / end_phrase
+    stop_event = threading.Event()
     if end_phrase:
         recognizer = create_vosk_recognizer()
         listener_thread = threading.Thread(
-            target=listen_for_phrase,
-            args=(recognizer, stop_event, end_phrase, audio_q)
+            target=lambda: listen_for_phrase(recognizer, stop_event, end_phrase, None)
         )
         listener_thread.start()
 
     try:
         while True:
             message = await websocket.receive()
-            if message["type"] == "websocket.receive":
-                if "text" in message and message["text"] == "end":
-                    break
-                elif "bytes" in message:
-                    data = message["bytes"]
-                    chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
-                    chunk_duration = len(chunk) / RATE
-                    total_duration += chunk_duration
+            # якщо прийшов спеціальний “end”
+            if message.get("type") == "websocket.receive" and "text" in message and message["text"] == "end":
+                break
 
-                    audio_buffer.append(chunk)
-                    classification_buffer.append(chunk)
-                    classification_buffer_duration += chunk_duration
+            # якщо атач із байтами
+            if message.get("type") == "websocket.receive" and "bytes" in message:
+                data = message["bytes"]
+                chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+                chunk_duration = len(chunk) / RATE
+                total_duration += chunk_duration
 
-                    # Якщо використовується end_time:
-                    if end_time != None:
-                        if classification_buffer_duration >= window_duration:
-                            window_audio = np.concatenate(classification_buffer)
-                            classification_buffer = []
-                            classification_buffer_duration = 0.0
+                # 2.1) Завжди збираємо в загальний буфер
+                audio_buffer.append(chunk)
+                # 2.2) Класіфікаційний буфер для end_time
+                classification_buffer.append(chunk)
+                classification_buffer_duration += chunk_duration
 
-                            embedding = get_segment_embedding(window_audio)
-                            me_embedding = np.array(user_voice)
-                            distances = cdist(np.atleast_2d(embedding), np.atleast_2d(me_embedding), metric="cosine")
-                            if distances.min() < THRESHOLD:
-                                last_me_detected_time = total_duration
+                # Обробка за end_time
+                if end_time is not None:
+                    if classification_buffer_duration >= window_duration:
+                        window_audio = np.concatenate(classification_buffer)
+                        classification_buffer = []
+                        classification_buffer_duration = 0.0
 
-                        if total_duration - last_me_detected_time >= int(end_time) and total_duration > int(end_time):
+                        embedding = get_segment_embedding(window_audio)
+                        me_embedding = np.array(user_voice)
+                        distances = cdist(
+                            np.atleast_2d(embedding),
+                            np.atleast_2d(me_embedding),
+                            metric="cosine"
+                        )
+                        if distances.min() < THRESHOLD:
+                            last_me_detected_time = total_duration
+
+                    if total_duration - last_me_detected_time >= int(end_time):
+                        break
+
+                # Обробка за end_phrase
+                elif end_phrase is not None:
+                    if recognizer.AcceptWaveform(data):
+                        result = json.loads(recognizer.Result())
+                        text = result.get("text", "")
+                        if end_phrase.lower() in text.lower():
                             break
 
-                    # Якщо використовується end_phrase:
-                    elif end_phrase != None:
-                        if recognizer.AcceptWaveform(data):
-                            result = recognizer.Result()
-                            result_dict = json.loads(result)
-                            recognized_text = result_dict.get("text", "")
-                            print("Розпізнаний текст:", recognized_text)
-                            if end_phrase.lower() in recognized_text.lower():
-                                break
-            elif message["type"] == "websocket.disconnect":
+            # клієнт відключився
+            if message.get("type") == "websocket.disconnect":
                 break
 
     except Exception as e:
-        print("WebSocket відключено клієнтом або сталася помилка:", e)
+        print("WebSocket відключено або помилка:", e)
     finally:
         if end_phrase:
             stop_event.set()
             listener_thread.join()
 
     full_audio = np.concatenate(audio_buffer)
-    return full_audio
+    return full_audio, True
 
-def process_audio_segments(full_audio, idx: int, user_voice):
+def process_audio_segments(full_audio, user_voice):
     final_audio_segments = []
     temp_audio_path = "temp_stream.wav"
     sf.write(temp_audio_path, full_audio, RATE)
@@ -201,7 +253,6 @@ def process_audio_segments(full_audio, idx: int, user_voice):
         seg_embedding = get_segment_embedding(segment_signal)
         me_embedding = np.array(user_voice)
         
-        #me_embedding = known_speakers[idx]
         distances = cdist(np.atleast_2d(seg_embedding), np.atleast_2d(me_embedding), metric="cosine")
         if distances.min() < THRESHOLD:
             final_audio_segments.append(segment_signal)
@@ -226,3 +277,4 @@ def transcribe_audio(final_audio_segments):
 
 load_known_speakers()
 post_processing_params = load_yaml_config()
+

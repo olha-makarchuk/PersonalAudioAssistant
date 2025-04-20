@@ -17,28 +17,19 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 async def websocket_audio(websocket: WebSocket):
     await websocket.accept()
 
-    id_user, end_time, user_voice, end_phrase = await receive_id(websocket)
-    if id_user is None:
-        return
+    end_time, user_voice, end_phrase, isFirstRequest, previousResponseId = await receive_id(websocket)
 
-    if str(id_user) in known_speaker_ids:
-        idx = known_speaker_ids.index(str(id_user))
-        print(f"Спікер з id {id_user} знайдений. Індекс: {idx}")
-    else:
-        print(f"Спікера з id {id_user} не знайдено.")
-        idx = None  
-
-    full_audio = await receive_audio(websocket, idx, end_time, user_voice, end_phrase)
+    full_audio, isContinuous  = await receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequest)
 
     #sf.write("received_audio.wav", full_audio, RATE)
 
-    final_audio_segments = process_audio_segments(full_audio, idx, user_voice)
+    final_audio_segments = process_audio_segments(full_audio, user_voice)
 
     transcription = transcribe_audio(final_audio_segments)
     transcription_text = transcription.text if hasattr(transcription, "text") else str(transcription)
 
     print(transcription_text)
-    
+    '''
     completion = client.chat.completions.create(
     model="gpt-4o-mini",
     messages=[
@@ -48,6 +39,11 @@ async def websocket_audio(websocket: WebSocket):
         }]
     )
     print(completion.choices[0].message.content)
+    '''
+    if transcription_text == "":
+        isContinuous = False
+    else:
+        isContinuous = True
 
-    await websocket.send_json({"transcripts": completion.choices[0].message.content})
+    await websocket.send_json({"request": transcription_text, "transcripts": transcription_text, "isContinuous":isContinuous, "conversationId": "", "AIconversationId": ""})
     await websocket.close()
