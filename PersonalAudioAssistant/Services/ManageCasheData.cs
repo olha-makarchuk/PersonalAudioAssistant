@@ -61,7 +61,7 @@ namespace PersonalAudioAssistant.Services
         public async Task UpdateAppSetttingsList()
         {
             _cache.Remove(SettingsCacheKey);
-            await GetUsersAsync();
+            await GetAppSettingsAsync();
         }
 
         public void ClearCache()

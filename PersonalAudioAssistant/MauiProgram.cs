@@ -65,6 +65,7 @@ public static class MauiProgram
         builder.Services.AddScoped<ApiClientAudio>();
         builder.Services.AddScoped<WebSocketService>(); 
         builder.Services.AddScoped<ApiClientVoiceEmbedding>(); 
+        builder.Services.AddScoped<ApiClientTokens>(); 
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
 

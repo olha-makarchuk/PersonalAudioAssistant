@@ -3,6 +3,29 @@ from openai import OpenAI
 OPENAI_API_KEY = "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"
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+import tiktoken
+
+# Використовуємо токенізатор для GPT-4o
+enc = tiktoken.encoding_for_model("gpt-4")
+
+text = "Сонце повільно сходило над горизонтом."
+tokens = enc.encode(text)
+
+print(f"Tokens: {tokens}")
+
+
+
+response = client.responses.create(
+    model="gpt-4.1",
+    input=[
+        {"role": "user", "content": "Сонце повільно сходило над горизонтом."},
+    ],
+)
+
+print(response.output_text)
+
+
+'''
 def continue_chat(user_message, prev_response_id=None):
     response_params = {
         "model": "gpt-4o-mini",
@@ -22,3 +45,4 @@ def continue_chat(user_message, prev_response_id=None):
     return resp 
 
 continue_chat("яке було моє попереднє запитання?", "resp_680515fcaeb08192a564398e5fd913900da8b8fd6c8fe0aa")
+'''

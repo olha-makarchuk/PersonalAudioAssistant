@@ -6,7 +6,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsC
     public class UpdateBalanceCommand: IRequest
     {
         public required string UserId { get; set; }
-        public int Balance { get; set; }
+        public decimal Balance { get; set; }
     }
 
     public class UpdateBalanceCommandHandler : IRequestHandler<UpdateBalanceCommand>
@@ -27,7 +27,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsC
                 throw new Exception("Settings not found.");
             }
 
-            settings.Balance = request.Balance;
+            settings.Balance += request.Balance;
             await _settingsRepository.UpdateSettingsAsync(settings, cancellationToken);
         }
     }

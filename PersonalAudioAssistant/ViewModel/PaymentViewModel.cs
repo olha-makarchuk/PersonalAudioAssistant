@@ -3,8 +3,13 @@ using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.AutoPaymentsQuery;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentQuery;
+using PersonalAudioAssistant.Application.Services;
+using PersonalAudioAssistant.Model;
+using PersonalAudioAssistant.Model.Payment;
+using PersonalAudioAssistant.Services;
 using System.Text.RegularExpressions;
 
 namespace PersonalAudioAssistant.ViewModel
@@ -12,14 +17,22 @@ namespace PersonalAudioAssistant.ViewModel
     public partial class PaymentViewModel : ObservableObject
     {
         private readonly IMediator _mediator;
+        private readonly ApiClientTokens _apiClientTokens;
+        private readonly ManageCacheData _manageCacheData;
 
-        public PaymentViewModel(IMediator mediator)
+        public PaymentViewModel(IMediator mediator, ApiClientTokens apiClientTokens, ManageCacheData manageCacheData)
         {
             _mediator = mediator;
+            CardModel = new CardModel();
+            AutoPaymentModel = new AutoPaymentModel();
+            _apiClientTokens = apiClientTokens;
+            _manageCacheData = manageCacheData;
         }
 
         [ObservableProperty]
         private bool isBusy;
+        public CardModel CardModel { get; }
+        public AutoPaymentModel AutoPaymentModel { get; }
 
         public bool IsNotBusy => !IsBusy;
 
@@ -33,18 +46,6 @@ namespace PersonalAudioAssistant.ViewModel
         }
 
         [ObservableProperty]
-        private string maskedCardNumber;
-
-        [ObservableProperty]
-        public string cardNumber;
-
-        [ObservableProperty]
-        private string cVV_number;
-
-        [ObservableProperty]
-        private string dateExpirience;
-
-        [ObservableProperty]
         private bool isCardPreset;
 
         [ObservableProperty]
@@ -52,19 +53,12 @@ namespace PersonalAudioAssistant.ViewModel
 
         private string paymentGatewayToken;
 
-        // --- Налаштування автоплатежів ---
-        [ObservableProperty]
-        private bool isAutoPaymentEnabled;
-
-        [ObservableProperty]
-        private int minimumTokenBalance;
-
-        [ObservableProperty]
-        private int autoRechargeAmount;
-
         // --- Поповнення балансу ---
         [ObservableProperty]
         private decimal rechargeAmountInput;
+
+        [ObservableProperty]
+        private string textInput;
 
         public async Task InitializeAsync()
         {
@@ -89,14 +83,14 @@ namespace PersonalAudioAssistant.ViewModel
                 return;
 
             var paymentResult = await _mediator.Send(new GetPaymentByUserIdQuery { UserId = userId });
-            MaskedCardNumber = paymentResult.MaskedCardNumber;
-            DateExpirience = paymentResult.DataExpired;
-            IsCardPreset = !string.IsNullOrEmpty(MaskedCardNumber);
+            CardModel.MaskedCardNumber = paymentResult.MaskedCardNumber;
+            CardModel.DateExpirience = paymentResult.DataExpired;
+            IsCardPreset = !string.IsNullOrEmpty(CardModel.MaskedCardNumber);
 
             var autoPaymentResult = await _mediator.Send(new GetAutoPaymentsByUserIdQuery { UserId = userId });
-            IsAutoPaymentEnabled = autoPaymentResult.IsAutoPayment;
-            MinimumTokenBalance = autoPaymentResult.MinTokenThreshold;
-            AutoRechargeAmount = autoPaymentResult.ChargeAmount;
+            AutoPaymentModel.IsAutoPaymentEnabled = autoPaymentResult.IsAutoPayment;
+            AutoPaymentModel.MinimumTokenBalance = autoPaymentResult.MinTokenThreshold;
+            AutoPaymentModel.AutoRechargeAmount = autoPaymentResult.ChargeAmount;
         }
 
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
@@ -116,19 +110,19 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task Validate()
         {
             // Валідація полів
-            if (!Regex.IsMatch(CardNumber ?? string.Empty, @"^\d{16}$"))
+            if (!Regex.IsMatch(CardModel.CardNumber ?? string.Empty, @"^\d{16}$"))
             {
                 await Shell.Current.DisplayAlert("Помилка", "Невірний формат номера картки. Має бути 16 цифр.", "OK");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(DateExpirience) || !Regex.IsMatch(DateExpirience, @"^(0[1-9]|1[0-2])\/\d{2}$"))
+            if (string.IsNullOrWhiteSpace(CardModel.DateExpirience) || !Regex.IsMatch(CardModel.DateExpirience, @"^(0[1-9]|1[0-2])\/\d{2}$"))
             {
                 await Shell.Current.DisplayAlert("Помилка", "Невірний формат терміну дії. Формат MM/YY.", "OK");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(CVV_number) || !Regex.IsMatch(CVV_number, "^\\d{3,4}$"))
+            if (string.IsNullOrWhiteSpace(CardModel.CVV_number) || !Regex.IsMatch(CardModel.CVV_number, "^\\d{3,4}$"))
             {
                 await Shell.Current.DisplayAlert("Помилка", "CVV має містити 3 або 4 цифри.", "OK");
                 return;
@@ -152,18 +146,18 @@ namespace PersonalAudioAssistant.ViewModel
                 var random = new Random();
                 var fakeToken = Guid.NewGuid().ToString();
 
-                var lastFourDigits = CardNumber.Substring(CardNumber.Length - 4);
+                var lastFourDigits = CardModel.CardNumber.Substring(CardModel.CardNumber.Length - 4);
 
                 var fakeCardNumber = $"**** **** **** {lastFourDigits}";
 
-                MaskedCardNumber = fakeCardNumber;
+                CardModel.MaskedCardNumber = fakeCardNumber;
 
                 var command = new UpdatePaymentCommand
                 {
                     UserId = userId,
                     MaskedCardNumber = fakeCardNumber,
                     PaymentGatewayToken = fakeToken,
-                    DataExpired = DateExpirience
+                    DataExpired = CardModel.DateExpirience
                 };
                 await _mediator.Send(command);
                 IsCardPreset = true;
@@ -205,7 +199,7 @@ namespace PersonalAudioAssistant.ViewModel
                     DataExpired = null
                 });
 
-                MaskedCardNumber = null;
+                CardModel.MaskedCardNumber = null;
                 IsCardPreset = false;
             }
             finally
@@ -227,9 +221,9 @@ namespace PersonalAudioAssistant.ViewModel
                 await _mediator.Send(new UpdateAutoPaymentCommand
                 {
                     UserId = userId,
-                    ChargeAmount = AutoRechargeAmount,
-                    IsAutoPayment = IsAutoPaymentEnabled,
-                    MinTokenThreshold = MinimumTokenBalance,
+                    ChargeAmount = AutoPaymentModel.AutoRechargeAmount,
+                    IsAutoPayment = AutoPaymentModel.IsAutoPaymentEnabled,
+                    MinTokenThreshold = AutoPaymentModel.MinimumTokenBalance,
                 });
             }
             finally
@@ -254,12 +248,60 @@ namespace PersonalAudioAssistant.ViewModel
                 if (string.IsNullOrEmpty(userId))
                     return;
 
-                RechargeAmountInput = 5;
+                var command = new UpdateBalanceCommand()
+                {
+                    Balance = RechargeAmountInput,
+                    UserId = userId
+                };
+                await _mediator.Send(command);
+                await Shell.Current.DisplayAlert("Успіх", $"Баланс успішно поповнено на {RechargeAmountInput} $", "OK"); 
+
+                await _manageCacheData.UpdateAppSetttingsList();
             }
             finally
             {
                 IsBusy = false;
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task CalculatePrice()
+        {
+            var answer = "Привіт, чим я можу вам допомогти?";
+            const double DollarPerSystemToken = 0.0003;
+
+            var inputTokenCount = await _apiClientTokens.GetTokenCountAsync(TextInput);
+            var outputTokenCount = await _apiClientTokens.GetTokenCountAsync(answer);
+
+            var wordCount = Regex.Matches(TextInput, @"\b\w+\b").Count;
+            var durationInSeconds = wordCount * 0.4;
+
+            var transcriptionCost = (durationInSeconds / 60.0) * 0.006;
+            var transcribionOut = await _apiClientTokens.GetTokenCountAsync(TextInput) * 0.00001;
+
+            var gptInCost = inputTokenCount * 0.000002;
+            var gptOutCost = outputTokenCount * 0.000008;
+
+            var charCount = answer.Length;
+            var ttsCost = (charCount / 1000.0) * 0.0833;
+
+            var totalCost = transcriptionCost + transcribionOut + gptInCost + gptOutCost + ttsCost;
+            var tokenCost = totalCost / DollarPerSystemToken;
+
+            // Розрахунок скільки запитів можна здійснити за $5
+            var howManyRequestsFiveDollars = (5 / totalCost);  // Кількість запитів за $5
+
+            var summary = $"""
+                   🧠 Відповідь(приклад): "{answer}"
+                   🎙️ Транскрипція: {durationInSeconds:F1} сек → ${transcriptionCost:F5}
+                   🤖 GPT Input: {inputTokenCount} токенів → ${gptInCost:F5}
+                   📤 GPT Output: {outputTokenCount} токенів → ${gptOutCost:F5}
+                   🗣️ Озвучення: {charCount} символів → ${ttsCost:F5}
+                   💰 Загалом: ${totalCost:F5}
+                   💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} схожих запитів
+                   """;
+
+            await Shell.Current.DisplayAlert("Оцінка", summary, "OK");
         }
     }
 }

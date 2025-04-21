@@ -1,13 +1,12 @@
 using CommunityToolkit.Maui.Views;
 using Mopups.Interfaces;
-using Mopups.Pages;
 using Mopups.Services;
-using Microsoft.Maui;     
-using Microsoft.Extensions.DependencyInjection;
+using PersonalAudioAssistant.Services;
+using System.ComponentModel;
 
 namespace PersonalAudioAssistant.Views;
 
-public partial class MenuPage : Popup
+public partial class MenuPage : Popup, INotifyPropertyChanged
 {
     private readonly IPopupNavigation _popupNavigation;
 
@@ -17,8 +16,31 @@ public partial class MenuPage : Popup
     {
         InitializeComponent();
         _popupNavigation = popupNavigation;
+        BindingContext = this;
+
+        GetBalance();
     }
 
+    private decimal _balance;
+    public decimal Balance
+    {
+        get => _balance;
+        set
+        {
+            if (_balance != value)
+            {
+                _balance = value;
+                OnPropertyChanged(nameof(Balance));
+            }
+        }
+    }
+
+    private async void GetBalance()
+    {
+        var balance = Microsoft.Maui.Controls.Application.Current.Handler.MauiContext.Services.GetRequiredService<ManageCacheData>();
+        var settings = await balance.GetAppSettingsAsync();
+        Balance = settings.Balance;
+    }
 
     private async void MainPageClicked(object sender, EventArgs e)
     {
@@ -59,4 +81,10 @@ public partial class MenuPage : Popup
         }
     }
 
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }

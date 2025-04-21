@@ -17,7 +17,7 @@ namespace PersonalAudioAssistant.ViewModel
         private string email;
 
         [ObservableProperty]
-        private int balance;
+        private decimal balance;
 
         [ObservableProperty]
         private string theme;
@@ -43,11 +43,9 @@ namespace PersonalAudioAssistant.ViewModel
             _mediator = mediator;
             _authTokenManager = authTokenManager;
             _manageCacheData = manageCacheData;
-
-            LoadSettingsAsync();
         }
 
-        private async void LoadSettingsAsync()
+        public async Task LoadSettingsAsync()
         {
             try
             {
@@ -92,12 +90,6 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-
-        [RelayCommand]
-        public async Task SaveSettings()
-        {
-        }
-
         [RelayCommand]
         public async Task PaymentDetails()
             => await Shell.Current.GoToAsync("/PaymentPage");
@@ -119,5 +111,10 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
+        [RelayCommand] 
+        public async Task SaveTheme()
+        {
+            
+        }
     }
 }

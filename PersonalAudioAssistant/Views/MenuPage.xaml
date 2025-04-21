@@ -17,8 +17,8 @@
             BackgroundColor="#232D53"
             Padding="10"
             Spacing="0">
-            
-            <Label Text="Баланс: 100$"
+
+            <Label Text="{Binding Balance}"
                    Margin="0, 50, 0, 0 "
                    TextColor="White"
                    FontSize="20"

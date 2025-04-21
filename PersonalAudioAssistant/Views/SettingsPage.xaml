@@ -3,66 +3,40 @@
              x:Class="PersonalAudioAssistant.Views.SettingsPage">
 
     <ContentPage.Resources>
-        <Style TargetType="Label">
-            <Setter Property="TextColor" Value="#333333"/>
-        </Style>
-        <Style TargetType="Entry">
-            <Setter Property="BackgroundColor" Value="White"/>
-            <Setter Property="TextColor" Value="#333333"/>
-            <Setter Property="Margin" Value="0,5"/>
-            <Setter Property="HeightRequest" Value="45"/>
-            <Setter Property="PlaceholderColor" Value="#A9A9A9"/>
-            <Setter Property="FontSize" Value="16"/>
-        </Style>
-        <Style TargetType="Picker">
-            <Setter Property="BackgroundColor" Value="White"/>
-            <Setter Property="TextColor" Value="#333333"/>
-            <Setter Property="Margin" Value="0,5"/>
-            <Setter Property="HeightRequest" Value="45"/>
-            <Setter Property="FontSize" Value="16"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="TextColor" Value="White"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="Padding" Value="15"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="0,10"/>
-        </Style>
+        <!-- Оновлені стилі -->
         <Style x:Key="SectionTitleLabel" TargetType="Label">
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="TextColor" Value="#4CAF50"/>
         </Style>
         <Style x:Key="InfoLabel" TargetType="Label">
             <Setter Property="FontSize" Value="16"/>
+            <Setter Property="TextColor" Value="#333"/>
         </Style>
         <Style x:Key="BalanceLabel" TargetType="Label">
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="TextColor" Value="#28A745"/>
+            <Setter Property="TextColor" Value="#5CB85C"/>
         </Style>
         <Style x:Key="SettingsFrame" TargetType="Frame">
-            <Setter Property="BackgroundColor" Value="White"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Padding" Value="20"/>
+            <Setter Property="BackgroundColor" Value="#FFFFFF"/>
             <Setter Property="HasShadow" Value="True"/>
-            <Setter Property="Margin" Value="0,0,0,20"/>
         </Style>
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout Spacing="10" Padding="25, 0, 25, 0">
-            <Label Text="Налаштування"
-                   FontSize="24"
-                   HorizontalOptions="Center"
-                   FontAttributes="Bold"
-                   TextColor="#333333"
-                   Margin="0,0,0,20"/>
+        <VerticalStackLayout Spacing="20" Padding="30,0">
+            <Label Text="⚙️ Налаштування" 
+                   FontSize="30" 
+                   FontAttributes="Bold" 
+                   Margin="0,20,0,10" 
+                   HorizontalOptions="Center" />
 
             <Frame Style="{StaticResource SettingsFrame}">
-                <VerticalStackLayout Spacing="18">
-                    <Label Text="Інформація про профіль" Style="{StaticResource SectionTitleLabel}"/>
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="👤 Інформація про профіль" Style="{StaticResource SectionTitleLabel}"/>
                     <HorizontalStackLayout>
                         <Label Text="Електронна пошта:" Style="{StaticResource InfoLabel}"/>
                         <Label Text="{Binding Email}" Style="{StaticResource InfoLabel}" Margin="10, 0, 0, 0"/>
@@ -70,62 +44,84 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,0,0,15"/>
+
             <Frame Style="{StaticResource SettingsFrame}">
-                <VerticalStackLayout Spacing="18">
-                    <Label Text="Персоналізація" Style="{StaticResource SectionTitleLabel}"/>
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="🎨 Персоналізація" Style="{StaticResource SectionTitleLabel}"/>
                     <Label Text="Тема оформлення:" Style="{StaticResource InfoLabel}"/>
                     <Picker ItemsSource="{Binding Themes}"
                             SelectedItem="{Binding Theme}"
-                            Title="Виберіть тему"/>
+                            Title="Виберіть тему"
+                            BackgroundColor="#F2F2F2"/>
+                    <Button Text="💾 Зберегти"
+                            Command="{Binding SaveThemeCommand}"
+                            BackgroundColor="#5CB85C"
+                            TextColor="White"
+                            FontSize="16"
+                            CornerRadius="10"/>
                 </VerticalStackLayout>
             </Frame>
 
+            <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,0,0,15"/>
+
             <Frame Style="{StaticResource SettingsFrame}">
-                <VerticalStackLayout Spacing="18">
-                    <Label Text="Баланс" Style="{StaticResource SectionTitleLabel}"/>
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="💰 Баланс" Style="{StaticResource SectionTitleLabel}"/>
                     <Label Text="Ваш поточний баланс:" Style="{StaticResource InfoLabel}"/>
-                    <HorizontalStackLayout>
-                        <Label Text="{Binding Balance}"
-                           Style="{StaticResource BalanceLabel}"
-                           HorizontalOptions="Start"/>
-                        <Label Text=" токенів"
-                           Style="{StaticResource BalanceLabel}"
-                           HorizontalOptions="Start"/>
+                    <HorizontalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding Balance}" Style="{StaticResource BalanceLabel}" />
+                        <Label Text=" $" Style="{StaticResource BalanceLabel}" />
                     </HorizontalStackLayout>
-                    <Button Text="Платіжна інформація"
+                    <Button Text="💳 Платіжна інформація"
                             Command="{Binding PaymentDetailsCommand}"
-                            BackgroundColor="#5CB85C"/>
+                            BackgroundColor="#5CB85C"
+                            FontSize="16"
+                            TextColor="White"
+                            CornerRadius="10"/>
                 </VerticalStackLayout>
             </Frame>
+
+            <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,0,0,15"/>
 
             <Frame Style="{StaticResource SettingsFrame}">
-                <VerticalStackLayout Spacing="18">
-                    <Label Text="Поміняти пароль" Style="{StaticResource SectionTitleLabel}"/>
-                    
-                    <StackLayout>
-                        <StackLayout>
-                            <Label Text="Поточний пароль:" TextColor="#555555"/>
-                            <Entry Text="{Binding OldPassword}" Placeholder="Введіть поточний пароль" BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
-                        </StackLayout>
-                        <StackLayout>
-                            <Label Text="Новий пароль:" TextColor="#555555"/>
-                            <Entry Text="{Binding NewPassword}" Placeholder="Введіть новий пароль" BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
-                        </StackLayout>
-                    </StackLayout>
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="🔒 Змінити пароль" Style="{StaticResource SectionTitleLabel}"/>
 
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="🔑 Поточний пароль:" Style="{StaticResource InfoLabel}"/>
+                        <Entry Text="{Binding OldPassword}"
+                               Placeholder="Введіть поточний пароль"
+                               IsPassword="True"
+                               BackgroundColor="#F2F2F2"/>
+                    </VerticalStackLayout>
 
-                    <Button Text="Підтвердити"
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="✨ Новий пароль:" Style="{StaticResource InfoLabel}"/>
+                        <Entry Text="{Binding NewPassword}"
+                               Placeholder="Введіть новий пароль"
+                               IsPassword="True"
+                               BackgroundColor="#F2F2F2"/>
+                    </VerticalStackLayout>
+
+                    <Button Text="✅ Підтвердити"
                             Command="{Binding ChangePasswordCommand}"
-                            BackgroundColor="#5CB85C"/>
+                            BackgroundColor="#5CB85C"
+                            TextColor="White"
+                            FontSize="16"
+                            CornerRadius="10"/>
                 </VerticalStackLayout>
             </Frame>
-            
-            <Button Text="Зберегти налаштування"
-                    Command="{Binding SaveSettingsCommand}"/>
-            
-            <Button Text="Вийти"
+
+            <BoxView HeightRequest="1" BackgroundColor="#E0E0E0" Margin="0,0,0,15"/>
+
+            <Button Text="LogOut"
                     Command="{Binding SignOutCommand}"
-                    BackgroundColor="#a40200"/>
+                    BackgroundColor="#d9534f"
+                    FontSize="16"
+                    Margin="0,0,0,50"
+                    TextColor="White"
+                    CornerRadius="10"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
