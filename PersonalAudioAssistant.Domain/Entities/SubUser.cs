@@ -13,5 +13,6 @@ namespace PersonalAudioAssistant.Domain.Entities
         public byte[]? PasswordHash { get; set; }
         public byte[]? PasswordSalt { get; set; }
         public required string UserId { get; set; }
+        public required string PhotoPath { get; set; }
     }
 }

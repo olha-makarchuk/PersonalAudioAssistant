@@ -58,6 +58,17 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         public string selectedAudioFilePath;
 
+        private bool _isPhotoSelected;
+        public bool IsPhotoSelected
+        {
+            get => _isPhotoSelected;
+            set
+            {
+                _isPhotoSelected = value;
+                OnPropertyChanged();
+            }
+        }
+
         public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
             _mediator = mediator;
@@ -87,6 +98,33 @@ namespace PersonalAudioAssistant.ViewModel.Users
             LoadVoicesAsync();
         }
 
+        [RelayCommand]
+        private async Task PickPhotoAsync()
+        {
+            var customImageFileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.WinUI, new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" } },
+                    { DevicePlatform.Android, new[] { "image/*" } },
+                    { DevicePlatform.iOS, new[] { "public.image" } },
+                    { DevicePlatform.MacCatalyst, new[] { "public.image" } },
+                    { DevicePlatform.Tizen, new[] { "*/*" } }
+                });
+
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Оберіть будь-яке зображення",
+                FileTypes = customImageFileTypes
+            });
+
+            if (result != null)
+            {
+                SubUser.PhotoPath = result.FullPath;
+                IsPhotoSelected = true;
+                OnPropertyChanged(nameof(SubUser));
+                OnPropertyChanged(nameof(SubUser.PhotoPath));
+            }
+        }
+
         private void ValidateSubUser(object s, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(SubUser.UserName))
@@ -97,6 +135,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsNotValid.IsStartPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.StartPhrase);
             if (e.PropertyName == nameof(SubUser.EndPhrase) && EndOptionsModel.IsEndPhraseSelected)
                 IsNotValid.IsEndPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.EndPhrase);
+            if (e.PropertyName == nameof(SubUser.PhotoPath))
+                IsNotValid.IsPhotoPathNotValid = string.IsNullOrWhiteSpace(SubUser.PhotoPath);
         }
 
         private void ValidateCloneModel(object s, PropertyChangedEventArgs e)
@@ -239,6 +279,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsNotValid.IsCloneVoiceNotValid = false;
                 IsNotValid.IsUserVoiceNotValid = false;
                 IsNotValid.IsPasswordNotValid = false;
+                IsNotValid.IsPhotoPathNotValid = false;
 
                 if (string.IsNullOrWhiteSpace(SubUser.UserName))
                     IsNotValid.IsUserNameNotValid = true;
@@ -258,12 +299,16 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 if (SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.Password))
                     IsNotValid.IsPasswordNotValid = true;
 
+                if (string.IsNullOrWhiteSpace(SubUser.PhotoPath))
+                    IsNotValid.IsPhotoPathNotValid = true;
+
                 if (IsNotValid.IsUserNameNotValid
                     || IsNotValid.IsStartPhraseNotValid
                     || IsNotValid.IsEndPhraseNotValid
                     || IsNotValid.IsCloneVoiceNotValid
                     || IsNotValid.IsUserVoiceNotValid
-                    || IsNotValid.IsPasswordNotValid)
+                    || IsNotValid.IsPasswordNotValid
+                    || IsNotValid.IsPhotoPathNotValid)
                 {
                     return;
                 }
@@ -275,7 +320,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 {
                     var commandVoice = new CreateVoiceCommand()
                     {
-                        Name = "name",
+                        Name = CloneVoiceModel.Name,
                         VoiceId = _cloneVoiceId,
                         UserId = ""
                     };
@@ -295,6 +340,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     EndPhrase = EndOptionsModel.IsEndPhraseSelected ? SubUser.EndPhrase : null,
                     EndTime = EndOptionsModel.IsEndTimeSelected ? EndOptionsModel.SelectedEndTime.ToString() : null,
                     VoiceId = voiceId,
+                    PhotoPath = SubUser.PhotoPath,
                     UserVoice = embedding
                 };
                 var userId = await _mediator.Send(command);
@@ -565,6 +611,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             SubUser.UserName = null;
             SelectedVoice = null;
             SelectedVoiceUrl = null;
+            IsPhotoSelected = false;
             EndOptionsModel.IsEndPhraseSelected = false;
             EndOptionsModel.IsEndTimeSelected = true;
             EndOptionsModel.SelectedEndTime = 2;
@@ -585,6 +632,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsNotValid.IsCloneVoiceNotValid = false;
             IsNotValid.IsUserVoiceNotValid = false;
             IsNotValid.IsPasswordNotValid = false;
+            IsNotValid.IsPhotoPathNotValid = false;
 
             ResetDescriptionFilter();
             ResetAgeFilter();

@@ -7,44 +7,39 @@ namespace PersonalAudioAssistant.Application.Services
     public class BlobStorage : IBlobStorage
     {
         private readonly BlobServiceClient _client;
-        private readonly string _containerName = "audio-message";
 
         public BlobStorage(BlobStorageConfig config)
         {
             _client = new BlobServiceClient(config.ConnectionString);
         }
 
-        public async Task<bool> FileExistsAsync(string fileName)
+        public async Task<bool> FileExistsAsync(string fileName, BlobContainerType containerType)
         {
-            var blobClient = _client.GetBlobContainerClient(_containerName).GetBlobClient(fileName);
+            var blobClient = GetContainer(containerType).GetBlobClient(fileName);
             var exists = await blobClient.ExistsAsync();
             if (!exists)
             {
-                throw new Exception($"Blob '{fileName}' does not exist in container '{_containerName}'.");
-                //throw new NotFoundException($"Blob '{fileName}' does not exist in container '{_containerName}'.");
+                throw new Exception($"Blob '{fileName}' does not exist in container '{containerType}'.");
             }
             return exists;
         }
 
-        public async Task PutContextAsync(string filename, Stream stream)
+        public async Task PutContextAsync(string filename, Stream stream, BlobContainerType containerType)
         {
             try
             {
-                var blobClient = _client.GetBlobContainerClient(_containerName).GetBlobClient(filename);
-
-                //var blobClient = _client.GetBlobContainerClient(_containerName).GetBlobClient("folder1/folder2/" + filename);
-
+                var blobClient = GetContainer(containerType).GetBlobClient(filename);
                 await blobClient.UploadAsync(stream, overwrite: true);
             }
             catch (RequestFailedException ex)
             {
-                throw new Exception($"Error uploading blob '{filename}' to container '{_containerName}': {ex.Message}");
+                throw new Exception($"Error uploading blob '{filename}' to container '{containerType}': {ex.Message}");
             }
         }
 
-        public List<int> FindByMessage(Guid messageId)
+        public List<int> FindByMessage(Guid messageId, BlobContainerType containerType)
         {
-            var results = _client.GetBlobContainerClient(_containerName)
+            var results = GetContainer(containerType)
                 .GetBlobs(prefix: messageId.ToString("N"))
                 .AsPages(default, 1000)
                 .SelectMany(dt => dt.Values)
@@ -54,9 +49,9 @@ namespace PersonalAudioAssistant.Application.Services
             return results;
         }
 
-        public async Task<List<string>> GetAllAsync()
+        public async Task<List<string>> GetAllAsync(BlobContainerType containerType)
         {
-            var results = _client.GetBlobContainerClient(_containerName)
+            var results = GetContainer(containerType)
                 .GetBlobs()
                 .Select(blobItem => blobItem.Name)
                 .ToList();
@@ -64,9 +59,9 @@ namespace PersonalAudioAssistant.Application.Services
             return results;
         }
 
-        public async Task DeleteAsync(string filename)
+        public async Task DeleteAsync(string filename, BlobContainerType containerType)
         {
-            var blobClient = _client.GetBlobContainerClient(_containerName).GetBlobClient(filename);
+            var blobClient = GetContainer(containerType).GetBlobClient(filename);
 
             try
             {
@@ -77,13 +72,29 @@ namespace PersonalAudioAssistant.Application.Services
                 }
                 else
                 {
-                    throw new Exception($"Blob '{filename}' does not exist in container '{_containerName}'.");
+                    throw new Exception($"Blob '{filename}' does not exist in container '{containerType}'.");
                 }
             }
             catch (RequestFailedException ex)
             {
-                throw new Exception($"Error deleting blob '{filename}' from container '{_containerName}': {ex.Message}");
+                throw new Exception($"Error deleting blob '{filename}' from container '{containerType}': {ex.Message}");
             }
         }
+
+        private BlobContainerClient GetContainer(BlobContainerType type)
+        {
+            return type switch
+            {
+                BlobContainerType.AudioMessage => _client.GetBlobContainerClient("audio-message"),
+                BlobContainerType.UserImage => _client.GetBlobContainerClient("user-image"),
+                _ => throw new ArgumentOutOfRangeException(nameof(type), $"Unsupported container type: {type}")
+            };
+        }
+    }
+
+    public enum BlobContainerType
+    {
+        AudioMessage,
+        UserImage
     }
 }

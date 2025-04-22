@@ -3,7 +3,6 @@
              x:Class="PersonalAudioAssistant.Views.SettingsPage">
 
     <ContentPage.Resources>
-        <!-- Оновлені стилі -->
         <Style x:Key="SectionTitleLabel" TargetType="Label">
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontAttributes" Value="Bold"/>

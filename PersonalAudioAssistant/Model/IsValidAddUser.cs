@@ -26,5 +26,8 @@ namespace PersonalAudioAssistant.Model
                 
         [ObservableProperty]
         public bool isUserVoiceNotValid = false;
+
+        [ObservableProperty]
+        public bool isPhotoPathNotValid = false;
     }
 }

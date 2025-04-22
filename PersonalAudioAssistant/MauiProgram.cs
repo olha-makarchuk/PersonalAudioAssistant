@@ -95,6 +95,8 @@ public static class MauiProgram
         builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();
         builder.Services.AddScoped<IVoiceRepository, VoiceRepository>();
         builder.Services.AddScoped<ISpeechToText, SpeechToTextImplementation>();
+        builder.Services.AddScoped<IBlobStorage, BlobStorage>();
+        builder.Services.AddSingleton<BlobStorageConfig>();
 
         // CosmosDb
         builder.Services.AddDbContext<CosmosDbContext>(options =>

@@ -27,6 +27,9 @@ namespace PersonalAudioAssistant.Model
         public string password;
 
         [ObservableProperty]
+        public string photoPath;
+
+        [ObservableProperty]
         public bool isPasswordEnabled = false;
     }
 }

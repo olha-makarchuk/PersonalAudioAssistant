@@ -44,6 +44,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 EndPhrase = request.EndPhrase,
                 EndTime = request.EndTime,
                 VoiceId = request.VoiceId,
+                PhotoPath = "",//request.UserName,
                 UserVoice = request.UserVoice
             };
 

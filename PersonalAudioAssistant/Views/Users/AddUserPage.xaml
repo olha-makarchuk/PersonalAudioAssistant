@@ -24,6 +24,25 @@
                            Placeholder="Ім'я користувача"
                            BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
                         <Label Text="Введіть ім’я користувача" TextColor="Red" IsVisible="{Binding IsNotValid.IsUserNameNotValid}"/>
+
+                        <Label Text="Додайте основну світлину:" 
+                               FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                        <Button Text="Вибрати файл" 
+                                Command="{Binding PickPhotoCommand}"
+                                TextColor="White"/>
+
+                        <Frame HeightRequest="100" WidthRequest="100"
+                               Padding="0"
+                               CornerRadius="100"
+                               IsVisible="{Binding IsPhotoSelected}"
+                               HasShadow="False"
+                               BorderColor="#CCCCCC">
+                            <Image Source="{Binding SubUser.PhotoPath}" 
+                                   Aspect="AspectFill"
+                                   HeightRequest="100" WidthRequest="100"/>
+                        </Frame>
+
                     </VerticalStackLayout>
                 </Frame>
 
