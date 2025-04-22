@@ -281,7 +281,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 };
 
                 await _mediator.Send(command);
+                //await _manageCacheData.UpdateUsersList();
                 await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
+                MessagingCenter.Send(this, "UserUpdated");
             }
             catch (Exception ex)
             {
@@ -774,6 +776,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsNotValid.IsCloneVoiceNotValid = false;
             IsNotValid.IsUserVoiceNotValid = false;
             IsNotValid.IsPasswordNotValid = false;
+            IsPhotoSelected = false;
 
             ResetDescriptionFilter();
             ResetAgeFilter();

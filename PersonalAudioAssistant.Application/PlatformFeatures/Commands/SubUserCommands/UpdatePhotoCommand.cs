@@ -27,7 +27,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
             if (request.PhotoPath != null && request.PhotoURL != null)
             {
                 using var stream = System.IO.File.OpenRead(request.PhotoPath);
-                string fileName = $"{Path.GetFileName(request.PhotoURL)}?nocache=1";
+                string fileName = $"{Path.GetFileName(request.PhotoURL)}";
                 var a = await _blobStorage.FileExistsAsync(fileName, BlobContainerType.UserImage);
 
                 await _blobStorage.DeleteAsync(fileName, BlobContainerType.UserImage);

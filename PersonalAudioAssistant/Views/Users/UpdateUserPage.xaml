@@ -18,6 +18,9 @@
                 <Setter Property="FontSize" Value="18" />
                 <Setter Property="Margin" Value="0,10,0,0" />
             </Style>
+            
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -125,11 +128,29 @@
                                Padding="0"
                                CornerRadius="100"
                                HasShadow="False"
+                               IsVisible="{Binding IsPhotoSelected, Converter={StaticResource InvertedBoolConverter}}"
                                BorderColor="#CCCCCC">
-                            <Image Source="{Binding SubUser.PhotoPath}" 
+                            <Image
+                                   Aspect="AspectFill"
+                                   HeightRequest="100" WidthRequest="100">
+                                <Image.Source>
+                                    <UriImageSource Uri="{Binding SubUser.PhotoPath}" 
+                                                        CachingEnabled="False"/>
+                                </Image.Source>
+                            </Image>
+                        </Frame>
+                        
+                        <Frame HeightRequest="100" WidthRequest="100"
+                               Padding="0"
+                               CornerRadius="100"
+                               HasShadow="False"
+                               IsVisible="{Binding IsPhotoSelected}"
+                               BorderColor="#CCCCCC">
+                            <Image Source="{Binding SubUser.PhotoPath} "
                                    Aspect="AspectFill"
                                    HeightRequest="100" WidthRequest="100"/>
                         </Frame>
+                        
                         <Button Text="Вибрати файл" 
                                 Background="#f5f1f9"
                                 Margin="70,0"

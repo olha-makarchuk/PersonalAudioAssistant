@@ -19,4 +19,13 @@ public partial class UsersListPage : ContentPage
             await viewModel.LoadUsersAsync();
         }
     }
+
+    protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+    {
+        base.OnNavigatedFrom(args);
+        if (BindingContext is UsersListViewModel viewModel)
+        {
+            viewModel.OnNavigatedFrom();
+        }
+    }
 }

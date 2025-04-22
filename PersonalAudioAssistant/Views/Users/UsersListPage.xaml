@@ -47,13 +47,17 @@
                                    VerticalOptions="Center"
                                    HorizontalOptions="Center"
                                    BackgroundColor="Transparent">
-                                <Image Source="{Binding PhotoPath}"
-                                       Aspect="AspectFill"
-                                       WidthRequest="80"
-                                       HeightRequest="80"
-                                       VerticalOptions="Center"
-                                       HorizontalOptions="Center"
-                                       Clip="EllipseGeometry Center=40,40 RadiusX=40 RadiusY=40"/>
+                                <Image
+                                    Aspect="AspectFill"
+                                    WidthRequest="80"
+                                    HeightRequest="80"
+                                    VerticalOptions="Center"
+                                    HorizontalOptions="Center">
+                                    <Image.Source>
+                                        <UriImageSource Uri="{Binding PhotoPath}" 
+                                                        CachingEnabled="False"/>
+                                    </Image.Source>
+                                </Image>
                             </Frame>
 
                             <!-- Ім'я користувача -->
