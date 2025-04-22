@@ -11,5 +11,6 @@
         public List<double>? UserVoice { get; set; }
         public string? UserId { get; set; }
         public byte[]? PasswordHash { get; set; }
+        public required string PhotoPath { get; set; }
     }
 }

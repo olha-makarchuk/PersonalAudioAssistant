@@ -84,7 +84,7 @@
                     HeightRequest="30"
                     HorizontalOptions="End"
                     VerticalOptions="Start"
-                    Command="{Binding LogoutCommand}" />
+                    Command="{Binding CloseMopupCommand}" />
             
             <VerticalStackLayout Spacing="10">
 

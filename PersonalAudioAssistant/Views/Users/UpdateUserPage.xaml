@@ -109,12 +109,39 @@
 
                         <Button
                             Text="Зберегти"
-                            Command="{Binding UpdateUserCommand}"
+                            Command="{Binding UpdatePersonalInformationCommand}"
                             Style="{StaticResource PrimaryButtonStyle}" />
 
                     </VerticalStackLayout>
                 </Frame>
 
+                <!-- Основну світлина -->
+                <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Змінити основну світлину:" 
+                               FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                        <Frame HeightRequest="100" WidthRequest="100"
+                               Padding="0"
+                               CornerRadius="100"
+                               HasShadow="False"
+                               BorderColor="#CCCCCC">
+                            <Image Source="{Binding SubUser.PhotoPath}" 
+                                   Aspect="AspectFill"
+                                   HeightRequest="100" WidthRequest="100"/>
+                        </Frame>
+                        <Button Text="Вибрати файл" 
+                                Background="#f5f1f9"
+                                Margin="70,0"
+                                Command="{Binding PickPhotoCommand}"
+                                TextColor="Black"/>
+                        <Button
+                            Text="Зберегти"
+                            Command="{Binding UpdatePhotoCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                    </VerticalStackLayout>
+                </Frame>
+                
                 <!-- Пароль -->
                 <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
                     <VerticalStackLayout Spacing="15">
@@ -166,7 +193,7 @@
                     <VerticalStackLayout Spacing="15">
                         <StackLayout Spacing="5">
                             <Label
-                                Text="Зразок вашого голосу (10 секунд):"
+                                Text="Змінити зразок вашого голосу (10 секунд):"
                                 FontSize="16"
                                 FontAttributes="Bold"
                                 TextColor="#333333"

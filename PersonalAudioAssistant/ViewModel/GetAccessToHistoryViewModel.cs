@@ -94,7 +94,7 @@ namespace PersonalAudioAssistant.ViewModel
         }
 
         [RelayCommand]
-        public async Task logout()
+        public async Task CloseMopup()
         {
             await MopupService.Instance.PopAsync();
         }

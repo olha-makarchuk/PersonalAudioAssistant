@@ -13,6 +13,9 @@ namespace PersonalAudioAssistant.Model
         public string? id;
 
         [ObservableProperty]
+        public string? userId;
+
+        [ObservableProperty]
         public string startPhrase;
 
         [ObservableProperty]
@@ -41,5 +44,8 @@ namespace PersonalAudioAssistant.Model
 
         [ObservableProperty]
         public byte[] passwordHash;
+
+        [ObservableProperty]
+        public string photoPath;
     }
 }

@@ -10,6 +10,7 @@ using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Model;
+using System.ComponentModel;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -23,6 +24,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private Stream _recordedAudioStream;
         private string _selectedAudioFilePath;
         private string UserIdQueryAttribute;
+        private string _photoUrl;
 
         [ObservableProperty]
         private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
@@ -62,49 +64,77 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         private bool isVoiceBase;
 
+        [ObservableProperty]
+        private string voiceName;
+
+        [ObservableProperty]
+        public bool isPhotoSelected;
+
         public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
             _mediator = mediator;
             _audioManager = audioManager;
-            _audioRecorder = audioManager.CreateRecorder();
             _manageCacheData = manageCacheData;
             _apiClient = apiClient;
+            _audioRecorder = audioManager.CreateRecorder();
+
             Filter = new VoiceFilterModel();
-            Filter.PropertyChanged += (_, __) => ApplyVoiceFilter();
             EndOptionsModel = new EndOptionsModel();
             CloneVoiceModel = new CloneVoiceModel();
             IsNotValid = new IsNotValidAddUser();
             SubUser = new SubUserUpdateModel();
 
-            SubUser.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(SubUser.UserName))
-                    IsNotValid.IsUserNameNotValid = string.IsNullOrWhiteSpace(SubUser.UserName);
-                if (e.PropertyName == nameof(SubUser.OldPassword))
-                    IsNotValid.IsPasswordNotValid = string.IsNullOrWhiteSpace(SubUser.OldPassword);
-                if (e.PropertyName == nameof(SubUser.NewPassword))
-                    IsNotValid.IsPasswordNotValid = string.IsNullOrWhiteSpace(SubUser.NewPassword);
-            };
+            Filter.PropertyChanged += (_, __) => ApplyVoiceFilter();
+            SubUser.PropertyChanged += ValidateSubUser!;
+            CloneVoiceModel.PropertyChanged += ValidateCloneModel;
 
             this.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(IsAudioRecorded) && IsAudioRecorded)
                     IsNotValid.IsUserVoiceNotValid = false;
+                if (e.PropertyName == nameof(IsNotValid.IsPhotoPathNotValid))
+                    IsNotValid.IsPhotoPathNotValid = false;
             };
+        }
 
-            SubUser.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(SubUser.StartPhrase))
-                    IsNotValid.IsStartPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.StartPhrase);
-                if (e.PropertyName == nameof(SubUser.EndPhrase) && EndOptionsModel.IsEndPhraseSelected)
-                    IsNotValid.IsEndPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.EndPhrase);
-            };
+        private void ValidateSubUser(object s, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SubUser.UserName))
+                IsNotValid.IsUserNameNotValid = string.IsNullOrWhiteSpace(SubUser.UserName);
+            if (e.PropertyName == nameof(SubUser.NewPassword))
+                IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.NewPassword);
+            if (e.PropertyName == nameof(SubUser.OldPassword))
+                IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.OldPassword);
+            if (e.PropertyName == nameof(SubUser.StartPhrase))
+                IsNotValid.IsStartPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.StartPhrase);
+            if (e.PropertyName == nameof(SubUser.EndPhrase) && EndOptionsModel.IsEndPhraseSelected)
+                IsNotValid.IsEndPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.EndPhrase);
+        }
 
-            CloneVoiceModel.PropertyChanged += (s, e) =>
+        private void ValidateCloneModel(object s, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CloneVoiceModel.IsCloneAudioRecorded)
+                || e.PropertyName == nameof(SelectedAudioFilePath)
+                || e.PropertyName == nameof(CloneVoiceModel.Name)
+                || e.PropertyName == nameof(CloneVoiceModel.IsUploadSelected)
+                || e.PropertyName == nameof(CloneVoiceModel.IsRecordSelected))
             {
-                if (e.PropertyName == nameof(CloneVoiceModel.IsCloneAudioRecorded) && CloneVoiceModel.IsCloneAudioRecorded)
-                    IsNotValid.IsCloneVoiceNotValid = false;
-            };
+                bool isAudioInvalid = false;
+
+                if (CloneVoiceModel.IsUploadSelected)
+                {
+                    isAudioInvalid = SelectedAudioFilePath == null;
+                }
+                else if (CloneVoiceModel.IsRecordSelected)
+                {
+                    isAudioInvalid = !CloneVoiceModel.IsCloneAudioRecorded;
+                }
+
+                IsNotValid.IsCloneVoiceNotValid =
+                    CloneVoiceModel.IsCloneVoiceSelected &&
+                    (string.IsNullOrWhiteSpace(CloneVoiceModel.Name) ||
+                     isAudioInvalid);
+            }
         }
 
         public async Task LoadVoicesAsync()
@@ -128,8 +158,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 SubUser.EndTime = user.EndTime;
                 SubUser.VoiceId = user.VoiceId;
                 SubUser.PasswordHash = user.PasswordHash;
+                SubUser.PhotoPath = user.PhotoPath;
                 SubUser.Id = user.Id;
+                SubUser.UserId = user.UserId;
                 SubUser.IsPasswordEnabled = SubUser.PasswordHash != null;
+                _photoUrl = user.PhotoPath;
 
                 if (voiceList != null)
                 {
@@ -154,6 +187,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                         IsVoiceColone = false;
                         IsVoiceBase = true;
                     }
+                    VoiceName = userVoice.Name;
 
                     InitializeFilterOptions();
 
@@ -188,6 +222,166 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false; 
             }
         }
+
+
+        [RelayCommand]
+        public async Task UpdatePersonalInformation()
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+                if (IsNotValid.IsUserNameNotValid
+                   || IsNotValid.IsStartPhraseNotValid
+                   || IsNotValid.IsEndPhraseNotValid)
+                {
+                    return;
+                }
+
+                var command = new UpdateSubUserCoomand()
+                {
+                    Id = SubUser.Id,
+                    UserId = SubUser.UserId,
+                    UserName = SubUser.UserName,
+                    StartPhrase = SubUser.StartPhrase!,
+                    EndPhrase = EndOptionsModel.IsEndPhraseSelected ? SubUser.EndPhrase : null,
+                    EndTime = EndOptionsModel.IsEndTimeSelected ? EndOptionsModel.SelectedEndTime.ToString() : null
+                };
+
+                await _mediator.Send(command);
+                await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
+
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false; 
+            }
+        }
+
+        [RelayCommand]
+        public async Task UpdatePhoto()
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+                if (!IsPhotoSelected)
+                    await Shell.Current.DisplayAlert("Помилка", $"Виберіть нову основну світлину", "OK");
+
+                var command = new UpdatePhotoCommand()
+                {
+                    PhotoPath = SubUser.PhotoPath,
+                    PhotoURL = _photoUrl
+                };
+
+                await _mediator.Send(command);
+                await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task PickPhotoAsync()
+        {
+            var customImageFileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.WinUI, new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" } },
+                    { DevicePlatform.Android, new[] { "image/*" } },
+                    { DevicePlatform.iOS, new[] { "public.image" } },
+                    { DevicePlatform.MacCatalyst, new[] { "public.image" } },
+                    { DevicePlatform.Tizen, new[] { "*/*" } }
+                });
+
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Оберіть будь-яке зображення",
+                FileTypes = customImageFileTypes
+            });
+
+            if (result != null)
+            {
+                SubUser.PhotoPath = result.FullPath;
+                IsPhotoSelected = true;
+                OnPropertyChanged(nameof(SubUser));
+                OnPropertyChanged(nameof(SubUser.PhotoPath));
+            }
+        }
+
+        [RelayCommand]
+        public async Task UpdatePassword()
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task UpdateUserVoice()
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task UpdateVoice()
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+
+
+
+
+
 
 
         [RelayCommand]
@@ -569,7 +763,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             SubUser.OldPassword = null;
             SubUser.NewPassword = null;
             _recordedAudioStream = null;
-            isAudioRecorded = false;
+            IsAudioRecorded = false;
             _selectedAudioFilePath = null;
             IsBaseVoiceSelected = true;
             CloneVoiceModel.IsCloneVoiceSelected = false;

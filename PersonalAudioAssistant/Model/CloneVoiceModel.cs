@@ -31,7 +31,7 @@ namespace PersonalAudioAssistant.Model
         private bool isCreateCloneVoiceMode = false;
 
         [ObservableProperty]
-        private string cloneSourceButtonText = "Зклонувати новий голос";
+        private string cloneSourceButtonText = "Обрати новий голос";
 
         private Color _cloneSourceButtonColor = Color.FromArgb("#4CAF50");
         public Color CloneSourceButtonColor
@@ -47,7 +47,7 @@ namespace PersonalAudioAssistant.Model
 
             CloneSourceButtonText = IsCreateCloneVoiceMode
                 ? "Скасувати"
-                : "Зклонувати новий голос";
+                : "Обрати новий голос";
 
             CloneSourceButtonColor = IsCreateCloneVoiceMode
                 ? Color.FromArgb("#ae2f2f")

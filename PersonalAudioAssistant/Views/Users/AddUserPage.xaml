@@ -42,6 +42,7 @@
                                    Aspect="AspectFill"
                                    HeightRequest="100" WidthRequest="100"/>
                         </Frame>
+                        <Label Text="Додайте основну світлину" TextColor="Red" IsVisible="{Binding IsNotValid.IsPhotoPathNotValid}"/>
 
                     </VerticalStackLayout>
                 </Frame>

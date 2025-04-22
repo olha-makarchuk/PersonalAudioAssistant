@@ -26,8 +26,9 @@
                     <Frame BackgroundColor="White"
                            CornerRadius="10"
                            Padding="15"
+                           Background="#f5f1f9"
                            HasShadow="True"
-                           Margin="10,0"
+                           Margin="0,0"
                            InputTransparent="True">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -38,32 +39,36 @@
 
                             <!-- Аватар користувача -->
                             <Frame Grid.Column="0"
-                                   WidthRequest="50"
-                                   HeightRequest="50"
-                                   CornerRadius="25"
-                                   BackgroundColor="#cccccc"
+                                   WidthRequest="70"
+                                   HeightRequest="70"
+                                   CornerRadius="40"
+                                   Margin="10,0,0,0"
+                                   HasShadow="False"
                                    VerticalOptions="Center"
                                    HorizontalOptions="Center"
-                                   HasShadow="False">
-                                <Label Text="&#x1F464;" 
-                                       FontSize="24"
-                                       HorizontalOptions="Center"
+                                   BackgroundColor="Transparent">
+                                <Image Source="{Binding PhotoPath}"
+                                       Aspect="AspectFill"
+                                       WidthRequest="80"
+                                       HeightRequest="80"
                                        VerticalOptions="Center"
-                                       TextColor="White"/>
+                                       HorizontalOptions="Center"
+                                       Clip="EllipseGeometry Center=40,40 RadiusX=40 RadiusY=40"/>
                             </Frame>
 
                             <!-- Ім'я користувача -->
                             <Label Grid.Column="1"
                                    Text="{Binding UserName}" 
                                    FontSize="18"
+                                   FontAttributes="None"
                                    VerticalOptions="Center"
                                    TextColor="#333333"
-                                   Margin="10,0"/>
+                                   Margin="35,0"/>
 
                             <!-- Додаткова інформація -->
                             <Label Grid.Column="2"
                                    Text="{Binding StartPhrase}"
-                                   FontSize="14"
+                                   FontSize="12"
                                    VerticalOptions="Center"
                                    TextColor="Gray"
                                    Margin="10,0"/>

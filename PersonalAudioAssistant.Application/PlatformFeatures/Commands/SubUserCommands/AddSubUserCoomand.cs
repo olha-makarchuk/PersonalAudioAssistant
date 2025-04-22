@@ -65,10 +65,9 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
 
             var extension = Path.GetExtension(request.PhotoPath);
             using var stream = System.IO.File.OpenRead(request.PhotoPath);
-            string fileName = $"{newUser.Id}{extension}";
+            string fileName = $"{newUser.Id}{extension}?nocache=1";
             await _blobStorage.PutContextAsync(fileName, stream, BlobContainerType.UserImage);
-
-            newUser.PhotoPath = fileName;
+            newUser.PhotoPath = $"https://audioassistantblob.blob.core.windows.net/user-image/{fileName}";
             await _subUserRepository.UpdateUser(newUser, cancellationToken);
 
             return newUser.Id.ToString();

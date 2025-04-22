@@ -33,7 +33,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQue
                     EndTime = user.EndTime,
                     UserVoice = user.UserVoice,
                     VoiceId = user.VoiceId,
-                    PasswordHash = user.PasswordHash
+                    PasswordHash = user.PasswordHash,
+                    PhotoPath = user.PhotoPath
                 };
 
                 return userResponse;

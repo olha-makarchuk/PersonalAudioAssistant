@@ -58,16 +58,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         public string selectedAudioFilePath;
 
-        private bool _isPhotoSelected;
-        public bool IsPhotoSelected
-        {
-            get => _isPhotoSelected;
-            set
-            {
-                _isPhotoSelected = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        public bool isPhotoSelected;
 
         public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
@@ -93,36 +85,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 if (e.PropertyName == nameof(IsAudioRecorded) && IsAudioRecorded)
                     IsNotValid.IsUserVoiceNotValid = false;
+                if (e.PropertyName == nameof(IsNotValid.IsPhotoPathNotValid))
+                    IsNotValid.IsPhotoPathNotValid = false;
             };
 
             LoadVoicesAsync();
-        }
-
-        [RelayCommand]
-        private async Task PickPhotoAsync()
-        {
-            var customImageFileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.WinUI, new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" } },
-                    { DevicePlatform.Android, new[] { "image/*" } },
-                    { DevicePlatform.iOS, new[] { "public.image" } },
-                    { DevicePlatform.MacCatalyst, new[] { "public.image" } },
-                    { DevicePlatform.Tizen, new[] { "*/*" } }
-                });
-
-            var result = await FilePicker.Default.PickAsync(new PickOptions
-            {
-                PickerTitle = "Оберіть будь-яке зображення",
-                FileTypes = customImageFileTypes
-            });
-
-            if (result != null)
-            {
-                SubUser.PhotoPath = result.FullPath;
-                IsPhotoSelected = true;
-                OnPropertyChanged(nameof(SubUser));
-                OnPropertyChanged(nameof(SubUser.PhotoPath));
-            }
         }
 
         private void ValidateSubUser(object s, PropertyChangedEventArgs e)
@@ -187,6 +154,34 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await Shell.Current.DisplayAlert("Помилка", $"Не вдалося завантажити голоси: {ex.Message}", "OK");
             }
             finally{IsBusy = false;}
+        }
+
+        [RelayCommand]
+        private async Task PickPhotoAsync()
+        {
+            var customImageFileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.WinUI, new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" } },
+                    { DevicePlatform.Android, new[] { "image/*" } },
+                    { DevicePlatform.iOS, new[] { "public.image" } },
+                    { DevicePlatform.MacCatalyst, new[] { "public.image" } },
+                    { DevicePlatform.Tizen, new[] { "*/*" } }
+                });
+
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Оберіть будь-яке зображення",
+                FileTypes = customImageFileTypes
+            });
+
+            if (result != null)
+            {
+                SubUser.PhotoPath = result.FullPath;
+                IsPhotoSelected = true;
+                OnPropertyChanged(nameof(SubUser));
+                OnPropertyChanged(nameof(SubUser.PhotoPath));
+            }
+            IsNotValid.IsPhotoPathNotValid = false;
         }
 
         [RelayCommand]
@@ -328,7 +323,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 }
                 else
                 {
-                    voiceId = SelectedVoice.VoiceId;
+                    voiceId = SelectedVoice.Id;
                 }
 
                 var command = new AddSubUserCoomand
@@ -345,12 +340,15 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 };
                 var userId = await _mediator.Send(command);
 
-                var commandUpdate = new UpdateVoiceCommand()
+                if (CloneVoiceModel.IsCloneVoiceSelected)
                 {
-                    VoiceId = voiceId,
-                    UserId = userId
-                };
-                await _mediator.Send(commandUpdate);
+                    var commandUpdate = new UpdateVoiceCommand()
+                    {
+                        VoiceId = voiceId,
+                        UserId = userId
+                    };
+                    await _mediator.Send(commandUpdate);
+                }
 
                 await _manageCacheData.UpdateUsersList();
                 var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
