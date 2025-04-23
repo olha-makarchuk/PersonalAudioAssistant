@@ -465,13 +465,13 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 var fileResult = await FilePicker.PickAsync(new PickOptions
                 {
                     FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-            {
-                { DevicePlatform.Android, new[] { "audio/*" } },
-                { DevicePlatform.iOS,    new[] { "public.audio" } },
-                { DevicePlatform.WinUI,  new[] { ".mp3", ".wav", ".aac", ".m4a" } },
-                { DevicePlatform.Tizen,  new[] { "*/*" } },
-                { DevicePlatform.macOS,  new[] { "public.audio" } },
-            })
+                    {
+                        { DevicePlatform.Android, new[] { "audio/*" } },
+                        { DevicePlatform.iOS,    new[] { "public.audio" } },
+                        { DevicePlatform.WinUI,  new[] { ".mp3", ".wav", ".aac", ".m4a" } },
+                        { DevicePlatform.Tizen,  new[] { "*/*" } },
+                        { DevicePlatform.macOS,  new[] { "public.audio" } },
+                    })
                 });
 
                 if (fileResult == null)

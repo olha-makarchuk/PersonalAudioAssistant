@@ -5,7 +5,7 @@ using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands
 {
-    public class UpdateSubUserCoomand : IRequest
+    public class UpdateSubUserCommand : IRequest
     {
         public string Id { get; set; }
         public string UserId { get; set; }
@@ -14,31 +14,37 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
         public string? EndPhrase { get; set; }
         public string? EndTime { get; set; }
         public string VoiceId { get; set; }
-        public List<double> UserVoice { get; set; }
+        //public List<double> UserVoice { get; set; }
+        public Stream UserVoice { get; set; }
         public string? Password { get; set; }
         public string? NewPassword { get; set; }
         public string PhotoPath { get; set; }
     }
 
-    public class UpdateSubUserCoomandHandler : IRequestHandler<UpdateSubUserCoomand>
+    public class UpdateSubUserCoomandHandler : IRequestHandler<UpdateSubUserCommand>
     {
         private readonly ISubUserRepository _subUserRepository;
         private readonly PasswordManager _passwordManager;
+        private readonly ApiClientVoiceEmbedding _apiClientVoiceEmbedding;
         private readonly IBlobStorage _blobStorage;
 
-        public UpdateSubUserCoomandHandler(ISubUserRepository subUserRepository, PasswordManager passwordManager, IBlobStorage blobStorage)
+        public UpdateSubUserCoomandHandler(ISubUserRepository subUserRepository, PasswordManager passwordManager, IBlobStorage blobStorage, ApiClientVoiceEmbedding apiClientVoiceEmbedding)
         {
             _subUserRepository = subUserRepository;
             _passwordManager = passwordManager;
             _blobStorage = blobStorage;
+            _apiClientVoiceEmbedding = apiClientVoiceEmbedding;
         }
 
-        public async Task Handle(UpdateSubUserCoomand request, CancellationToken cancellationToken = default)
+        public async Task Handle(UpdateSubUserCommand request, CancellationToken cancellationToken = default)
         {
-            var userByStartPhrase = await _subUserRepository.GetUserByStartPhraseAsync(request.UserId, request.StartPhrase, cancellationToken);
-            if (userByStartPhrase != null)
+            if(request.StartPhrase != null)
             {
-                throw new Exception("Користувач із цією стартовою вразою вже існує");
+                var userByStartPhrase = await _subUserRepository.GetUserByStartPhraseAsync(request.UserId, request.StartPhrase, cancellationToken);
+                if (userByStartPhrase != null)
+                {
+                    throw new Exception("Користувач із цією стартовою вразою вже існує");
+                }
             }
 
             var userExist = await _subUserRepository.GetUserByIdAsync(request.Id, cancellationToken);
@@ -53,7 +59,11 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
             userExist.EndPhrase = request.EndPhrase ?? userExist.EndPhrase;
             userExist.EndTime = request.EndTime ?? userExist.EndTime;
             userExist.VoiceId = request.VoiceId ?? userExist.VoiceId;
-            userExist.UserVoice = request.UserVoice ?? userExist.UserVoice;
+
+            if(request.UserVoice != null)
+            {
+                userExist.UserVoice = await _apiClientVoiceEmbedding.CreateVoiceEmbedding(request.UserVoice);
+            }
 
             if (request.Password != null && request.NewPassword != null)
             {

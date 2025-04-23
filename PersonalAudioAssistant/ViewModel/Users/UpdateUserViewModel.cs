@@ -11,6 +11,10 @@ using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Model;
 using System.ComponentModel;
+using Microsoft.Azure.Cosmos;
+using PersonalAudioAssistant.Application.Services;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
+using static Java.Util.Jar.Attributes;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -22,6 +26,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
         private Stream _recordedAudioStream;
+        private Stream _recordedAudioCloneStream;
         private string _selectedAudioFilePath;
         private string UserIdQueryAttribute;
         private string _photoUrl;
@@ -72,6 +77,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         [ObservableProperty]
         public bool hasPassword;
+
+        [ObservableProperty]
+        public string selectedAudioFilePath;
 
         public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
@@ -172,37 +180,28 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 SubUser.IsPasswordEnabled = SubUser.PasswordHash != null;
                 _photoUrl = user.PhotoPath;
                 HasPassword = SubUser.PasswordHash != null;
-
+                
                 if (voiceList != null)
                 {
                     allVoices = voiceList;
                     Voices = new ObservableCollection<VoiceResponse>(allVoices);
 
-                    CloneVoice = voiceList.FirstOrDefault(u => u.UserId == user.Id);
+                    CloneVoice = Voices
+                        .FirstOrDefault(v => v.VoiceId == user.VoiceId && v.UserId == user.Id)
+                        ?? new VoiceResponse();
 
-                    var userVoiceCommand = new GetVoiceByIdQuery()
-                    {
-                        VoiceId = user.VoiceId
-                    };
-                    var userVoice = await _mediator.Send(userVoiceCommand);
+                    bool isClone = CloneVoice.VoiceId == user.VoiceId && CloneVoice.UserId == user.Id;
+                    IsVoiceColone = isClone;
+                    IsVoiceBase = !isClone;
 
-                    if (userVoice.UserId == user.Id)
-                    {
-                        IsVoiceColone = true;
-                        IsVoiceBase = false;
-                    }
-                    else
-                    {
-                        IsVoiceColone = false;
-                        IsVoiceBase = true;
-                    }
+                    var userVoice = await _mediator.Send(new GetVoiceByIdQuery { VoiceId = user.VoiceId });
                     VoiceName = userVoice.Name;
 
                     InitializeFilterOptions();
 
                     if (!string.IsNullOrWhiteSpace(SubUser?.VoiceId))
                     {
-                        var userVoiceselected = Voices.FirstOrDefault(v => v.VoiceId == SubUser.VoiceId);
+                        var userVoiceselected = Voices.FirstOrDefault(v => v.Id == SubUser.VoiceId);
                         if (userVoiceselected != null)
                         {
                             SelectedVoice = userVoiceselected;
@@ -248,7 +247,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     return;
                 }
 
-                var command = new UpdateSubUserCoomand()
+                var command = new UpdateSubUserCommand()
                 {
                     Id = SubUser.Id,
                     UserId = SubUser.UserId,
@@ -364,7 +363,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     if (IsNotValid.IsPasswordNotValid)
                         return;
 
-                    var addCmd = new UpdateSubUserCoomand { NewPassword = SubUser.NewPassword };
+                    var addCmd = new UpdateSubUserCommand 
+                    {
+                        Id = SubUser.Id,
+                        NewPassword = SubUser.NewPassword 
+                    };
                     await _mediator.Send(addCmd);
                     await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно додано", "OK");
                     HasPassword = true;
@@ -376,8 +379,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     if (IsNotValid.IsPasswordNotValid)
                         return;
                     
-                    var changeCmd = new UpdateSubUserCoomand()
+                    var changeCmd = new UpdateSubUserCommand()
                     {
+                        Id = SubUser.Id,
                         Password = SubUser.OldPassword,
                         NewPassword = SubUser.NewPassword
                     };
@@ -391,6 +395,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
             finally
             {
+                await _manageCacheData.UpdateUsersList();
                 IsBusy = false;
             }
         }
@@ -401,8 +406,26 @@ namespace PersonalAudioAssistant.ViewModel.Users
             if (IsBusy)
                 return;
 
+            var shouldUpdate = await Shell.Current.DisplayAlert(
+                title: "Підтвердження",
+                message: "Ви дійсно хочете змінити зразок голосу?",
+                accept: "Так",
+                cancel: "Ні");
+
+            if (!shouldUpdate)
+                return;
+
             try
             {
+                var command = new UpdateSubUserCommand()
+                {
+                    Id = SubUser.Id,
+                    UserVoice = _recordedAudioStream
+                };
+                _recordedAudioStream = null;
+                IsAudioRecorded = false;
+               
+                await Shell.Current.DisplayAlert("Успішно", $"Зразок голосу успішно змінено", "OK");
             }
             catch (Exception ex)
             {
@@ -410,9 +433,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
             finally
             {
+                await _manageCacheData.UpdateUsersList();
                 IsBusy = false;
             }
         }
+
+        private readonly ElevenlabsApi _elevenLabsApi = new ElevenlabsApi();
 
         [RelayCommand]
         public async Task UpdateVoice()
@@ -420,8 +446,24 @@ namespace PersonalAudioAssistant.ViewModel.Users
             if (IsBusy)
                 return;
 
+            IsNotValid.IsCloneVoiceNotValid = false;
+
             try
             {
+                if (IsBaseVoiceSelected)
+                {
+                    await UpdateBaseVoiceAsync();
+                }
+                else
+                {
+                    await UpdateCloneVoiceAsync();
+                }
+
+                await Shell.Current.DisplayAlert("Успішно", $"Голос озвучування успішно змінено", "OK");
+            }
+            catch (InvalidOperationException invEx)
+            {
+                await ShowErrorAsync(invEx.Message);
             }
             catch (Exception ex)
             {
@@ -429,94 +471,122 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
             finally
             {
+                CloneVoiceModel.ResetCloneSourceButton();
+                await _manageCacheData.UpdateUsersList();
                 IsBusy = false;
             }
         }
 
-
-
-
-
-
-
-
-        [RelayCommand]
-        public async Task UpdateUser()
+        private async Task UpdateBaseVoiceAsync()
         {
-            if (IsBusy)
-                return; 
-
-            try
+            var updateCommand = new UpdateSubUserCommand
             {
-                IsBusy = true; 
+                Id = SubUser.Id,
+                VoiceId = SelectedVoice.Id
+            };
+            await _mediator.Send(updateCommand);
 
-                if (string.IsNullOrWhiteSpace(SubUser.UserName))
+            if (CloneVoice.VoiceId != null)
+            {
+                await _elevenLabsApi.DeleteVoiceAsync(_voiceIdElevenlabs);
+                var command = new DeleteVoiceCommand()
                 {
-                    await Shell.Current.DisplayAlert("Помилка", "Ім'я користувача не може бути порожнім.", "OK");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(SubUser.StartPhrase))
-                {
-                    await Shell.Current.DisplayAlert("Помилка", "Початкова фраза не може бути порожньою.", "OK");
-                    return;
-                }
-
-                if (EndOptionsModel.IsEndPhraseSelected && string.IsNullOrWhiteSpace(SubUser.EndPhrase))
-                {
-                    await Shell.Current.DisplayAlert("Помилка", "Кінцева фраза обрана, але не заповнена.", "OK");
-                    return;
-                }
-
-                if (EndOptionsModel.IsEndTimeSelected && EndOptionsModel.SelectedEndTime <= 0)
-                {
-                    await Shell.Current.DisplayAlert("Помилка", "Час завершення має бути більше 0.", "OK");
-                    return;
-                }
-
-                if (SelectedVoice == null)
-                {
-                    await Shell.Current.DisplayAlert("Помилка", "Будь ласка, оберіть голос.", "OK");
-                    return;
-                }
-
-                var embedding = await _apiClient.CreateVoiceEmbedding(_recordedAudioStream);
-
-                var command = new UpdateSubUserCoomand
-                {
-                    UserId = await SecureStorage.GetAsync("user_id"),
-                    UserName = SubUser.UserName,
-                    StartPhrase = SubUser.StartPhrase,
-                    EndPhrase = EndOptionsModel.IsEndPhraseSelected ? SubUser.EndPhrase : string.Empty,
-                    EndTime = EndOptionsModel.IsEndTimeSelected ? EndOptionsModel.SelectedEndTime.ToString() : string.Empty,
-                    VoiceId = SelectedVoice.VoiceId,
-                    NewPassword = SubUser.IsPasswordEnabled ? SubUser.NewPassword : string.Empty,
-                    Password = SubUser.IsPasswordEnabled ? SubUser.OldPassword : string.Empty,
-                    UserVoice = embedding
+                    Id = CloneVoice.VoiceId
                 };
+                await _mediator.Send(command);
+            }
+            IsVoiceColone = false;
+            IsVoiceBase = true;
+        }
 
-                if (embedding != null)
+        private string _voiceIdElevenlabs;
+        private async Task UpdateCloneVoiceAsync()
+        {
+            string audioPath;
+
+            if (CloneVoiceModel.IsUploadSelected)
+            {
+                if (string.IsNullOrWhiteSpace(_selectedAudioFilePath) || !File.Exists(_selectedAudioFilePath))
                 {
-                    command.UserVoice = embedding;
+                    IsNotValid.IsCloneVoiceNotValid = true;
+                    await Shell.Current.DisplayAlert("Помилка", "Аудіофайл не знайдено або шлях некоректний.", "OK");
+                    return;
                 }
 
+                audioPath = _selectedAudioFilePath;
+            }
+            else
+            {
+                if (_recordedAudioCloneStream == null)
+                {
+                    IsNotValid.IsCloneVoiceNotValid = true;
+                    await Shell.Current.DisplayAlert("Помилка", "Запис аудіо не знайдено.", "OK");
+                    return;
+                }
+
+                audioPath = Path.Combine(FileSystem.CacheDirectory, $"clone_{Guid.NewGuid()}.wav");
+
+                using (var fileStream = File.Create(audioPath))
+                {
+                    _recordedAudioCloneStream.Position = 0;
+                    await _recordedAudioCloneStream.CopyToAsync(fileStream);
+                }
+            }
+
+            var clonedInfo = await _elevenLabsApi.CloneVoiceAsync(
+                CloneVoiceModel.Name,
+                audioPath);
+            
+            if (CloneVoice.VoiceId != null)
+            {
+                await _elevenLabsApi.DeleteVoiceAsync(_voiceIdElevenlabs);
+                var command = new DeleteVoiceCommand()
+                {
+                    Id = CloneVoice.VoiceId
+                };
                 await _mediator.Send(command);
-                await _manageCacheData.UpdateUsersList();
+            }
 
-                var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;
-                await usersListViewModel?.RefreshUsersAsync();
+            var createCommand = new CreateVoiceCommand
+            {
+                Name = clonedInfo.VoiceName,
+                VoiceId = clonedInfo.VoiceId,
+                UserId = SubUser.Id
+            };
+            var newVoiceDbId = await _mediator.Send(createCommand);
 
-                await Shell.Current.GoToAsync("//UsersListPage");
-            }
-            catch (Exception ex)
+            await UpdateUserVoiceAsync(newVoiceDbId);
+
+            CloneVoice.Name = clonedInfo.VoiceName;
+
+            CloneVoice.VoiceId = newVoiceDbId;
+            _voiceIdElevenlabs = clonedInfo.VoiceId;
+
+            if (!string.IsNullOrEmpty(newVoiceDbId))
             {
-                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+                await ShowSuccessAsync("Голос успішно клоновано!");
             }
-            finally
+            else
             {
-                IsBusy = false; 
+                await ShowErrorAsync("Не вдалося клонувати голос. Спробуйте пізніше.");
             }
+            OnPropertyChanged(nameof(CloneVoice));
+            IsVoiceColone = true;
+            IsVoiceBase = false;
         }
+
+        private async Task UpdateUserVoiceAsync(string voiceId)
+        {
+            var updateCommand = new UpdateSubUserCommand
+            {
+                Id = SubUser.Id,
+                VoiceId = voiceId
+            };
+            await _mediator.Send(updateCommand);
+        }
+
+        private Task ShowErrorAsync(string message) => Shell.Current.DisplayAlert("Помилка", message, "OK");
+        private Task ShowSuccessAsync(string message) => Shell.Current.DisplayAlert("Успіх", message, "OK");
 
         [RelayCommand]
         public async Task DeleteUser()
@@ -629,7 +699,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     return;
                 }
 
-                _recordedAudioStream = recordedAudio.GetAudioStream();
+                _recordedAudioCloneStream = recordedAudio.GetAudioStream();
                 IsNotValid.IsCloneVoiceNotValid = false;
                 CloneVoiceModel.IsCloneAudioRecorded = true;
             }
@@ -647,34 +717,23 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 var fileResult = await FilePicker.PickAsync(new PickOptions
                 {
                     FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-            {
-                { DevicePlatform.Android, new[] { "audio/*" } },
-                { DevicePlatform.iOS, new[] { "public.audio" } },
-                { DevicePlatform.WinUI, new[] { ".mp3", ".wav", ".aac", ".m4a" } },
-                { DevicePlatform.Tizen, new[] { "*/*" } },
-                { DevicePlatform.macOS, new[] { "public.audio" } },
-            })
+                    {
+                        { DevicePlatform.Android, new[] { "audio/*" } },
+                        { DevicePlatform.iOS, new[] { "public.audio" } },
+                        { DevicePlatform.WinUI, new[] { ".mp3", ".wav", ".aac", ".m4a" } },
+                        { DevicePlatform.Tizen, new[] { "*/*" } },
+                        { DevicePlatform.macOS, new[] { "public.audio" } },
+                    })
                 });
 
                 if (fileResult != null)
                 {
                     _selectedAudioFilePath = fileResult.FullPath;
-                    IsNotValid.IsCloneVoiceNotValid = false;
 
-                    SelectedAudioFilePath = fileResult.FileName;
+                    SelectedAudioFilePath = Path.GetFileName(_selectedAudioFilePath);
                     OnPropertyChanged(nameof(SelectedAudioFilePath));
 
-                    var cacheFile = Path.Combine(FileSystem.CacheDirectory, fileResult.FileName);
-                    using (var inStream = await fileResult.OpenReadAsync())
-                    using (var outFs = File.OpenWrite(cacheFile))
-                        await inStream.CopyToAsync(outFs);
-
-                    var player = _audioManager.CreatePlayer(cacheFile);
-                    var durationSec = player.Duration;
-
-                    CloneVoiceModel.IsFragmentSelectionVisible = durationSec > 30;
-                    player.Dispose();
-
+                    IsNotValid.IsCloneVoiceNotValid = false;
                 }
             }
             catch (Exception ex)
@@ -798,13 +857,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private void ApplyVoiceFilter()
         {
             Voices = ApplyFilter(allVoices);
-            SelectedVoice = Voices.FirstOrDefault();
-        }
-
-        public string SelectedAudioFilePath
-        {
-            get => _selectedAudioFilePath;
-            set => SetProperty(ref _selectedAudioFilePath, value);
         }
 
         public void OnNavigatedFrom()

@@ -21,6 +21,14 @@ namespace PersonalAudioAssistant.Persistence.Repositories
 
         public async Task DeleteVoiceByUserIdAsync(string id, CancellationToken cancellationToken)
         {
+            var voice = await _context.Voices.FirstOrDefaultAsync(x => x.UserId == id, cancellationToken);
+
+            _context.Remove(voice!);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task DeleteVoiceById(string id, CancellationToken cancellationToken)
+        {
             Guid guidId = Guid.Parse(id);
             var voice = await _context.Voices.FirstOrDefaultAsync(x => x.Id == guidId, cancellationToken);
 

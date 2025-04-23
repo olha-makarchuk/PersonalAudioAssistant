@@ -64,5 +64,14 @@ namespace PersonalAudioAssistant.Model
                 IsRecordSelected = false;
             }
         }
+
+        public void ResetCloneSourceButton()
+        {
+            IsCreateCloneVoiceMode = false;
+            CloneSourceButtonText = "Обрати новий голос";
+            CloneSourceButtonColor = Color.FromArgb("#4CAF50");
+            IsUploadSelected = false;
+            IsRecordSelected = false;
+        }
     }
 }

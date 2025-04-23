@@ -266,7 +266,7 @@
                         </StackLayout>
                         <Button
                             Text="Зберегти"
-                            Command="{Binding UpdateUserCommand}"
+                            Command="{Binding UpdateUserVoiceCommand}"
                             Style="{StaticResource PrimaryButtonStyle}" />
                     </VerticalStackLayout>
                 </Frame>
@@ -290,22 +290,16 @@
 
                             <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
                                 <Label
-                                    Text="Клонований голос:"
+                                    Text="{Binding CloneVoice.Name, StringFormat='Клонований голос: {0}'}"
                                     FontSize="14"
                                     TextColor="#555555"
                                     IsVisible="{Binding IsVoiceColone}" />
 
                                 <Label
-                                    Text="Базовий голос:"
+                                    Text="{Binding SelectedVoice.Name, StringFormat='Базовий голос: {0}'}"
                                     FontSize="14"
                                     TextColor="#555555"
                                     IsVisible="{Binding IsVoiceBase}" />
-
-                                <Label
-                                    Text="назва голосу"
-                                    FontSize="14"
-                                    FontAttributes="Bold"
-                                    TextColor="#333333"/>
 
                             </HorizontalStackLayout>
                         </Frame>
@@ -463,116 +457,104 @@
 
                             </StackLayout>
 
-                        </StackLayout>
-
-                        <!-- Клонування голосу -->
-                        <StackLayout Orientation="Vertical" Spacing="20" IsVisible="{Binding CloneVoiceModel.IsCloneVoiceSelected}">
-                            <Label
-                                Text="Клонування голосу"
-                                FontSize="18"
-                                FontAttributes="Bold"
-                                HorizontalOptions="Center"
-                                TextColor="#333333" />
-
-                            <!-- Спосіб надходження аудіо -->
-                            <StackLayout Spacing="10">
-                                <Label Text="Введіть назву голосу:" FontAttributes="Bold" TextColor="#333333" />
-                                <Entry
-                                    Text="{Binding CloneVoiceModel.Name}"
-                                    Placeholder="Назву голосу"
-                                    BackgroundColor="#F0F0F0"
-                                    HeightRequest="50"
-                                    TextColor="#333333" />
-                            </StackLayout>
-
-                            <!-- Завантаження файлу -->
-                            <StackLayout IsVisible="{Binding CloneVoiceModel.IsUploadSelected}" Spacing="10">
-                                <HorizontalStackLayout VerticalOptions="Center" Spacing="10">
-                                    <Label Text="Виберіть файл:" TextColor="#555555" VerticalOptions="Center" />
-                                    <Button
-                                        BackgroundColor="Transparent"
-                                        TextColor="White"
-                                        FontAttributes="Bold"
-                                        HeightRequest="70"
-                                        FontSize="16"
-                                        Command="{Binding PickAudioFileCommand}"
-                                        ImageSource="fileaudio.png" />
-                                </HorizontalStackLayout>
+                            <!-- Клонування голосу -->
+                            <StackLayout Orientation="Vertical" Spacing="20" IsVisible="{Binding CloneVoiceModel.IsCloneVoiceSelected}">
                                 <Label
-                                    Text="{Binding SelectedAudioFilePath}"
-                                    TextColor="#555555"
-                                    HorizontalOptions="Center"
-                                    FontAttributes="Italic"
-                                    Margin="0,-20,0,0" />
-
-                                <StackLayout IsVisible="{Binding CloneVoiceModel.IsFragmentSelectionVisible}" Spacing="10" Margin="0,20,0,0">
-                                    <Label
-                                        Text="{Binding CloneVoiceModel.TotalDuration, StringFormat='Аудіо триває {0}, що є більше 30 секунд, виберіть, будь ласка, діапазон:'}"
-                                        TextColor="Red" />
-                                    <Label Text="Тривалість аудіо:" FontAttributes="Bold" TextColor="#333333" />
-                                    <Label Text="Початок фрагменту:" TextColor="#555555" />
-                                    <Label
-                                        Text="Будь ласка, виберіть фрагмент аудіо тривалістю від 5 до 30 секунд"
-                                        TextColor="Red"
-                                        IsVisible="{Binding IsNotValid.IsEndPhraseNotValid!}" />
-                                </StackLayout>
-                            </StackLayout>
-
-                            <!-- Запис голосу -->
-                            <StackLayout IsVisible="{Binding CloneVoiceModel.IsRecordSelected}" Spacing="10">
-                                <Label
-                                    Text="Зразок голосу (30 секунд):"
-                                    FontSize="16"
+                                    Text="Клонування голосу"
+                                    FontSize="18"
                                     FontAttributes="Bold"
+                                    HorizontalOptions="Center"
                                     TextColor="#333333" />
-                                <HorizontalStackLayout Spacing="10">
-                                    <Label Text="Розпочати запис:" TextColor="#555555" VerticalOptions="Center" />
-                                    <Button
-                                        Command="{Binding RecordCloneVoiceCommand}"
+
+                                <!-- Спосіб надходження аудіо -->
+                                <StackLayout Spacing="10">
+                                    <Label Text="Введіть назву голосу:" FontAttributes="Bold" TextColor="#333333" />
+                                    <Entry
+                                        Text="{Binding CloneVoiceModel.Name}"
+                                        Placeholder="Назву голосу"
+                                        BackgroundColor="#F0F0F0"
                                         HeightRequest="50"
-                                        WidthRequest="50"
-                                        CornerRadius="25"
-                                        ImageSource="microphone.png"
+                                        TextColor="#333333" />
+                                </StackLayout>
+
+                                <!-- Завантаження файлу -->
+                                <StackLayout IsVisible="{Binding CloneVoiceModel.IsUploadSelected}" Spacing="10">
+                                    <HorizontalStackLayout VerticalOptions="Center" Spacing="10">
+                                        <Label Text="Виберіть файл:" TextColor="#555555" VerticalOptions="Center" />
+                                        <Button
+                                            BackgroundColor="Transparent"
+                                            TextColor="White"
+                                            FontAttributes="Bold"
+                                            HeightRequest="70"
+                                            FontSize="16"
+                                            Command="{Binding PickAudioFileCommand}"
+                                            ImageSource="fileaudio.png" />
+                                    </HorizontalStackLayout>
+                                    <Label
+                                        Text="{Binding SelectedAudioFilePath}"
+                                        TextColor="#555555"
                                         HorizontalOptions="Center"
-                                        VerticalOptions="Center" />
-                                    <Image
-                                        Source="checkmark.png"
-                                        WidthRequest="30"
-                                        HeightRequest="30"
-                                        IsVisible="{Binding CloneVoiceModel.IsCloneAudioRecorded}" />
-                                </HorizontalStackLayout>
-                            </StackLayout>
+                                        FontAttributes="Italic"
+                                        Margin="0,-20,0,0" />
 
-                            <!-- Перемикання способу надходження -->
-                            <StackLayout Spacing="20" Orientation="Horizontal">
-                                <RadioButton
-                                    Content="Завантажити файл"
-                                    GroupName="CloneSourceOption"
-                                    IsChecked="{Binding CloneVoiceModel.IsUploadSelected}" />
-                                <RadioButton
-                                    Content="Записати голос"
-                                    GroupName="CloneSourceOption"
-                                    IsChecked="{Binding CloneVoiceModel.IsRecordSelected}" />
-                            </StackLayout>
+                                </StackLayout>
 
-                            <!-- Клоновано -->
-                            <StackLayout Spacing="20" HorizontalOptions="Center" IsVisible="{Binding CloneVoiceModel.IsCloneGenerated}">
+                                <!-- Запис голосу -->
+                                <StackLayout IsVisible="{Binding CloneVoiceModel.IsRecordSelected}" Spacing="10">
+                                    <Label
+                                        Text="Зразок голосу (30 секунд):"
+                                        FontSize="16"
+                                        FontAttributes="Bold"
+                                        TextColor="#333333" />
+                                    <HorizontalStackLayout Spacing="10">
+                                        <Label Text="Розпочати запис:" TextColor="#555555" VerticalOptions="Center" />
+                                        <Button
+                                            Command="{Binding RecordCloneVoiceCommand}"
+                                            HeightRequest="50"
+                                            WidthRequest="50"
+                                            CornerRadius="25"
+                                            ImageSource="microphone.png"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
+                                        <Image
+                                            Source="checkmark.png"
+                                            WidthRequest="30"
+                                            HeightRequest="30"
+                                            IsVisible="{Binding CloneVoiceModel.IsCloneAudioRecorded}" />
+                                    </HorizontalStackLayout>
+                                </StackLayout>
+
+                                <!-- Перемикання способу надходження -->
+                                <StackLayout Spacing="20" Orientation="Horizontal">
+                                    <RadioButton
+                                        Content="Завантажити файл"
+                                        GroupName="CloneSourceOption"
+                                        IsChecked="{Binding CloneVoiceModel.IsUploadSelected}" />
+                                    <RadioButton
+                                        Content="Записати голос"
+                                        GroupName="CloneSourceOption"
+                                        IsChecked="{Binding CloneVoiceModel.IsRecordSelected}" />
+                                </StackLayout>
+
+                                <!-- Клоновано -->
+                                <StackLayout Spacing="20" HorizontalOptions="Center" IsVisible="{Binding CloneVoiceModel.IsCloneGenerated}">
+                                    <Label
+                                        Text="Голос склоновано!"
+                                        TextColor="Green"
+                                        FontSize="16"
+                                        FontAttributes="Bold" />
+                                </StackLayout>
+
                                 <Label
-                                    Text="Голос склоновано!"
-                                    TextColor="Green"
-                                    FontSize="16"
-                                    FontAttributes="Bold" />
+                                    Text="Заповніть усі поня та запишіть/завантажте аудіо"
+                                    TextColor="Red"
+                                    IsVisible="{Binding IsNotValid.IsCloneVoiceNotValid}" />
                             </StackLayout>
-
-                            <Label
-                                Text="Заповніть усі поня та запишіть/завантажте аудіо"
-                                TextColor="Red"
-                                IsVisible="{Binding IsNotValid.IsCloneVoiceNotValid}" />
                         </StackLayout>
 
                         <Button
                             Text="Зберегти голос"
-                            Command="{Binding SaveVoiceCommand}"
+                            Command="{Binding UpdateVoiceCommand}"
                             IsVisible="{Binding CloneVoiceModel.IsCreateCloneVoiceMode}"
                             Style="{StaticResource PrimaryButtonStyle}" />
                         

@@ -9,5 +9,6 @@ namespace PersonalAudioAssistant.Application.Interfaces
         Task DeleteVoiceByUserIdAsync(string id, CancellationToken cancellationToken);
         Task CreateVoice(Voice voice, CancellationToken cancellationToken);
         Task UpdateVoiceAsync(Voice voice, CancellationToken cancellationToken);
+        Task DeleteVoiceById(string id, CancellationToken cancellationToken);
     }
 }
