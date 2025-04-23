@@ -92,6 +92,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             LoadVoicesAsync();
         }
 
+        #region Validation
         private void ValidateSubUser(object s, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(SubUser.UserName))
@@ -131,7 +132,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                      isAudioInvalid);
             }
         }
+        #endregion
 
+        #region LoadVoices
         private async Task LoadVoicesAsync()
         {
             IsBusy = true;
@@ -155,35 +158,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
             finally{IsBusy = false;}
         }
+        #endregion
 
-        [RelayCommand]
-        private async Task PickPhotoAsync()
-        {
-            var customImageFileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.WinUI, new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" } },
-                    { DevicePlatform.Android, new[] { "image/*" } },
-                    { DevicePlatform.iOS, new[] { "public.image" } },
-                    { DevicePlatform.MacCatalyst, new[] { "public.image" } },
-                    { DevicePlatform.Tizen, new[] { "*/*" } }
-                });
-
-            var result = await FilePicker.Default.PickAsync(new PickOptions
-            {
-                PickerTitle = "Оберіть будь-яке зображення",
-                FileTypes = customImageFileTypes
-            });
-
-            if (result != null)
-            {
-                SubUser.PhotoPath = result.FullPath;
-                IsPhotoSelected = true;
-                OnPropertyChanged(nameof(SubUser));
-                OnPropertyChanged(nameof(SubUser.PhotoPath));
-            }
-            IsNotValid.IsPhotoPathNotValid = false;
-        }
-
+        #region CreateCloneVoice
         [RelayCommand]
         public async Task CreateCloneVoiceAsync()
         {
@@ -259,7 +236,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false;
             }
         }
+        #endregion
 
+        #region CreateUser
         [RelayCommand]
         public async Task CreateUserAsync()
         {
@@ -368,7 +347,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false;
             }
         }
+        #endregion
 
+        #region PlayAudio_RecordAudio
         [RelayCommand]
         public async Task PlaySelectedVoiceAsync()
         {
@@ -456,7 +437,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка при записі для клонування: {ex.Message}", "OK");
             }
         }
+        #endregion
 
+        #region PickPhoto_AudioFile
         [RelayCommand]
         private async Task PickAudioFileAsync()
         {
@@ -490,6 +473,36 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
         }
 
+        [RelayCommand]
+        private async Task PickPhotoAsync()
+        {
+            var customImageFileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.WinUI, new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" } },
+                    { DevicePlatform.Android, new[] { "image/*" } },
+                    { DevicePlatform.iOS, new[] { "public.image" } },
+                    { DevicePlatform.MacCatalyst, new[] { "public.image" } },
+                    { DevicePlatform.Tizen, new[] { "*/*" } }
+                });
+
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Оберіть будь-яке зображення",
+                FileTypes = customImageFileTypes
+            });
+
+            if (result != null)
+            {
+                SubUser.PhotoPath = result.FullPath;
+                IsPhotoSelected = true;
+                OnPropertyChanged(nameof(SubUser));
+                OnPropertyChanged(nameof(SubUser.PhotoPath));
+            }
+            IsNotValid.IsPhotoPathNotValid = false;
+        }
+        #endregion
+
+        #region Filter
         public ObservableCollection<VoiceResponse> ApplyFilter(List<VoiceResponse> allVoices)
         {
             var filtered = allVoices.AsEnumerable();
@@ -602,6 +615,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             Filter.UseCase = null;
             ApplyVoiceFilter();
         }
+        #endregion
 
         [RelayCommand]
         public void OnNavigatedFrom()

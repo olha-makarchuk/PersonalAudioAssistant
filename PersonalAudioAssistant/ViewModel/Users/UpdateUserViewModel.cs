@@ -11,16 +11,13 @@ using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Model;
 using System.ComponentModel;
-using Microsoft.Azure.Cosmos;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
-using static Java.Util.Jar.Attributes;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
     public partial class UpdateUserViewModel : ObservableObject, IQueryAttributable
     {
-        private readonly IApiClient _apiClient;
         private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
@@ -30,6 +27,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private string _selectedAudioFilePath;
         private string UserIdQueryAttribute;
         private string _photoUrl;
+        private readonly ElevenlabsApi _elevenLabsApi = new ElevenlabsApi();
 
         [ObservableProperty]
         private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();
@@ -81,12 +79,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         public string selectedAudioFilePath;
 
-        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
+        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData)
         {
             _mediator = mediator;
             _audioManager = audioManager;
             _manageCacheData = manageCacheData;
-            _apiClient = apiClient;
             _audioRecorder = audioManager.CreateRecorder();
 
             Filter = new VoiceFilterModel();
@@ -108,6 +105,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             };
         }
 
+        #region Validation
         private void ValidateSubUser(object s, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(SubUser.UserName))
@@ -151,7 +149,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                      isAudioInvalid);
             }
         }
+        #endregion
 
+        #region LoadVoicesAsync
         public async Task LoadVoicesAsync()
         {
             IsBusy = true;
@@ -230,8 +230,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false; 
             }
         }
+        #endregion
 
-
+        #region UpdatePersonalInformation
         [RelayCommand]
         public async Task UpdatePersonalInformation()
         {
@@ -271,7 +272,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false; 
             }
         }
+        #endregion
 
+        #region UpdatePhoto
         [RelayCommand]
         public async Task UpdatePhoto()
         {
@@ -329,7 +332,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 OnPropertyChanged(nameof(SubUser.PhotoPath));
             }
         }
+        #endregion
 
+        #region UpdatePassword
         [RelayCommand]
         public async Task UpdatePassword()
         {
@@ -399,7 +404,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false;
             }
         }
+        #endregion
 
+        #region UpdateUserVoice
         [RelayCommand]
         public async Task UpdateUserVoice()
         {
@@ -437,9 +444,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 IsBusy = false;
             }
         }
+        #endregion
 
-        private readonly ElevenlabsApi _elevenLabsApi = new ElevenlabsApi();
-
+        #region UpdateVoice
         [RelayCommand]
         public async Task UpdateVoice()
         {
@@ -584,10 +591,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
             };
             await _mediator.Send(updateCommand);
         }
-
         private Task ShowErrorAsync(string message) => Shell.Current.DisplayAlert("Помилка", message, "OK");
         private Task ShowSuccessAsync(string message) => Shell.Current.DisplayAlert("Успіх", message, "OK");
+        #endregion
 
+        #region DeleteUser
         [RelayCommand]
         public async Task DeleteUser()
         {
@@ -621,7 +629,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 }
             }
         }
+        #endregion
 
+        #region PlayAudio_RecordAudio
         [RelayCommand]
         public async Task PlaySelectedVoice()
         {
@@ -708,7 +718,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка при записі для клонування: {ex.Message}", "OK");
             }
         }
+        #endregion
 
+        //add image changer 
+        #region PickAudio_Photo
         [RelayCommand]
         private async Task PickAudioFileAsync()
         {
@@ -741,7 +754,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 await Shell.Current.DisplayAlert("Помилка", $"Помилка при виборі файлу: {ex.Message}", "OK");
             }
         }
+        #endregion 
 
+        #region Filters
         public ObservableCollection<VoiceResponse> ApplyFilter(List<VoiceResponse> allVoices)
         {
             var filtered = allVoices.AsEnumerable();
@@ -810,14 +825,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             ApplyVoiceFilter();
         }
 
-        public async void ApplyQueryAttributes(IDictionary<string, object> query)
-        {
-            if (query.ContainsKey("userId"))
-            {
-                UserIdQueryAttribute = query["userId"]?.ToString();
-            }
-        }
-
         [RelayCommand]
         public void ResetDescriptionFilter()
         {
@@ -858,6 +865,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             Voices = ApplyFilter(allVoices);
         }
+        #endregion
 
         public void OnNavigatedFrom()
         {
@@ -892,6 +900,13 @@ namespace PersonalAudioAssistant.ViewModel.Users
             Voices = new ObservableCollection<VoiceResponse>(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
             SelectedVoiceUrl = SelectedVoice?.URL;
+        }
+        public async void ApplyQueryAttributes(IDictionary<string, object> query)
+        {
+            if (query.ContainsKey("userId"))
+            {
+                UserIdQueryAttribute = query["userId"]?.ToString();
+            }
         }
     }
 }
