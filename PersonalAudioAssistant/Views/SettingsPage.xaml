@@ -27,7 +27,7 @@
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="30,0">
-            <Label Text="⚙️ Налаштування" 
+            <Label Text="Налаштування" 
                    FontSize="30" 
                    FontAttributes="Bold" 
                    Margin="0,20,0,10" 
@@ -47,13 +47,13 @@
 
             <Frame Style="{StaticResource SettingsFrame}">
                 <VerticalStackLayout Spacing="15">
-                    <Label Text="🎨 Персоналізація" Style="{StaticResource SectionTitleLabel}"/>
+                    <Label Text="Персоналізація" Style="{StaticResource SectionTitleLabel}"/>
                     <Label Text="Тема оформлення:" Style="{StaticResource InfoLabel}"/>
                     <Picker ItemsSource="{Binding Themes}"
                             SelectedItem="{Binding Theme}"
                             Title="Виберіть тему"
                             BackgroundColor="#F2F2F2"/>
-                    <Button Text="💾 Зберегти"
+                    <Button Text="Зберегти"
                             Command="{Binding SaveThemeCommand}"
                             BackgroundColor="#5CB85C"
                             TextColor="White"
@@ -69,8 +69,8 @@
                     <Label Text="💰 Баланс" Style="{StaticResource SectionTitleLabel}"/>
                     <Label Text="Ваш поточний баланс:" Style="{StaticResource InfoLabel}"/>
                     <HorizontalStackLayout HorizontalOptions="Center">
-                        <Label Text="{Binding Balance}" Style="{StaticResource BalanceLabel}" />
                         <Label Text=" $" Style="{StaticResource BalanceLabel}" />
+                        <Label Text="{Binding Balance}" Style="{StaticResource BalanceLabel}" />
                     </HorizontalStackLayout>
                     <Button Text="💳 Платіжна інформація"
                             Command="{Binding PaymentDetailsCommand}"
@@ -88,7 +88,7 @@
                     <Label Text="🔒 Змінити пароль" Style="{StaticResource SectionTitleLabel}"/>
 
                     <VerticalStackLayout Spacing="8">
-                        <Label Text="🔑 Поточний пароль:" Style="{StaticResource InfoLabel}"/>
+                        <Label Text="Поточний пароль:" Style="{StaticResource InfoLabel}"/>
                         <Entry Text="{Binding OldPassword}"
                                Placeholder="Введіть поточний пароль"
                                IsPassword="True"
@@ -96,14 +96,14 @@
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Spacing="8">
-                        <Label Text="✨ Новий пароль:" Style="{StaticResource InfoLabel}"/>
+                        <Label Text="Новий пароль:" Style="{StaticResource InfoLabel}"/>
                         <Entry Text="{Binding NewPassword}"
                                Placeholder="Введіть новий пароль"
                                IsPassword="True"
                                BackgroundColor="#F2F2F2"/>
                     </VerticalStackLayout>
 
-                    <Button Text="✅ Підтвердити"
+                    <Button Text="Підтвердити"
                             Command="{Binding ChangePasswordCommand}"
                             BackgroundColor="#5CB85C"
                             TextColor="White"

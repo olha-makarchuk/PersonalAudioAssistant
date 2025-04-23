@@ -2,7 +2,13 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.ProgramPage"
+             xmlns:local="clr-namespace:PersonalAudioAssistant.ViewModel"
              Title="Audio Assistant">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <local:ListenButtonTextConverter x:Key="ListenButtonTextConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <ScrollView>
         <VerticalStackLayout
@@ -26,17 +32,32 @@
                 IsRunning="{Binding IsListening}"
                 HorizontalOptions="Center" />
 
-            <!-- Listen start button -->
             <Button
-                Text="Listen"
-                Command="{Binding ListenCommand}"
-                HorizontalOptions="Center" />
+                Text="{Binding IsListening, Converter={StaticResource ListenButtonTextConverter}}"
+                Command="{Binding ToggleListenCommand}"
+                WidthRequest="100"
+                HeightRequest="100"
+                CornerRadius="50"
+                TextColor="White"
+                FontAttributes="Bold"
+                FontSize="16"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
 
-            <!-- Listen cancel button -->
-            <Button
-                Text="Listen Cancel"
-                Command="{Binding ListenCancelCommand}"
-                HorizontalOptions="Center" />
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsListening}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="#8a75f8" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+                                 Binding="{Binding IsListening}"
+                                 Value="False">
+                        <Setter Property="BackgroundColor" Value="#5e42f6" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+
 
         </VerticalStackLayout>
     </ScrollView>

@@ -5,6 +5,7 @@
              xmlns:vm="clr-namespace:PersonalAudioAssistant.ViewModel"
              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
 
+    <Grid>
     <ScrollView>
 
         <Grid RowDefinitions="Auto,Auto,*">
@@ -151,7 +152,10 @@
 
             <ContentView Content="{Binding CurrentAnalyticsContent}" Grid.Row="2" Padding="300" />
 
-            <ActivityIndicator
+    </Grid>
+    </ScrollView>
+
+        <ActivityIndicator
             IsVisible="{Binding IsBusy}"
             IsRunning="{Binding IsBusy}"
             VerticalOptions="Center"
@@ -159,6 +163,4 @@
             WidthRequest="60"
             HeightRequest="60" />
     </Grid>
-    </ScrollView>
-
 </ContentPage>

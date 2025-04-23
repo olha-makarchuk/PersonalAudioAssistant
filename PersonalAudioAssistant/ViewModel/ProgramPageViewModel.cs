@@ -24,7 +24,6 @@ namespace PersonalAudioAssistant.ViewModel
         [ObservableProperty]
         private string? recognitionText;
 
-        // New property for the listening state.
         [ObservableProperty]
         private bool isListening;
 
@@ -89,5 +88,29 @@ namespace PersonalAudioAssistant.ViewModel
                 IsListening = false;
             }
         }
+
+        [RelayCommand]
+        void ToggleListen()
+        {
+            if (IsListening)
+            {
+                ListenCancelCommand.Execute(null);
+            }
+            else
+            {
+                ListenCommand.Execute(null);
+            }
+        }
+    }
+
+    public class ListenButtonTextConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (value is bool isListening && isListening) ? "Stop Listening" : "Start Listening";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            throw new NotImplementedException();
     }
 }

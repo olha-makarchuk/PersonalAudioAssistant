@@ -14,11 +14,11 @@
            WidthRequest="300"
            HeightRequest="1000">
         <VerticalStackLayout 
-            BackgroundColor="#232D53"
+            BackgroundColor="#2c1e68"
             Padding="10"
             Spacing="0">
 
-            <Label Text="{Binding Balance}"
+            <Label Text="{Binding Balance, StringFormat='${0}'}"
                    Margin="0, 50, 0, 0 "
                    TextColor="White"
                    FontSize="20"
