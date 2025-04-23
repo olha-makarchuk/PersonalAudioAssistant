@@ -31,7 +31,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentQue
                     UserId = user.UserId,
                     MaskedCardNumber = user.MaskedCardNumber,
                     PaymentGatewayToken = user.PaymentGatewayToken,
-                    DataExpired = user.DataExpired
+                    DataExpired = user.DataExpiredCard,
                 };
 
                 return paymentResponse;

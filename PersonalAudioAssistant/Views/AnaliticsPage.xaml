@@ -5,16 +5,14 @@
              xmlns:vm="clr-namespace:PersonalAudioAssistant.ViewModel"
              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
 
-    <ContentPage.BindingContext>
-        <vm:AnaliticsViewModel />
-    </ContentPage.BindingContext>
+    <ScrollView>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid RowDefinitions="Auto,Auto,*">
         <Grid ColumnDefinitions="*,*,*"
               Padding="20,10"
               ColumnSpacing="0">
 
-            <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center">
+                <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center">
                 <Label Text="Статистика &#x0a;за користувачами"
                        FontSize="14"
                        FontAttributes="Bold"
@@ -29,50 +27,138 @@
                          BackgroundColor="{StaticResource Primary}"
                          HorizontalOptions="Fill"
                          IsVisible="{Binding IsUserTabSelected}" />
-            </StackLayout>
+                </StackLayout>
 
-            <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="1">
-                <Label Text="Використання &#x0a;токенів"
-                       FontSize="14"
-                       FontAttributes="Bold"
-                       HorizontalOptions="Center"
-                       TextColor="{Binding IsTokenTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
-                       Margin="0,0,0,5"
-                       HorizontalTextAlignment="Center">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding SelectTokenTabCommand}" />
-                    </Label.GestureRecognizers>
-                </Label>
-                <BoxView HeightRequest="3"
-                         BackgroundColor="{StaticResource Primary}"
-                         HorizontalOptions="Fill"
-                         IsVisible="{Binding IsTokenTabSelected}" />
-            </StackLayout>
+                <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="1">
+                    <Label Text="Використання &#x0a;токенів"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           TextColor="{Binding IsTokenTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
+                           Margin="0,0,0,5"
+                           HorizontalTextAlignment="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectTokenTabCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <BoxView HeightRequest="3"
+                             BackgroundColor="{StaticResource Primary}"
+                             HorizontalOptions="Fill"
+                             IsVisible="{Binding IsTokenTabSelected}" />
+                </StackLayout>
 
-            <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="2">
-                <Label Text="Історія &#x0a;оплати"
-                       FontSize="14"
-                       FontAttributes="Bold"
-                       HorizontalOptions="Center"
-                       TextColor="{Binding IsPaymentTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
-                       Margin="0,0,0,5"
-                       HorizontalTextAlignment="Center">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding SelectPaymentTabCommand}" />
-                    </Label.GestureRecognizers>
-                </Label>
-                <BoxView HeightRequest="3"
-                         BackgroundColor="{StaticResource Primary}"
-                         HorizontalOptions="Fill"
-                         IsVisible="{Binding IsPaymentTabSelected}" />
-            </StackLayout>
+                <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="2">
+                    <Label Text="Історія &#x0a;оплати"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{Binding IsPaymentTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
+                               Margin="0,0,0,5"
+                               HorizontalTextAlignment="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectPaymentTabCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <BoxView HeightRequest="3"
+                                 BackgroundColor="{StaticResource Primary}"
+                                 HorizontalOptions="Fill"
+                                 IsVisible="{Binding IsPaymentTabSelected}" />
+                </StackLayout>
         </Grid>
 
         <BoxView Grid.Row="1"
                  HeightRequest="1"
                  Color="#cccccc"
                  Margin="10,0" />
+        
 
-        <ContentView Content="{Binding CurrentAnalyticsContent}" Grid.Row="2" Padding="20" />
+            <ContentView Grid.Row="2" Padding="20" IsVisible="{Binding IsPaymentTabSelected}">
+                <StackLayout>
+                    <!-- Заголовки колонок -->
+                    <Grid Padding="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="3*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Text="Дата"
+                               FontSize="14"
+                               TextColor="Gray"
+                               Margin="20,0,0,0"
+                               Grid.Column="0"/>
+                        <Label Text="Картка"
+                               FontSize="14"
+                               TextColor="Gray"
+                               Margin="50,0,0,0"
+                               Grid.Column="1"/>
+                        <Label Text="Опис"
+                               FontSize="14"
+                               Margin="60,0,0,0"
+                               TextColor="Gray"
+                               Grid.Column="2"/>
+                        <Label Text="Сума $"
+                               FontSize="14"
+                               TextColor="Gray"
+                               HorizontalTextAlignment="End"
+                               Grid.Column="3"/>
+                    </Grid>
+
+                    <!-- Список історії -->
+                    <CollectionView ItemsSource="{Binding HistoryList}"
+                        SelectionMode="None"
+                        Margin="0">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Vertical"
+                                   ItemSpacing="5"/>
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10" BackgroundColor="#f5f1f9">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="3*"/>
+                                        <ColumnDefinition Width="2*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Label Grid.Column="0"
+                                           Text="{Binding DataTimePayment}" 
+                                           FontSize="12"
+                                           TextColor="#333333"/>
+                                    <Label Grid.Column="1"
+                                           Text="{Binding MaskedCardNumber}" 
+                                           FontSize="12"
+                                           TextColor="#333333"/>
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Description}" 
+                                           FontSize="12"
+                                           TextColor="#333333"/>
+                                    <Label Grid.Column="3"
+                                           Text="{Binding Amount}" 
+                                           FontSize="12"
+                                           Padding="0,0,10,0"
+                                           TextColor="#333333"
+                                           HorizontalTextAlignment="End"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </StackLayout>
+            </ContentView>
+
+
+            <ContentView Content="{Binding CurrentAnalyticsContent}" Grid.Row="2" Padding="300" />
+
+            <ActivityIndicator
+            IsVisible="{Binding IsBusy}"
+            IsRunning="{Binding IsBusy}"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            WidthRequest="60"
+            HeightRequest="60" />
     </Grid>
+    </ScrollView>
+
 </ContentPage>

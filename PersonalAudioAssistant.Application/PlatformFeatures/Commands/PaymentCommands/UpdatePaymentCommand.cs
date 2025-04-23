@@ -8,7 +8,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCo
         public required string UserId { get; set; }
         public required string PaymentGatewayToken { get; set; }
         public required string MaskedCardNumber { get; set; }
-        public required string DataExpired { get; set; }
+        public required string DataExpiredCard { get; set; }
     }
 
     public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand>
@@ -33,7 +33,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCo
 
                 payment.PaymentGatewayToken = request.PaymentGatewayToken;
                 payment.MaskedCardNumber = request.MaskedCardNumber;
-                payment.DataExpired = request.DataExpired;
+                payment.DataExpiredCard = request.DataExpiredCard;
 
                 await _paymentRepository.UpdatePaymentAsync(payment, cancellationToken);
             }

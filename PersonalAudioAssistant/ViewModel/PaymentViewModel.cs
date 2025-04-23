@@ -157,7 +157,7 @@ namespace PersonalAudioAssistant.ViewModel
                     UserId = userId,
                     MaskedCardNumber = fakeCardNumber,
                     PaymentGatewayToken = fakeToken,
-                    DataExpired = CardModel.DateExpirience
+                    DataExpiredCard = CardModel.DateExpirience
                 };
                 await _mediator.Send(command);
                 IsCardPreset = true;
@@ -196,7 +196,7 @@ namespace PersonalAudioAssistant.ViewModel
                     UserId = userId,
                     MaskedCardNumber = null,
                     PaymentGatewayToken = null,
-                    DataExpired = null
+                    DataExpiredCard = null
                 });
 
                 CardModel.MaskedCardNumber = null;
@@ -250,8 +250,10 @@ namespace PersonalAudioAssistant.ViewModel
 
                 var command = new UpdateBalanceCommand()
                 {
-                    Balance = RechargeAmountInput,
-                    UserId = userId
+                    RechargeAmountInput = RechargeAmountInput,
+                    UserId = userId,
+                    MaskedCardNumber = CardModel.MaskedCardNumber,
+                    DescriptionPayment = "Поповнення балансу"
                 };
                 await _mediator.Send(command);
                 await Shell.Current.DisplayAlert("Успіх", $"Баланс успішно поповнено на {RechargeAmountInput} $", "OK"); 

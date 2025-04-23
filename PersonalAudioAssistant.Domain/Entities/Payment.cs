@@ -8,6 +8,6 @@ namespace PersonalAudioAssistant.Domain.Entities
         public required string PaymentGatewayToken { get; set; }
         public required string MaskedCardNumber { get; set; }
         public required string UserId { get; set; }
-        public required string DataExpired { get; set; }
+        public required string DataExpiredCard { get; set; }
     }
 }

@@ -465,8 +465,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 {
                     await UpdateCloneVoiceAsync();
                 }
-
-                await Shell.Current.DisplayAlert("Успішно", $"Голос озвучування успішно змінено", "OK");
             }
             catch (InvalidOperationException invEx)
             {
@@ -495,15 +493,16 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             if (CloneVoice.VoiceId != null)
             {
-                await _elevenLabsApi.DeleteVoiceAsync(_voiceIdElevenlabs);
                 var command = new DeleteVoiceCommand()
                 {
-                    Id = CloneVoice.VoiceId
+                    Id = CloneVoice.VoiceId,
+                    IdElevenlabs = _voiceIdElevenlabs
                 };
                 await _mediator.Send(command);
             }
             IsVoiceColone = false;
             IsVoiceBase = true;
+            await Shell.Current.DisplayAlert("Успішно", $"Голос озвучування успішно змінено", "OK");
         }
 
         private string _voiceIdElevenlabs;
@@ -543,16 +542,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
             var clonedInfo = await _elevenLabsApi.CloneVoiceAsync(
                 CloneVoiceModel.Name,
                 audioPath);
-            
-            if (CloneVoice.VoiceId != null)
+
+            var commandDeleteVoice = new DeleteVoiceCommand()
             {
-                await _elevenLabsApi.DeleteVoiceAsync(_voiceIdElevenlabs);
-                var command = new DeleteVoiceCommand()
-                {
-                    Id = CloneVoice.VoiceId
-                };
-                await _mediator.Send(command);
-            }
+                Id = CloneVoice.VoiceId,
+                IdElevenlabs = _voiceIdElevenlabs
+            };
 
             var createCommand = new CreateVoiceCommand
             {
@@ -564,8 +559,12 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             await UpdateUserVoiceAsync(newVoiceDbId);
 
-            CloneVoice.Name = clonedInfo.VoiceName;
+            if (CloneVoice.VoiceId != null)
+            {
+                await _mediator.Send(commandDeleteVoice);
+            }
 
+            CloneVoice.Name = clonedInfo.VoiceName;
             CloneVoice.VoiceId = newVoiceDbId;
             _voiceIdElevenlabs = clonedInfo.VoiceId;
 
