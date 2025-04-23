@@ -70,6 +70,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         public bool isPhotoSelected;
 
+        [ObservableProperty]
+        public bool hasPassword;
+
         public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
         {
             _mediator = mediator;
@@ -101,14 +104,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             if (e.PropertyName == nameof(SubUser.UserName))
                 IsNotValid.IsUserNameNotValid = string.IsNullOrWhiteSpace(SubUser.UserName);
-            if (e.PropertyName == nameof(SubUser.NewPassword))
-                IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.NewPassword);
-            if (e.PropertyName == nameof(SubUser.OldPassword))
-                IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.OldPassword);
             if (e.PropertyName == nameof(SubUser.StartPhrase))
                 IsNotValid.IsStartPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.StartPhrase);
             if (e.PropertyName == nameof(SubUser.EndPhrase) && EndOptionsModel.IsEndPhraseSelected)
                 IsNotValid.IsEndPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.EndPhrase);
+            if (e.PropertyName == nameof(SubUser.NewPassword))
+                IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.NewPassword);
+
+            if (HasPassword == true)
+            {
+                if (e.PropertyName == nameof(SubUser.OldPassword))
+                    IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.OldPassword);
+            }
         }
 
         private void ValidateCloneModel(object s, PropertyChangedEventArgs e)
@@ -146,7 +153,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 var appUserId = await SecureStorage.GetAsync("user_id");
                 var users = await _manageCacheData.GetUsersAsync();
                 var user = users.FirstOrDefault(u => u.Id.ToString() == UserIdQueryAttribute);
-
+                user.PhotoPath = user.PhotoPath.Split('?')[0];
+                
                 var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery()
                 {
                     UserId = user.Id.ToString()
@@ -163,6 +171,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 SubUser.UserId = user.UserId;
                 SubUser.IsPasswordEnabled = SubUser.PasswordHash != null;
                 _photoUrl = user.PhotoPath;
+                HasPassword = SubUser.PasswordHash != null;
 
                 if (voiceList != null)
                 {
@@ -250,6 +259,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 };
 
                 await _mediator.Send(command);
+                await _manageCacheData.UpdateUsersList();
                 await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
 
             }
@@ -281,9 +291,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 };
 
                 await _mediator.Send(command);
-                //await _manageCacheData.UpdateUsersList();
+                await _manageCacheData.UpdateUsersList();
                 await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
-                MessagingCenter.Send(this, "UserUpdated");
             }
             catch (Exception ex)
             {
@@ -330,6 +339,51 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             try
             {
+                if (HasPassword && !SubUser.IsPasswordEnabled)
+                {
+                    var currentPwd = await Shell.Current.DisplayPromptAsync(
+                        title: "Видалити пароль",
+                        message: "Введіть поточний пароль для видалення:",
+                        accept: "Видалити",
+                        cancel: "Скасувати",
+                        placeholder: "Пароль",
+                        keyboard: Keyboard.Text);
+
+                    if (string.IsNullOrWhiteSpace(currentPwd))
+                        return;
+                    
+                    var removeCmd = new DeletePasswordSubUserCommand {UserId = SubUser.Id, Password = currentPwd };
+                    await _mediator.Send(removeCmd);
+                    await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно видалено", "OK");
+                    HasPassword = false;
+                }
+
+                // User had no password and checked the box -> add new password
+                else if (!HasPassword && SubUser.IsPasswordEnabled)
+                {
+                    if (IsNotValid.IsPasswordNotValid)
+                        return;
+
+                    var addCmd = new UpdateSubUserCoomand { NewPassword = SubUser.NewPassword };
+                    await _mediator.Send(addCmd);
+                    await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно додано", "OK");
+                    HasPassword = true;
+                }
+
+                // User has password and keeps it enabled -> change password
+                else if (HasPassword && SubUser.IsPasswordEnabled)
+                {
+                    if (IsNotValid.IsPasswordNotValid)
+                        return;
+                    
+                    var changeCmd = new UpdateSubUserCoomand()
+                    {
+                        Password = SubUser.OldPassword,
+                        NewPassword = SubUser.NewPassword
+                    };
+                    await _mediator.Send(changeCmd);
+                    await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно змінено", "OK");
+                }
             }
             catch (Exception ex)
             {

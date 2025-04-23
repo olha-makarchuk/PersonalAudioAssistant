@@ -176,34 +176,57 @@
                         </StackLayout>
 
                         <StackLayout IsVisible="{Binding SubUser.IsPasswordEnabled}" Spacing="5">
-                            <Label
-                                Text="Пароль до історії розмов:"
-                                FontSize="16"
-                                FontAttributes="Bold"
-                                TextColor="#333333"
-                                Margin="0,20,0,10" />
-                            <Entry
-                                Text="{Binding SubUser.OldPassword}"
-                                Placeholder="Пароль"
-                                BackgroundColor="#F0F0F0"
-                                HeightRequest="50"
-                                TextColor="#333333"
-                                IsPassword="True" />
-                            <Entry
-                                Text="{Binding SubUser.OldPassword}"
-                                Placeholder="Новий пароль"
-                                BackgroundColor="#F0F0F0"
-                                HeightRequest="50"
-                                TextColor="#333333"
-                                IsPassword="True" />
-                            <Label
-                                Text="Введіть коректний пароль"
-                                TextColor="Red"
-                                IsVisible="{Binding IsNotValid.IsPasswordNotValid}" />
+                            <StackLayout IsVisible="{Binding HasPassword}">
+                                <Label
+                                    Text="Пароль до історії розмов:"
+                                    FontSize="16"
+                                    FontAttributes="Bold"
+                                    TextColor="#333333"
+                                    Margin="0,20,0,10" />
+                                <Entry
+                                    Text="{Binding SubUser.OldPassword}"
+                                    Placeholder="Пароль"
+                                    BackgroundColor="#F0F0F0"
+                                    HeightRequest="50"
+                                    TextColor="#333333"
+                                    IsPassword="True" />
+                                <Entry
+                                    Text="{Binding SubUser.NewPassword}"
+                                    Placeholder="Новий пароль"
+                                    BackgroundColor="#F0F0F0"
+                                    HeightRequest="50"
+                                    TextColor="#333333"
+                                    IsPassword="True" />
+                                <Label
+                                    Text="Введіть коректний пароль"
+                                    TextColor="Red"
+                                    IsVisible="{Binding IsNotValid.IsPasswordNotValid}" />
+                            </StackLayout>
+
+                            <StackLayout IsVisible="{Binding HasPassword, Converter={StaticResource InvertedBoolConverter}}">
+                                <Label
+                                    Text="Пароль до історії розмов:"
+                                    FontSize="16"
+                                    FontAttributes="Bold"
+                                    TextColor="#333333"
+                                    Margin="0,20,0,10" />
+                                <Entry
+                                    Text="{Binding SubUser.NewPassword}"
+                                    Placeholder="Новий пароль"
+                                    BackgroundColor="#F0F0F0"
+                                    HeightRequest="50"
+                                    TextColor="#333333"
+                                    IsPassword="True" />
+                                <Label
+                                    Text="Введіть коректний пароль"
+                                    TextColor="Red"
+                                    IsVisible="{Binding IsNotValid.IsPasswordNotValid}" />
+                            </StackLayout>
+                            
                         </StackLayout>
                         <Button
                             Text="Зберегти"
-                            Command="{Binding UpdateUserCommand}"
+                            Command="{Binding UpdatePasswordCommand}"
                             Style="{StaticResource PrimaryButtonStyle}" />
                     </VerticalStackLayout>
                 </Frame>

@@ -67,6 +67,13 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCo
                 userExist.PasswordSalt = passwordSalt;
             }
 
+            if(userExist.PasswordHash == null && request.NewPassword != null)
+            {
+                _passwordManager.CreatePasswordHash(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
+                userExist.PasswordHash = passwordHash;
+                userExist.PasswordSalt = passwordSalt;
+            }
+
             await _subUserRepository.UpdateUser(userExist, cancellationToken);
         }
     }

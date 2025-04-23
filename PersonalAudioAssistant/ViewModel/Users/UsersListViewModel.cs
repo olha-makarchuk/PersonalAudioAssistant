@@ -30,11 +30,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             UserSelectedCommand = new AsyncRelayCommand<SubUserResponse>(UserSelectedAsync, CanExecuteUserSelected);
             AddUserCommand = new AsyncRelayCommand(AddUserAsync);
-
-            MessagingCenter.Subscribe<UpdateUserViewModel>(this, "UserUpdated", async (_) =>
-            {
-                await RefreshUsersAsync();
-            });
         }
 
         private bool CanExecuteUserSelected(SubUserResponse user)
@@ -79,7 +74,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 user.PhotoPath = $"{user.PhotoPath}?nocache={randomInt}";
                 Users.Add(user);
-                user.PhotoPath = user.PhotoPath.Split('?')[0];
             }
             OnPropertyChanged(nameof(Users));
         }
