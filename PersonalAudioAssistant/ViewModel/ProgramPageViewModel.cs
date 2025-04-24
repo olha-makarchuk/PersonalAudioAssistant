@@ -62,6 +62,7 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 try
                 {
+                    var chatProgress = new Progress<ChatMessage>(msg => ChatMessages.Add(msg));
                     RecognitionText = string.Empty;
                     RecognitionText = await speechToText.Listen(
                         CultureInfo.GetCultureInfo(Locale?.Language ?? "en-us"),
@@ -69,6 +70,7 @@ namespace PersonalAudioAssistant.ViewModel
                         {
                             RecognitionText += partialText + " ";
                         }),
+                        chatProgress,
                         usersList,
                         _listenCts.Token);
                 }

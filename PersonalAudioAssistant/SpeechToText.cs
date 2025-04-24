@@ -1,13 +1,14 @@
 ﻿using System.Globalization;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Platforms;
+using PersonalAudioAssistant.ViewModel;
 
 namespace PersonalAudioAssistant
 {
     public interface ISpeechToText : IAsyncDisposable
     {
         Task<bool> RequestPermissions();
-        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken);
+        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken);
     }
 
     public static class SpeechToText
@@ -19,9 +20,9 @@ namespace PersonalAudioAssistant
             return Default.RequestPermissions();
         }
 
-        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
+        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
-            return Default.Listen(culture, recognitionResult, listUsers, cancellationToken);
+            return Default.Listen(culture, recognitionResult, chatMessageProgress, listUsers, cancellationToken);
         }
 
         public static ISpeechToText Default =>

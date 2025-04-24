@@ -21,7 +21,7 @@ namespace PersonalAudioAssistant.Platforms
 
         private bool IsFirstRequest; 
         private string PreviousResponseId;
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();
 
@@ -52,8 +52,6 @@ namespace PersonalAudioAssistant.Platforms
                 {
                     bool processingCommand = false;
                     recognitionResult?.Report(sentence);
-
-                    List<ChatMessage> ChatMessages = new List<ChatMessage>();
 
                     SubUserResponse? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
@@ -91,16 +89,9 @@ namespace PersonalAudioAssistant.Platforms
 
                                     TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(answer);
 
-                                    ChatMessages.Add(new ChatMessage
-                                    {
-                                        Text = response.Request,
-                                        IsUser = true
-                                    });
-                                    ChatMessages.Add(new ChatMessage
-                                    {
-                                        Text = response.Transcripts,
-                                        IsUser = false
-                                    });
+                                    // замість локального ChatMessages
+                                    chatMessageProgress.Report(new ChatMessage { Text = response.Request, IsUser = true });
+                                    chatMessageProgress.Report(new ChatMessage { Text = response.Transcripts, IsUser = false });
 
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
