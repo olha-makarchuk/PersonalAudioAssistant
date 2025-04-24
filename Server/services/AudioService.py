@@ -154,6 +154,7 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
 
                 if dist < THRESHOLD:
                     speech_detected = True
+                    last_me_detected_time = total_duration
                     break
 
         if not speech_detected:
@@ -182,7 +183,7 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
                 chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
                 chunk_duration = len(chunk) / RATE
                 total_duration += chunk_duration
-
+                
                 # 2.1) Завжди збираємо в загальний буфер
                 audio_buffer.append(chunk)
                 # 2.2) Класіфікаційний буфер для end_time

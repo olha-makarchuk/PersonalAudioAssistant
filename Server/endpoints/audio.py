@@ -33,19 +33,43 @@ async def websocket_audio(websocket: WebSocket):
 
     if transcription_text == "none":
         isContinuous = False
-        await websocket.send_json({"request": transcription_text, "transcripts": "", "isContinuous":isContinuous, "conversationId": "", "AIconversationId": ""})
+        await websocket.send_json({
+            "request": transcription_text,
+            "transcripts": "",
+            "isContinuous": isContinuous,
+            "conversationId": "",
+            "AIconversationId": ""
+        })
         await websocket.close()
-    else:
-        isContinuous = True
-        completion = client.chat.completions.create(
+        return
+    
+    await websocket.send_json({
+        "request": transcription_text,
+        "transcripts": "",
+        "isContinuous": True,  
+        "conversationId": "",
+        "AIconversationId": ""
+    })
+    
+    '''
+    completion = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "user",
-                "content": transcription_text,
-            }]
-        )
-        print(completion.choices[0].message.content)
+        messages=[{
+            "role": "user",
+            "content": transcription_text,
+        }]
+    )
+    
+    response_text = completion.choices[0].message.content
+    print("GPT RESPONSE:", response_text)
 
-        await websocket.send_json({"request": transcription_text, "transcripts": completion.choices[0].message.content, "isContinuous":isContinuous, "conversationId": "", "AIconversationId": ""})
-        await websocket.close()
+    await websocket.send_json({
+        "request": transcription_text,
+        "transcripts": response_text,
+        "isContinuous": True,
+        "conversationId": "",
+        "AIconversationId": ""
+    })
+    '''
+
+    await websocket.close()

@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Azure;
+using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Contracts.SubUser;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 
@@ -15,7 +17,7 @@ namespace PersonalAudioAssistant.Application.Services
             this.webSocketService = webSocketService;
             this.audioDataProvider = audioDataProvider;
         }
-        
+
         public async Task<string> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
         {
             try
@@ -77,5 +79,13 @@ namespace PersonalAudioAssistant.Application.Services
                 }
             }
         }
+    }
+    public class TranscriptionResponse
+    {
+        public string Request { get; set; }
+        public string Transcripts { get; set; }
+        public bool IsContinuous { get; set; }
+        public string ConversationId { get; set; }
+        public string AIconversationId { get; set; }
     }
 }

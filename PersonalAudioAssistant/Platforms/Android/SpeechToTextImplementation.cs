@@ -17,10 +17,11 @@ namespace PersonalAudioAssistant.Platforms
         private SpeechRecognitionListener? listener;
         private SpeechRecognizer? speechRecognizer;
         private bool isListening = false;
-        private bool IsContinueConversation; 
-
+        private bool IsContinueConversation;
+        string _prevResponseId = null;
         private bool IsFirstRequest; 
         private string PreviousResponseId;
+
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
             var taskResult = new TaskCompletionSource<string>();
@@ -78,23 +79,34 @@ namespace PersonalAudioAssistant.Platforms
 
                             while (IsContinueConversation)
                             {
+                                var commandCreateConversation = new CreateCon
                                 try
                                 {
                                     IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                                     var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
-                                    string answer = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
+                                    string transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
 
-                                    await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
+                                    await Toast.Make($"Відповідь: {transcription}").Show(cancellationToken);
 
-                                    TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(answer);
+                                    TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription);
 
-                                    // замість локального ChatMessages
                                     chatMessageProgress.Report(new ChatMessage { Text = response.Request, IsUser = true });
-                                    chatMessageProgress.Report(new ChatMessage { Text = response.Transcripts, IsUser = false });
+
+                                    var apiGPT = new ApiClientGPT();
+                                    ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription, _prevResponseId);
+                                    _prevResponseId = answer.responseId;
+
+                                    chatMessageProgress.Report(new ChatMessage { Text = answer.text, IsUser = false });
 
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
+
+                                    if(!IsContinueConversation)
+                                    {
+                                        _prevResponseId = null;
+                                    }
+
                                     /*
                                     var textToSpeech = new ElevenlabsApi();
                                     var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
