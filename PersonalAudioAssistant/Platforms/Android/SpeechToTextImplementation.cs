@@ -7,6 +7,7 @@ using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.ViewModel;
 using Plugin.Maui.Audio;
 
 namespace PersonalAudioAssistant.Platforms
@@ -52,6 +53,8 @@ namespace PersonalAudioAssistant.Platforms
                     bool processingCommand = false;
                     recognitionResult?.Report(sentence);
 
+                    List<ChatMessage> ChatMessages = new List<ChatMessage>();
+
                     SubUserResponse? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
                     matchedUser = listUsers.FirstOrDefault(user =>
@@ -87,6 +90,18 @@ namespace PersonalAudioAssistant.Platforms
                                     await Toast.Make($"Відповідь: {answer}").Show(cancellationToken);
 
                                     TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(answer);
+
+                                    ChatMessages.Add(new ChatMessage
+                                    {
+                                        Text = response.Request,
+                                        IsUser = true
+                                    });
+                                    ChatMessages.Add(new ChatMessage
+                                    {
+                                        Text = response.Transcripts,
+                                        IsUser = false
+                                    });
+
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
                                     /*

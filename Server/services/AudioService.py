@@ -236,6 +236,9 @@ def process_audio_segments(full_audio, user_voice):
     temp_audio_path = "temp_stream.wav"
     sf.write(temp_audio_path, full_audio, RATE)
 
+    if full_audio is None or full_audio.size == 0:
+        return []
+
     pred_list_pp = diar_model.diarize(audio=temp_audio_path, postprocessing_yaml=MODEL_CONFIG)[0]
     sorted_segments = sorted(pred_list_pp, key=lambda seg: float(seg.split()[0]))
 
@@ -261,7 +264,7 @@ def process_audio_segments(full_audio, user_voice):
     return final_audio_segments
 
 def transcribe_audio(final_audio_segments):
-    transcription = {"text": ""}
+    transcription = "none"
     if final_audio_segments:
         combined_audio = np.concatenate(final_audio_segments)
         final_audio_file = "final_audio.wav"

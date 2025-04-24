@@ -1,3 +1,4 @@
+import ast
 from fastapi import APIRouter, WebSocket
 import soundfile as sf
 from config import RATE, OPENAI_API_KEY
@@ -29,21 +30,22 @@ async def websocket_audio(websocket: WebSocket):
     transcription_text = transcription.text if hasattr(transcription, "text") else str(transcription)
 
     print(transcription_text)
-    '''
-    completion = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[
-        {
-            "role": "user",
-            "content": transcription_text,
-        }]
-    )
-    print(completion.choices[0].message.content)
-    '''
-    if transcription_text == "":
+
+    if transcription_text == "none":
         isContinuous = False
+        await websocket.send_json({"request": transcription_text, "transcripts": "", "isContinuous":isContinuous, "conversationId": "", "AIconversationId": ""})
+        await websocket.close()
     else:
         isContinuous = True
+        completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": transcription_text,
+            }]
+        )
+        print(completion.choices[0].message.content)
 
-    await websocket.send_json({"request": transcription_text, "transcripts": transcription_text, "isContinuous":isContinuous, "conversationId": "", "AIconversationId": ""})
-    await websocket.close()
+        await websocket.send_json({"request": transcription_text, "transcripts": completion.choices[0].message.content, "isContinuous":isContinuous, "conversationId": "", "AIconversationId": ""})
+        await websocket.close()

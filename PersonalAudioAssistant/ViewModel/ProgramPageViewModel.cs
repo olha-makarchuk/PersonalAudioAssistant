@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Services;
+using System.Collections.ObjectModel;
 using System.Globalization;
 
 namespace PersonalAudioAssistant.ViewModel
@@ -26,6 +27,9 @@ namespace PersonalAudioAssistant.ViewModel
 
         [ObservableProperty]
         private bool isListening;
+
+        [ObservableProperty]
+        private ObservableCollection<ChatMessage> chatMessages = new();
 
         public ProgramPageViewModel(ITextToSpeech textToSpeech, ISpeechToText speechToText, IMediator mediator, ManageCacheData manageCacheData)
         {
@@ -113,4 +117,21 @@ namespace PersonalAudioAssistant.ViewModel
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
             throw new NotImplementedException();
     }
+    public class ChatMessage
+    {
+        public string Text { get; set; }
+        public bool IsUser { get; set; } // true = user, false = assistant
+    }
+
+    public class BoolToColorConverterChat : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (bool)value ? Colors.Blue : Colors.Gray;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            throw new NotImplementedException();
+    }
+
 }

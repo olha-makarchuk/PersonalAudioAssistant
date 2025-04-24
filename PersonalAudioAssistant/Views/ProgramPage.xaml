@@ -7,6 +7,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <local:ListenButtonTextConverter x:Key="ListenButtonTextConverter" />
+            <local:BoolToColorConverter x:Key="BoolToColorConverterChat"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -16,6 +17,19 @@
             Padding="30,0"
             VerticalOptions="Center">
 
+            <CollectionView ItemsSource="{Binding ChatMessages}" Margin="10">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Padding="10" Margin="5"
+                   BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToColorConverterChat}}"
+                   CornerRadius="12" HasShadow="True">
+                            <Label Text="{Binding Text}" TextColor="White"/>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            
             <!-- Recognition result label -->
             <Label
                 Text="{Binding RecognitionText}"
