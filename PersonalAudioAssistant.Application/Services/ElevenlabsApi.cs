@@ -35,7 +35,6 @@ namespace PersonalAudioAssistant.Application.Services
             return response.RawBytes!;
         }
 
-
         public async Task<ElevenlabsApiResponse> CloneVoiceAsync(string voiceName, string filePath)
         {
             bool removeBackgroundNoise = true;

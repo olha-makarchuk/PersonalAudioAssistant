@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentHistory;
+using PersonalAudioAssistant.Contracts.Conversation;
 using PersonalAudioAssistant.Contracts.PaymentHistory;
 using System;
 using System.Collections.Generic;
@@ -41,11 +42,5 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.Conversati
                 return responseList;
             }
         }
-    }
-
-    public class AllConversationsResponse 
-    { 
-        public string IdConversation { get; set; }
-        public string Description { get; set; }
     }
 }

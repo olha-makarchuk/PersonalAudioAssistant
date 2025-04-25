@@ -4,12 +4,12 @@ using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.ConversationCommands
 {
-    public class CreateConversationCommand: IRequest
+    public class CreateConversationCommand: IRequest<string>
     {
         public string Description { get; set; }
         public string SubUserId { get; set; }
     }
-    public class CreateConversationCommandHandler : IRequestHandler<CreateConversationCommand>
+    public class CreateConversationCommandHandler : IRequestHandler<CreateConversationCommand, string>
     {
         private readonly IConversationRepository _conversationRepository;
 
@@ -18,7 +18,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Conversat
             _conversationRepository = conversationRepository;
         }
 
-        public async Task Handle(CreateConversationCommand request, CancellationToken cancellationToken = default)
+        public async Task<string> Handle(CreateConversationCommand request, CancellationToken cancellationToken = default)
         {
             var conversation = new Conversation
             {
@@ -28,6 +28,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Conversat
             };
 
             await _conversationRepository.AddConversationAsync(conversation, cancellationToken);
+
+            return conversation.Id.ToString();
         }
     }
 }

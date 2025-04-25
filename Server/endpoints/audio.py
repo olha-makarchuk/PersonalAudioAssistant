@@ -10,6 +10,8 @@ from services.AudioService import (
     transcribe_audio,
     known_speaker_ids
 )
+import base64
+import io
 
 router = APIRouter()
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -43,6 +45,17 @@ async def websocket_audio(websocket: WebSocket):
         await websocket.close()
         return
     
+    '''
+    buffer = io.BytesIO()
+    sf.write(buffer, full_audio, RATE, format='WAV')
+    buffer.seek(0)
+    audio_bytes = buffer.read()
+
+    audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
+    
+    await websocket.send_bytes(audio_bytes)
+'''
+
     await websocket.send_json({
         "request": transcription_text,
         "transcripts": "",
@@ -50,6 +63,10 @@ async def websocket_audio(websocket: WebSocket):
         "conversationId": "",
         "AIconversationId": ""
     })
+    
+    await websocket.close()
+    
+    
     
     '''
     completion = client.chat.completions.create(
@@ -71,5 +88,3 @@ async def websocket_audio(websocket: WebSocket):
         "AIconversationId": ""
     })
     '''
-
-    await websocket.close()

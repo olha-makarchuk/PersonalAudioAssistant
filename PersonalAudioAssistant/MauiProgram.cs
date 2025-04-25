@@ -19,6 +19,7 @@ using PersonalAudioAssistant.Platforms;
 using Mopups.Hosting;
 using Mopups.Interfaces;
 using Mopups.Services;
+using Google.Apis.Drive.v3.Data;
 namespace PersonalAudioAssistant;
 public static class MauiProgram
 {
@@ -50,11 +51,9 @@ public static class MauiProgram
 #endif
 
         // Services
-        builder.Services.AddSingleton<IPopupNavigation>(MopupService.Instance);
         builder.Services.AddApplication();
+        builder.Services.AddSingleton<IPopupNavigation>(MopupService.Instance);
         builder.Services.AddSingleton<HttpClient>();
-        builder.Services.AddSingleton(TextToSpeech.Default);
-        builder.Services.AddSingleton(SpeechToText.Default);
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
@@ -94,7 +93,9 @@ public static class MauiProgram
         builder.Services.AddScoped<IAutoPaymentRepository, AutoPaymentRepository>();
         builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();
         builder.Services.AddScoped<IVoiceRepository, VoiceRepository>();
-        builder.Services.AddScoped<ISpeechToText, SpeechToTextImplementation>();
+        builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+        builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+
         builder.Services.AddScoped<IBlobStorage, BlobStorage>();
         builder.Services.AddSingleton<BlobStorageConfig>();
 
@@ -105,8 +106,24 @@ public static class MauiProgram
                 databaseName: "AudioAssistantDB"),
             ServiceLifetime.Scoped);
 
-        //builder.Services.AddCosmos<CosmosDbContext>(_configuration.GetConnectionString("CosmosConnection")!, "AudioAssistantDB");
+        // in CreateMauiApp(), before builder.Build():
+        builder.Services.AddApplication();
+        builder.Services.AddSingleton<ITextToSpeech>(TextToSpeech.Default);
+        builder.Services.AddScoped<SpeechToTextImplementation>();
+        builder.Services.AddScoped<ISpeechToText, SpeechToTextImplementation>();
 
-        return builder.Build();
+
+        var app = builder.Build();
+
+        // 1) give MediatorProvider the real IServiceProvider
+        MediatorProvider.Services = app.Services;
+
+        // 2) set your SpeechToText.Default to the DI-created instance
+        SpeechToText.SetDefault(
+            app.Services.GetRequiredService<ISpeechToText>()
+        );
+
+        return app;
+
     }
 }

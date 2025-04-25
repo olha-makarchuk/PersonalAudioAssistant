@@ -8,6 +8,6 @@ namespace PersonalAudioAssistant.Application.Interfaces
         Task<List<Conversation>> GetConversationsByUserIdAsync(string userId, CancellationToken cancellationToken);
         Task UpdateConversationAsync(Conversation conversation, CancellationToken cancellationToken);
         Task AddConversationAsync(Conversation conversation, CancellationToken cancellationToken);
-        Task DeleteConversationAsync(string Id, CancellationToken cancellationToken);
+        Task DeleteConversationAsync(Conversation conversation, CancellationToken cancellationToken);
     }
 }

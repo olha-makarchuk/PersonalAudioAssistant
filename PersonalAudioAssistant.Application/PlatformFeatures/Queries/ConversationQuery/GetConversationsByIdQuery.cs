@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Contracts.Conversation;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.ConversationQuery
 {
@@ -34,11 +35,5 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.Conversati
                 return response;
             }
         }
-    }
-
-    public class ConversationsResponse
-    {
-        public string IdConversation { get; set; }
-        public string Description { get; set; }
     }
 }

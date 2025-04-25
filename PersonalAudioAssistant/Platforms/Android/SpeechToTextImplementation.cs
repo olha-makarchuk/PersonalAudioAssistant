@@ -1,14 +1,19 @@
 ﻿using System.Globalization;
 using Android.Content;
+using Android.Media;
 using Android.Speech;
 using CommunityToolkit.Maui.Alerts;
+using MediatR;
 using Newtonsoft.Json;
 using PersonalAudioAssistant.Application.Interfaces;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.ConversationCommands;
+using PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCommands;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 using Plugin.Maui.Audio;
+using AudioManager = Plugin.Maui.Audio.AudioManager;
 
 namespace PersonalAudioAssistant.Platforms
 {
@@ -21,6 +26,18 @@ namespace PersonalAudioAssistant.Platforms
         string _prevResponseId = null;
         private bool IsFirstRequest; 
         private string PreviousResponseId;
+        private IMediator _mediatr;
+
+        public SpeechToTextImplementation(IMediator mediatr)
+        {
+            _mediatr = mediatr;
+        }
+
+        public SpeechToTextImplementation()
+            : this(MediatorProvider.Mediator)  
+        {
+        }
+
 
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
         {
@@ -77,45 +94,68 @@ namespace PersonalAudioAssistant.Platforms
                             IsContinueConversation = true;
                             IsFirstRequest = true;
 
+                            var commandCreateConversation = new CreateConversationCommand
+                            {
+                                Description = "",
+                                SubUserId = matchedUser.Id,
+                            };
+                            var conversationTask = _mediatr.Send(commandCreateConversation, cancellationToken);
+
                             while (IsContinueConversation)
                             {
-                                var commandCreateConversation = new CreateCon
                                 try
                                 {
                                     IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                                     var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
-                                    string transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
+                                    var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
+                                    //string transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
 
-                                    await Toast.Make($"Відповідь: {transcription}").Show(cancellationToken);
-
-                                    TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription);
+                                    await Toast.Make($"Відповідь: {transcription.Response}").Show(cancellationToken);
+                                    TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
                                     chatMessageProgress.Report(new ChatMessage { Text = response.Request, IsUser = true });
+                                    await Task.WhenAll(conversationTask);
+
+                                    var careteMessageUser = new CreateMessageCommand
+                                    {
+                                        ConversationId = conversationTask.Result,
+                                        Text = response.Request,
+                                        UserRole = "user",
+                                        Audio = transcription.Audio
+                                    };
+                                    var userTask = _mediatr.Send(careteMessageUser, cancellationToken);
 
                                     var apiGPT = new ApiClientGPT();
-                                    ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription, _prevResponseId);
+                                    ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
                                     _prevResponseId = answer.responseId;
-
                                     chatMessageProgress.Report(new ChatMessage { Text = answer.text, IsUser = false });
+                                    await Task.WhenAll(userTask);
 
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
-
                                     if(!IsContinueConversation)
                                     {
                                         _prevResponseId = null;
                                     }
 
-                                    /*
                                     var textToSpeech = new ElevenlabsApi();
-                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer);
+                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer.text);
+
+                                    var careteMessageAI = new CreateMessageCommand
+                                    {
+                                        ConversationId = conversationTask.Result,
+                                        Text = answer.text,
+                                        UserRole = "ai",
+                                        Audio = audioBytes
+                                    };
+                                    var aiTask = _mediatr.Send(careteMessageAI, cancellationToken);
 
                                     await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
-                                    */
+                                    await Task.WhenAll(aiTask);
                                     await Task.Delay(100);
                                 }
-                                catch
+                                catch(Exception ex)
                                 {
                                     StopRecording();
                                     return;
@@ -232,6 +272,13 @@ namespace PersonalAudioAssistant.Platforms
         }
     }
 
+    public static class MediatorProvider
+    {
+        public static IServiceProvider? Services { get; set; }
+
+        public static IMediator Mediator =>
+            Services!.GetRequiredService<IMediator>();
+    }
 
     public class TranscriptionResponse
     {
@@ -241,5 +288,4 @@ namespace PersonalAudioAssistant.Platforms
         public string ConversationId { get; set; }
         public string AIconversationId { get; set; }
     }
-
 }

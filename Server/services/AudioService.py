@@ -228,6 +228,8 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
         if end_phrase:
             stop_event.set()
             listener_thread.join()
+            
+    await websocket.send_text("STOP")
 
     full_audio = np.concatenate(audio_buffer)
     return full_audio, True

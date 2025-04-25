@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Domain.Entities;
 
 namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.ConversationCommands
 {
@@ -20,8 +19,13 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.Conversat
 
         public async Task Handle(DeleteConversationCommand request, CancellationToken cancellationToken = default)
         {
+            var conversation = await _conversationRepository.GetConversationByIdAsync(request.IdConversation, cancellationToken);
+            if (conversation == null)
+            {
+                throw new Exception("Conversation with this Id not exists.");
+            }
 
-
+            await _conversationRepository.DeleteConversationAsync(conversation, cancellationToken);
         }
     }
 }

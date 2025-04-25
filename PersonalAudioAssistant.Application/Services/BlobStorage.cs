@@ -1,6 +1,8 @@
 ﻿using PersonalAudioAssistant.Application.Interfaces;
 using Azure;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using System.IO;
 
 namespace PersonalAudioAssistant.Application.Services
 {
@@ -29,13 +31,53 @@ namespace PersonalAudioAssistant.Application.Services
             try
             {
                 var blobClient = GetContainer(containerType).GetBlobClient(filename);
-                await blobClient.UploadAsync(stream, overwrite: true);
+
+                var headers = new BlobHttpHeaders
+                {
+                    ContentType = "audio/mpeg"
+                };
+
+                await blobClient.UploadAsync(stream, new BlobUploadOptions
+                {
+                    HttpHeaders = headers
+                });
             }
             catch (RequestFailedException ex)
             {
                 throw new Exception($"Error uploading blob '{filename}' to container '{containerType}': {ex.Message}");
             }
         }
+
+
+
+        public async Task PutContextAsync2(string filenamelocal, BlobContainerType containerType)
+        {
+            try
+            {
+                string fileName = Path.GetFileName(filenamelocal);
+                var blobClient = GetContainer(containerType).GetBlobClient(fileName);
+
+                byte[] buffer = await File.ReadAllBytesAsync(filenamelocal);
+                BinaryData binaryData = new BinaryData(buffer);
+
+                // Set the content type to audio/mpeg
+                var blobHttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = "audio/mpeg"
+                };
+
+                // Upload the file with the content type set
+                await blobClient.UploadAsync(binaryData, new BlobUploadOptions
+                {
+                    HttpHeaders = blobHttpHeaders
+                });
+            }
+            catch (RequestFailedException ex)
+            {
+                throw new Exception($"Error uploading blob to container '{containerType}': {ex.Message}");
+            }
+        }
+
 
         public List<int> FindByMessage(Guid messageId, BlobContainerType containerType)
         {
@@ -89,6 +131,11 @@ namespace PersonalAudioAssistant.Application.Services
                 BlobContainerType.UserImage => _client.GetBlobContainerClient("user-image"),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), $"Unsupported container type: {type}")
             };
+        }
+
+        public async Task PutContextAsyncBytes(string filename, byte[] bytes, BlobContainerType containerType)
+        {
+
         }
     }
 

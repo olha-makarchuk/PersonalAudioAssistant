@@ -18,13 +18,21 @@ namespace PersonalAudioAssistant.Application.Services
             this.audioDataProvider = audioDataProvider;
         }
 
-        public async Task<string> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
+        public async Task<(string Response, byte[] Audio)> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
         {
+            using var audioBuffer = new MemoryStream();
             try
             {
                 await webSocketService.ConnectAsync(cancellationToken);
 
-                var dataPayload = JsonSerializer.Serialize(new {subUser.EndTime, subUser.UserVoice, subUser.EndPhrase, IsFirstRequest, PreviousResponseId});
+                var dataPayload = JsonSerializer.Serialize(new
+                {
+                    subUser.EndTime,
+                    subUser.UserVoice,
+                    subUser.EndPhrase,
+                    IsFirstRequest,
+                    PreviousResponseId
+                });
 
                 var idBytes = Encoding.UTF8.GetBytes(dataPayload);
                 await webSocketService.SendDataAsync(idBytes, idBytes.Length, cancellationToken);
@@ -38,9 +46,23 @@ namespace PersonalAudioAssistant.Application.Services
                 }
 
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                var stopSignal = new TaskCompletionSource<string>();
 
-                var receiveTask = webSocketService.ReceiveMessagesAsync(linkedCts.Token);
+                // ✅ Task для прийому повідомлень і перевірки STOP
+                var receiveTask = Task.Run(async () =>
+                {
+                    while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
+                    {
+                        string message = await webSocketService.ReceiveMessagesAsync(linkedCts.Token);
+                        if (message == "STOP")
+                        {
+                            stopSignal.TrySetResult(message);
+                            break;
+                        }
+                    }
+                }, linkedCts.Token);
 
+                // ✅ Task для відправлення аудіо
                 var sendTask = Task.Run(async () =>
                 {
                     while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
@@ -48,44 +70,47 @@ namespace PersonalAudioAssistant.Application.Services
                         byte[] buffer = await audioDataProvider.GetAudioDataAsync(linkedCts.Token);
                         if (buffer?.Length > 0)
                         {
+                            audioBuffer.Write(buffer, 0, buffer.Length);
                             await webSocketService.SendDataAsync(buffer, buffer.Length, linkedCts.Token);
                         }
                         await Task.Delay(50, linkedCts.Token);
                     }
                 }, linkedCts.Token);
 
-                await Task.WhenAny(sendTask, receiveTask);
-
-                var finishedTask = await Task.WhenAny(sendTask, receiveTask);
-
+                // Чекаємо на STOP сигнал
+                await stopSignal.Task;
                 linkedCts.Cancel();
 
-                string finalResponse = await receiveTask;
+                // Отримуємо фінальний JSON-відповідь після STOP
+                string finalResponseJson = await webSocketService.ReceiveMessagesAsync(cancellationToken);
                 await webSocketService.CloseConnectionAsync();
 
-                return finalResponse;
+                return (finalResponseJson, audioBuffer.ToArray());
             }
             catch (Exception ex)
             {
                 await webSocketService.CloseConnectionAsync();
-                return "Помилка при стрімінгу: " + ex.Message;
+                return ("Помилка при стрімінгу: " + ex.Message, audioBuffer.ToArray());
             }
             finally
             {
-                // Зупиняємо запис аудіо, якщо audioDataProvider реалізує IDisposable
                 if (audioDataProvider is IDisposable disposable)
                 {
                     disposable.Dispose();
                 }
             }
         }
-    }
-    public class TranscriptionResponse
-    {
-        public string Request { get; set; }
-        public string Transcripts { get; set; }
-        public bool IsContinuous { get; set; }
-        public string ConversationId { get; set; }
-        public string AIconversationId { get; set; }
+
+
+
+        public class TranscriptionResponse
+        {
+            public string Request { get; set; }
+            public string Transcripts { get; set; }
+            public bool IsContinuous { get; set; }
+            public string ConversationId { get; set; }
+            public string AIconversationId { get; set; }
+            public string audio { get; set; }
+        }
     }
 }
