@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Net.WebSockets;
+﻿using System.Net.WebSockets;
 using System.Text;
 
 namespace PersonalAudioAssistant.Application.Services
@@ -9,7 +8,7 @@ namespace PersonalAudioAssistant.Application.Services
         private ClientWebSocket ws;
         private bool disposed = false;
         //private string _wsUrl = "ws://10.0.2.2:8000/ws/audio";
-        private string _wsUrl = "ws://192.168.104.117:8080/ws/audio";
+        private string _wsUrl = "ws://192.168.0.155:8080/ws/audio";
 
         public WebSocketService()
         {

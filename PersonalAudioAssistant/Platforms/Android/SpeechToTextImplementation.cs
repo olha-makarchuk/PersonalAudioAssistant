@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using Android.Content;
-using Android.Media;
 using Android.Speech;
 using CommunityToolkit.Maui.Alerts;
 using MediatR;
@@ -13,7 +12,6 @@ using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 using Plugin.Maui.Audio;
-using AudioManager = Plugin.Maui.Audio.AudioManager;
 
 namespace PersonalAudioAssistant.Platforms
 {
@@ -27,6 +25,7 @@ namespace PersonalAudioAssistant.Platforms
         private bool IsFirstRequest; 
         private string PreviousResponseId;
         private IMediator _mediatr;
+        private Action? _clearChatMessagesAction;
 
         public SpeechToTextImplementation(IMediator mediatr)
         {
@@ -39,9 +38,10 @@ namespace PersonalAudioAssistant.Platforms
         }
 
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction)
         {
             var taskResult = new TaskCompletionSource<string>();
+            _clearChatMessagesAction = clearChatMessagesAction;
 
             listener = new SpeechRecognitionListener
             {
@@ -70,6 +70,7 @@ namespace PersonalAudioAssistant.Platforms
                 {
                     bool processingCommand = false;
                     recognitionResult?.Report(sentence);
+                    var apiGPT = new ApiClientGPT();
 
                     SubUserResponse? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
@@ -98,6 +99,7 @@ namespace PersonalAudioAssistant.Platforms
                             {
                                 Description = "",
                                 SubUserId = matchedUser.Id,
+                                
                             };
                             var conversationTask = _mediatr.Send(commandCreateConversation, cancellationToken);
 
@@ -117,30 +119,32 @@ namespace PersonalAudioAssistant.Platforms
                                     chatMessageProgress.Report(new ChatMessage { Text = response.Request, IsUser = true });
                                     await Task.WhenAll(conversationTask);
 
+                                    ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                                    _prevResponseId = answer.responseId;
+                                    chatMessageProgress.Report(new ChatMessage { Text = answer.text, IsUser = false });
+
                                     var careteMessageUser = new CreateMessageCommand
                                     {
                                         ConversationId = conversationTask.Result,
                                         Text = response.Request,
                                         UserRole = "user",
-                                        Audio = transcription.Audio
+                                        Audio = transcription.Audio,
+                                        LastRequestId = answer.responseId
                                     };
                                     var userTask = _mediatr.Send(careteMessageUser, cancellationToken);
-
-                                    var apiGPT = new ApiClientGPT();
-                                    ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
-                                    _prevResponseId = answer.responseId;
-                                    chatMessageProgress.Report(new ChatMessage { Text = answer.text, IsUser = false });
-                                    await Task.WhenAll(userTask);
 
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
                                     if(!IsContinueConversation)
                                     {
                                         _prevResponseId = null;
+                                      clearChatMessagesAction?.Invoke();
                                     }
 
                                     var textToSpeech = new ElevenlabsApi();
                                     var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer.text);
+
+                                    await Task.WhenAll(userTask);
 
                                     var careteMessageAI = new CreateMessageCommand
                                     {
@@ -161,6 +165,12 @@ namespace PersonalAudioAssistant.Platforms
                                     return;
                                 }
                             }
+                            ApiClientGptResponse description = await apiGPT.ContinueChatAsync("На основі розмови напиши короткий заголовок, який підсумовує основну тему", _prevResponseId);
+                            var command = new UpdateConversationCommand()
+                            {
+                                Description = description.text
+                            };
+                            var TaskDescription = _mediatr.Send(command, cancellationToken);
                         }
                         catch (Exception ex)
                         {
@@ -188,7 +198,8 @@ namespace PersonalAudioAssistant.Platforms
             await using (cancellationToken.Register(() =>
             {
                 StopRecording();
-                taskResult.TrySetResult(string.Empty); 
+                clearChatMessagesAction?.Invoke();
+                taskResult.TrySetResult(string.Empty);
             }))
             {
                 try
@@ -250,6 +261,8 @@ namespace PersonalAudioAssistant.Platforms
 
             speechRecognizer?.Destroy();
             speechRecognizer = null;
+
+            _clearChatMessagesAction?.Invoke();
         }
         private void StartListening(CultureInfo culture)
         {

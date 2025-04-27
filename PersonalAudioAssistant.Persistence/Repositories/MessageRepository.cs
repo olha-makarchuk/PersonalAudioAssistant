@@ -30,6 +30,14 @@ namespace PersonalAudioAssistant.Persistence.Repositories
             await _context.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<Message> GetLastMessageByConversationIdAsync(string conversationId, CancellationToken cancellationToken)
+        {
+            return await _context.Messages
+                .Where(m => m.ConversationId == conversationId)
+                .Where(m => m.UserRole == "user")
+                .OrderBy(m => m.DateTimeCreated)
+                .LastOrDefaultAsync(cancellationToken);
+        }
 
         public async Task<List<Message>> GetMessagesByConversationIdAsync(string conversationId, CancellationToken cancellationToken)
         {

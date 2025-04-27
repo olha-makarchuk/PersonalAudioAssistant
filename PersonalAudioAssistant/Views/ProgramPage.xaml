@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.ProgramPage"
@@ -17,19 +18,22 @@
         <!-- Scrollable Chat Section -->
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="10">
-                <CollectionView ItemsSource="{Binding ChatMessages}" Margin="10"
-                                VerticalOptions="FillAndExpand">
+                <CollectionView ItemsSource="{Binding ChatMessages}" Margin="10">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Frame Padding="10" Margin="5" CornerRadius="12" HasShadow="True">
+                            <Frame Padding="10" CornerRadius="12" HasShadow="True">
                                 <Frame.Triggers>
                                     <DataTrigger TargetType="Frame" Binding="{Binding IsUser}" Value="True">
                                         <Setter Property="HorizontalOptions" Value="End" />
                                         <Setter Property="BackgroundColor" Value="#90CAF9" />
+                                        <Setter Property="Margin" Value="50,5,10,5" />
+                                        <!-- Більший відступ зліва -->
                                     </DataTrigger>
                                     <DataTrigger TargetType="Frame" Binding="{Binding IsUser}" Value="False">
                                         <Setter Property="HorizontalOptions" Value="Start" />
                                         <Setter Property="BackgroundColor" Value="#E1BEE7" />
+                                        <Setter Property="Margin" Value="10,5,50,5" />
+                                        <!-- Більший відступ справа -->
                                     </DataTrigger>
                                 </Frame.Triggers>
                                 <Label Text="{Binding Text}" TextColor="#0d1996" />

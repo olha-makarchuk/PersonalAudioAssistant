@@ -1,4 +1,3 @@
-using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
 namespace PersonalAudioAssistant.Views;

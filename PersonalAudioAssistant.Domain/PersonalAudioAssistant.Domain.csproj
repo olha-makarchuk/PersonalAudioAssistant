@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PersonalAudioAssistant.Contracts\PersonalAudioAssistant.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

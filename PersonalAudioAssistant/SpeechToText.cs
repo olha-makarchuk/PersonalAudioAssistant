@@ -8,7 +8,7 @@ namespace PersonalAudioAssistant
     public interface ISpeechToText : IAsyncDisposable
     {
         Task<bool> RequestPermissions();
-        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken);
+        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction);
     }
 
     public static class SpeechToText
@@ -20,9 +20,9 @@ namespace PersonalAudioAssistant
             return Default.RequestPermissions();
         }
 
-        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken)
+        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction)
         {
-            return Default.Listen(culture, recognitionResult, chatMessageProgress, listUsers, cancellationToken);
+            return Default.Listen(culture, recognitionResult, chatMessageProgress, listUsers, cancellationToken, clearChatMessagesAction);
         }
 
         public static ISpeechToText Default =>

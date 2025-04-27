@@ -15,6 +15,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCo
         public string Text { get; set; }
         public string UserRole { get; set; }
         public byte[] Audio { get; set; }
+        public string? LastRequestId { get; set; }
+
     }
 
     public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand>
@@ -37,7 +39,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCo
                 ConversationId = request.ConversationId,
                 Text = request.Text,
                 UserRole = request.UserRole,
-                DateTimeCreated = DateTime.UtcNow
+                DateTimeCreated = DateTime.UtcNow,
+                LastRequestId = request.LastRequestId,
             };
 
             if (request.Audio != null && request.Audio.Length > 0)
@@ -51,7 +54,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCo
 
             }
 
-            // Збереження повідомлення у репозиторій
             await _messageRepository.AddMessageAsync(message, cancellationToken);
         }
 

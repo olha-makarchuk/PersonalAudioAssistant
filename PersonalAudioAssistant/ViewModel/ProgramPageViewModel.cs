@@ -55,7 +55,6 @@ namespace PersonalAudioAssistant.ViewModel
             var isAuthorized = await speechToText.RequestPermissions();
             var usersList = await _manageCacheData.GetUsersAsync();
 
-            // Start animating / showing the indicator.
             IsListening = true;
 
             if (isAuthorized)
@@ -72,7 +71,8 @@ namespace PersonalAudioAssistant.ViewModel
                         }),
                         chatProgress,
                         usersList,
-                        _listenCts.Token);
+                        _listenCts.Token,
+                        () => ChatMessages.Clear());
                 }
                 catch (OperationCanceledException)
                 {
@@ -113,7 +113,7 @@ namespace PersonalAudioAssistant.ViewModel
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is bool isListening && isListening) ? "Stop Listening" : "Start Listening";
+            return (value is bool isListening && isListening) ? "Стоп" : "Старт";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
@@ -135,5 +135,4 @@ namespace PersonalAudioAssistant.ViewModel
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
             throw new NotImplementedException();
     }
-
 }

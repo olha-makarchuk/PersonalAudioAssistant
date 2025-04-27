@@ -1,8 +1,6 @@
 ﻿using Azure;
-using Microsoft.Extensions.Configuration;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Contracts.SubUser;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 
@@ -48,7 +46,7 @@ namespace PersonalAudioAssistant.Application.Services
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 var stopSignal = new TaskCompletionSource<string>();
 
-                // ✅ Task для прийому повідомлень і перевірки STOP
+                //  Task для прийому повідомлень і перевірки STOP
                 var receiveTask = Task.Run(async () =>
                 {
                     while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
@@ -62,7 +60,7 @@ namespace PersonalAudioAssistant.Application.Services
                     }
                 }, linkedCts.Token);
 
-                // ✅ Task для відправлення аудіо
+                //  Task для відправлення аудіо
                 var sendTask = Task.Run(async () =>
                 {
                     while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)

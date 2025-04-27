@@ -184,8 +184,9 @@ namespace PersonalAudioAssistant.Services
             }
             catch (Exception ex)
             {
+                await SignOutAsync();
                 await InitializeAsync();
-                throw new Exception($"Помилка оновлення токену: {ex.Message}");
+                //throw new Exception($"Помилка оновлення токену: {ex.Message}");
             }
         }
 
