@@ -10,6 +10,8 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.Conversati
     public class GetConversationsBySubUserIdQuery : IRequest<List<AllConversationsResponse>>
     {
         public required string SubUserId { get; set; }
+        public int PageNumber { get; set; } = 1; 
+        public int PageSize { get; set; } = 1;  
 
         public class GetConversationsBySubUserIdQueryHandler : IRequestHandler<GetConversationsBySubUserIdQuery, List<AllConversationsResponse>>
         {
@@ -28,7 +30,12 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.Conversati
             {
                 var apiGPT = new ApiClientGPT();
 
-                var conversations = await _conversationRepository.GetConversationsByUserIdAsync(query.SubUserId, cancellationToken);
+                var conversations = await _conversationRepository.GetConversationsByUserIdPaginatorAsync(
+                    query.SubUserId,
+                    query.PageNumber,
+                    query.PageSize,
+                    cancellationToken
+                );
 
                 if (conversations == null)
                 {

@@ -2,6 +2,7 @@ using CommunityToolkit.Maui.Views;
 using Mopups.Interfaces;
 using Mopups.Services;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Views.History;
 using System.ComponentModel;
 
 namespace PersonalAudioAssistant.Views;

@@ -6,9 +6,8 @@ using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using System.Collections.ObjectModel;
-using System.Data.SqlTypes;
 
-namespace PersonalAudioAssistant.ViewModel
+namespace PersonalAudioAssistant.ViewModel.History
 {
     public partial class GetAccessToHistoryViewModel : ObservableObject
     {

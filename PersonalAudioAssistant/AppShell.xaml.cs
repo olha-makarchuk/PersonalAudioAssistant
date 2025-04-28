@@ -1,6 +1,7 @@
 ﻿using PersonalAudioAssistant.Views;
 using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.Views.Users;
+using PersonalAudioAssistant.Views.History;
 
 namespace PersonalAudioAssistant
 {
@@ -24,6 +25,7 @@ namespace PersonalAudioAssistant
             Routing.RegisterRoute(nameof(PaymentPage), typeof(PaymentPage));
             Routing.RegisterRoute(nameof(GetAccessToHistoryModalPage), typeof(GetAccessToHistoryModalPage));
             Routing.RegisterRoute(nameof(HistoryPage), typeof(HistoryPage));
+            Routing.RegisterRoute(nameof(MessagesPage), typeof(MessagesPage));
         }
 
         private async void SignOut_Clicked(object sender, EventArgs e)

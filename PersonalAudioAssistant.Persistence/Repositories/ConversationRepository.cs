@@ -42,6 +42,16 @@ namespace PersonalAudioAssistant.Persistence.Repositories
             return conversation;
         }
 
+        public async Task<List<Conversation>> GetConversationsByUserIdPaginatorAsync(string subUserId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+        {
+            return await _context.Conversations
+                .Where(c => c.SubUserId == subUserId)
+                .OrderByDescending(c => c.DateTimeCreated)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task UpdateConversationAsync(Conversation conversation, CancellationToken cancellationToken)
         {
             _context.Conversations.Update(conversation);

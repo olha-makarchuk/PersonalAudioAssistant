@@ -1,7 +1,6 @@
-using PersonalAudioAssistant.ViewModel;
-using PersonalAudioAssistant.ViewModel.Users;
+using PersonalAudioAssistant.ViewModel.History;
 
-namespace PersonalAudioAssistant.Views;
+namespace PersonalAudioAssistant.Views.History;
 
 public partial class GetAccessToHistoryModalPage
 {

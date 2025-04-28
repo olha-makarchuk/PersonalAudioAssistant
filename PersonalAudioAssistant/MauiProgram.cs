@@ -20,6 +20,8 @@ using Mopups.Hosting;
 using Mopups.Interfaces;
 using Mopups.Services;
 using Google.Apis.Drive.v3.Data;
+using PersonalAudioAssistant.Views.History;
+using PersonalAudioAssistant.ViewModel.History;
 namespace PersonalAudioAssistant;
 public static class MauiProgram
 {
@@ -82,6 +84,7 @@ public static class MauiProgram
         builder.Services.AddScoped<PaymentPage, PaymentViewModel>();
         builder.Services.AddScoped<GetAccessToHistoryModalPage, GetAccessToHistoryViewModel>();
         builder.Services.AddScoped<HistoryPage, HistoryViewModel>();
+        builder.Services.AddScoped<MessagesPage, MessagesViewModel>();
         builder.Services.AddScoped<MenuPage>();
 
         // Repositories

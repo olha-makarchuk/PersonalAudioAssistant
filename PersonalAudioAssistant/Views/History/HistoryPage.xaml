@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="PersonalAudioAssistant.Views.History.HistoryPage"
+    BackgroundColor="White">
+
+    <Grid>
+        <CollectionView
+            ItemsSource="{Binding Conversations}"
+            SelectionMode="Single"
+            SelectedItem="{Binding SelectedConversation, Mode=TwoWay}"
+            RemainingItemsThreshold="5"
+            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
+            Margin="10">
+
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                                    ItemSpacing="5"/>
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <VerticalStackLayout Padding="15" Margin="0,5" BackgroundColor="White">
+                        <Label
+                            Text="{Binding Description}"
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            LineBreakMode="TailTruncation"
+                            MaxLines="2"
+                            TextColor="Black"/>
+                        <Label
+                            Text="{Binding DateTimeCreated}"
+                            FontSize="12"
+                            TextColor="Gray" />
+                        <BoxView HeightRequest="1" BackgroundColor="LightGray" Margin="0,5,0,0"/>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.Footer>
+                <Grid Padding="10" HorizontalOptions="Center">
+                    <ActivityIndicator
+                        IsVisible="{Binding IsLoadingMore}"
+                        IsRunning="{Binding IsLoadingMore}"
+                        WidthRequest="30"
+                        HeightRequest="30"
+                        Color="Black" />
+                </Grid>
+            </CollectionView.Footer>
+
+        </CollectionView>
+
+        <ActivityIndicator
+            IsVisible="{Binding IsBusy}"
+            IsRunning="{Binding IsBusy}"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            WidthRequest="50"
+            HeightRequest="50"
+            Color="Black"/>
+    </Grid>
+</ContentPage>

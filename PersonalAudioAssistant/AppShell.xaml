@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:PersonalAudioAssistant"
     xmlns:view="clr-namespace:PersonalAudioAssistant.Views"
     xmlns:view_users="clr-namespace:PersonalAudioAssistant.Views.Users"
+    xmlns:view_history="clr-namespace:PersonalAudioAssistant.Views.History"
     Shell.FlyoutBehavior="Disabled"
     Title="PersonalAudioAssistant">
 
@@ -74,13 +75,16 @@
 
     <ShellContent
         Title="GetAccessToHistoryModalPage"
-        ContentTemplate="{DataTemplate view:GetAccessToHistoryModalPage}"
+        ContentTemplate="{DataTemplate view_history:GetAccessToHistoryModalPage}"
         Route="GetAccessToHistoryModalPage"/>    
     
     <ShellContent
         Title="HistoryPage"
-        ContentTemplate="{DataTemplate view:HistoryPage}"
+        ContentTemplate="{DataTemplate view_history:HistoryPage}"
         Route="HistoryPage"/>
 
-    
+    <ShellContent
+        Title="MessagesPage"
+        ContentTemplate="{DataTemplate view_history:MessagesPage}"
+        Route="MessagesPage"/>
 </Shell>
