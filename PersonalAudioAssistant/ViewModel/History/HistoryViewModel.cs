@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui.Core.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Queries.ConversationQuery;
 using PersonalAudioAssistant.Contracts.Conversation;
@@ -25,10 +26,12 @@ namespace PersonalAudioAssistant.ViewModel.History
         [ObservableProperty]
         private bool isBusy;
 
+        private AllConversationsResponse _selectedConversation;
+
         private int _currentPage = 1;
         private bool _isLoadingMore;
         private bool _hasMoreItems = true;
-        private const int PageSize = 1;
+        private const int PageSize = 10;
 
         public HistoryViewModel(IMediator mediator, ManageCacheData manageCacheData)
         {
@@ -38,7 +41,6 @@ namespace PersonalAudioAssistant.ViewModel.History
             Conversations = new ObservableCollection<AllConversationsResponse>();
         }
 
-        private AllConversationsResponse _selectedConversation;
         public AllConversationsResponse SelectedConversation
         {
             get => _selectedConversation;
@@ -49,10 +51,8 @@ namespace PersonalAudioAssistant.ViewModel.History
                     _selectedConversation = value;
                     OnPropertyChanged();
 
-                    // Тут можна обробити вибір (наприклад, навігація на нову сторінку)
                     if (value != null)
                     {
-                        // Наприклад, відкрити нову сторінку з деталями
                         OpenConversationDetails(value);
                     }
                 }
@@ -61,7 +61,7 @@ namespace PersonalAudioAssistant.ViewModel.History
 
         private async void OpenConversationDetails(AllConversationsResponse conversation)
         {
-            // Реалізація навігації або показу діалогу
+            await Shell.Current.GoToAsync($"/MessagesPage?conversationId={conversation.IdConversation}");
         }
 
 
@@ -148,6 +148,13 @@ namespace PersonalAudioAssistant.ViewModel.History
 
                 await LoadHistoryAsync();
             }
+        }
+
+        [RelayCommand]
+        public void OnNavigatedFrom()
+        {
+            SelectedConversation = null;
+            Conversations.Clear();
         }
     }
 }

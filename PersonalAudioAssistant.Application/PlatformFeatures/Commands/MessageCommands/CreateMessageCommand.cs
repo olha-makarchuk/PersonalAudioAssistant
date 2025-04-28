@@ -16,7 +16,6 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCo
         public string UserRole { get; set; }
         public byte[] Audio { get; set; }
         public string? LastRequestId { get; set; }
-
     }
 
     public class CreateMessageCommandHandler : IRequestHandler<CreateMessageCommand>
@@ -32,28 +31,37 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCo
 
         public async Task Handle(CreateMessageCommand request, CancellationToken cancellationToken = default)
         {
-            var bytesAudio = ConvertPcmToWav(request.Audio);
+            byte[] bytesAudio;
 
-            var message = new Message
+            if (request.UserRole == "user")
             {
-                ConversationId = request.ConversationId,
-                Text = request.Text,
-                UserRole = request.UserRole,
-                DateTimeCreated = DateTime.UtcNow,
-                LastRequestId = request.LastRequestId,
-            };
+                bytesAudio = ConvertPcmToWav(request.Audio);
+            }
+            else
+            {
+                bytesAudio = request.Audio;
+            }
 
+
+                var message = new Message
+                {
+                    ConversationId = request.ConversationId,
+                    Text = request.Text,
+                    UserRole = request.UserRole,
+                    DateTimeCreated = DateTime.UtcNow,
+                    LastRequestId = request.LastRequestId,
+                };
+
+            string fileName = $"{Guid.NewGuid()}.wav";
             if (request.Audio != null && request.Audio.Length > 0)
             {
-                string fileName = $"{Guid.NewGuid()}.wav";
-
                 using (var stream = new MemoryStream(bytesAudio))
                 {
                     await _blobStorage.PutContextAsync(fileName, stream, BlobContainerType.AudioMessage);
                 }
 
             }
-
+            message.AudioPath = $"https://audioassistantblob.blob.core.windows.net/audio-message/{fileName}";
             await _messageRepository.AddMessageAsync(message, cancellationToken);
         }
 

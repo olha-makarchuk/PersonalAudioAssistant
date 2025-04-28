@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.ConversationCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentHistory;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.Conversation;
 
@@ -11,7 +10,7 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.Conversati
     {
         public required string SubUserId { get; set; }
         public int PageNumber { get; set; } = 1; 
-        public int PageSize { get; set; } = 1;  
+        public int PageSize { get; set; } = 10;  
 
         public class GetConversationsBySubUserIdQueryHandler : IRequestHandler<GetConversationsBySubUserIdQuery, List<AllConversationsResponse>>
         {

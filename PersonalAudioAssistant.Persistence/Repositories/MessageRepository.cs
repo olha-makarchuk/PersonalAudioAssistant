@@ -46,5 +46,15 @@ namespace PersonalAudioAssistant.Persistence.Repositories
                 .OrderBy(m => m.DateTimeCreated)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<List<Message>> GetMessagesByConversationIdPaginatorAsync(string conversationId, int pageNumber, int pageSize, CancellationToken cancellationToken)
+        {
+            return await _context.Messages
+                .Where(m => m.ConversationId == conversationId)
+                .OrderBy(c => c.DateTimeCreated)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
