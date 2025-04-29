@@ -1,4 +1,4 @@
-﻿using PersonalAudioAssistant.Contracts.Voice;
+﻿using PersonalAudioAssistant.Contracts.Payment;
 
 namespace PersonalAudioAssistant.Services.Api
 {
@@ -8,23 +8,23 @@ namespace PersonalAudioAssistant.Services.Api
         public PaymentApiClient(HttpClient httpClient) : base(httpClient) { }
 
 
-        public async Task<List<VoiceResponse>> CreatePaymentAsync(string userId)
+        public async Task<List<PaymentResponse>> CreatePaymentAsync(string userId)
         {
-            var url = $"{BaseUrl}Voice";
+            var url = $"{BaseUrl}Payment";
 
             var request = new
             {
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PostAsync<object, List<PaymentResponse>>(url, request);
 
             return voice;
         }
 
-        public async Task<List<VoiceResponse>> UpdatePaymentAsync(string userId, string paymentGatewayToken, string maskedCardNumber, string dataExpiredCard)
+        public async Task<List<PaymentResponse>> UpdatePaymentAsync(string userId, string paymentGatewayToken, string maskedCardNumber, string dataExpiredCard)
         {
-            var url = $"{BaseUrl}Voice";
+            var url = $"{BaseUrl}Payment";
 
             var request = new
             {
@@ -34,21 +34,21 @@ namespace PersonalAudioAssistant.Services.Api
                 DataExpiredCard = dataExpiredCard
             };
 
-            var voice = await PutAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PutAsync<object, List<PaymentResponse>>(url, request);
 
             return voice;
         }
 
-        public async Task<List<VoiceResponse>> GetPaymentByUserIdAsync(string userId)
+        public async Task<PaymentResponse> GetPaymentByUserIdAsync(string userId)
         {
-            var url = $"{BaseUrl}Voice/byid";
+            var url = $"{BaseUrl}Payment/byid";
 
             var request = new
             {
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PostAsync<object, PaymentResponse>(url, request);
 
             return voice;
         }

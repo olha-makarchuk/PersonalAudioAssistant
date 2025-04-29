@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.VoiceQuery;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.Voice;
 using System.Collections.ObjectModel;
@@ -11,9 +9,9 @@ using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Views.Users;
 using Plugin.Maui.Audio;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
 using System.ComponentModel;
 using PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -24,6 +22,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
+        private readonly SubUserApiClient _subUserApiClient;
 
         private Stream _recordedAudioStream;
         private Stream _recordedCloneAudioStream;
@@ -64,13 +63,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         VoiceApiClient _voiceApiClient;
 
-        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient)
+        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
         {
             _mediator = mediator;
             _audioManager = audioManager;
             _manageCacheData = manageCacheData;
             _apiClient = apiClient;
             _audioRecorder = _audioManager.CreateRecorder();
+            _subUserApiClient = subUserApiClient;
 
             Filter = new VoiceFilterModel();
             EndOptionsModel = new EndOptionsModel();
@@ -297,20 +297,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 if (CloneVoiceModel.IsCloneVoiceSelected)
                 {
-                    var commandVoice = new CreateVoiceCommand()
-                    {
-                        Name = CloneVoiceModel.Name,
-                        VoiceId = _cloneVoiceId,
-                        UserId = ""
-                    };
-                    voiceId = await _mediator.Send(commandVoice);
+                    voiceId = await _voiceApiClient.CreateVoiceAsync(_cloneVoiceId, CloneVoiceModel.Name, "");
                 }
                 else
                 {
                     voiceId = SelectedVoice.id;
                 }
 
-                var command = new AddSubUserCoomand
+                var command = new AddSubUserCommand
                 {
                     UserId = await SecureStorage.GetAsync("user_id"),
                     UserName = SubUser.UserName,
@@ -322,16 +316,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     PhotoPath = SubUser.PhotoPath,
                     UserVoice = embedding
                 };
-                var userId = await _mediator.Send(command);
+                var userId =  await _subUserApiClient.AddSubUserAsync(command);
 
                 if (CloneVoiceModel.IsCloneVoiceSelected)
                 {
-                    var commandUpdate = new UpdateVoiceCommand()
-                    {
-                        VoiceId = voiceId,
-                        UserId = userId
-                    };
-                    await _mediator.Send(commandUpdate);
+                    await _voiceApiClient.UpdateVoiceAsync(voiceId, userId);
                 }
 
                 await _manageCacheData.UpdateUsersList();

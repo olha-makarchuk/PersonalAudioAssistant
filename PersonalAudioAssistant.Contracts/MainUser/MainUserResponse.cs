@@ -2,11 +2,11 @@
 {
     public class MainUserResponse
     {
-        public required string? Id { get; set; }
-        public string? Email { get; set; }
-        public byte[]? PasswordHash { get; set; }
-        public byte[]? PasswordSalt { get; set; }
-        public string? RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        public required string? id { get; set; }
+        public string? email { get; set; }
+        public byte[]? passwordHash { get; set; }
+        public byte[]? passwordSalt { get; set; }
+        public string? refreshToken { get; set; }
+        public DateTime refreshTokenExpiryTime { get; set; }
     }
 }

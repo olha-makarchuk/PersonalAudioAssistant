@@ -61,7 +61,7 @@ namespace PersonalAudioAssistant.Services.Api
             }
         }
 
-        protected async Task<TResponse?> DeleteAsync<TRequest, TResponse>(string url, TRequest data)
+        protected async Task<bool> DeleteAsync<TRequest>(string url, TRequest data)
         {
             try
             {
@@ -77,20 +77,14 @@ namespace PersonalAudioAssistant.Services.Api
                 };
 
                 var response = await _httpClient.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<TResponse>(responseContent, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                // логування
-                return default;
+                return false;
             }
         }
+
 
 
         protected async Task<TResponse?> PutAsync<TRequest, TResponse>(string url, TRequest data)

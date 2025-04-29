@@ -1,6 +1,4 @@
-﻿
-using PersonalAudioAssistant.Contracts.Voice;
-using static Android.Content.Res.Resources;
+﻿using PersonalAudioAssistant.Contracts.AppSettings;
 
 namespace PersonalAudioAssistant.Services.Api
 {
@@ -9,7 +7,7 @@ namespace PersonalAudioAssistant.Services.Api
         public AppSettingsApiClient(HttpClient httpClient) : base(httpClient) { }
 
 
-        public async Task<List<VoiceResponse>> CreateAppSettingsAsync(string userId)
+        public async Task<List<AppSettingsResponse>> CreateAppSettingsAsync(string userId)
         {
             var url = $"{BaseUrl}AppSettings";
 
@@ -18,12 +16,12 @@ namespace PersonalAudioAssistant.Services.Api
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PostAsync<object, List<AppSettingsResponse>>(url, request);
 
             return voice;
         }
 
-        public async Task<List<VoiceResponse>> UpdateAppSettingsAsync(string userId, string balance, string theme)
+        public async Task<List<AppSettingsResponse>> UpdateAppSettingsAsync(string userId, string balance, string theme)
         {
             var url = $"{BaseUrl}AppSettings";
 
@@ -34,37 +32,38 @@ namespace PersonalAudioAssistant.Services.Api
                 Theme = theme
             };
 
-            var voice = await PutAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PutAsync<object, List<AppSettingsResponse>>(url, request);
 
             return voice;
         }
 
-        public async Task<List<VoiceResponse>> UpdateBalanceAsync(string userId, string balance, string theme)
+        public async Task<List<AppSettingsResponse>> UpdateBalanceAsync(string userId, decimal rechargeAmountInput, string maskedCardNumber, string descriptionPayment)
         {
             var url = $"{BaseUrl}AppSettings/balance";
 
             var request = new
             {
                 UserId = userId,
-                Balance = balance,
-                Theme = theme
+                RechargeAmountInput = rechargeAmountInput,
+                MaskedCardNumber = maskedCardNumber,
+                DescriptionPayment = descriptionPayment
             };
 
-            var voice = await PostAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PostAsync<object, List<AppSettingsResponse>>(url, request);
 
             return voice;
         }
 
-        public async Task<List<VoiceResponse>> GetSettingsByUserIdAsync(string userId)
+        public async Task<AppSettingsResponse> GetSettingsByUserIdAsync(string userId)
         {
-            var url = $"{BaseUrl}AppSettings/balance";
+            var url = $"{BaseUrl}AppSettings/getsettings";
 
             var request = new
             {
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PostAsync<object, AppSettingsResponse>(url, request);
 
             return voice;
         }

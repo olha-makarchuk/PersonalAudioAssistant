@@ -1,6 +1,4 @@
-﻿
-using PersonalAudioAssistant.Contracts.Voice;
-using static Java.Util.Jar.Attributes;
+﻿using PersonalAudioAssistant.Contracts.Voice;
 
 namespace PersonalAudioAssistant.Services.Api
 {
@@ -37,7 +35,7 @@ namespace PersonalAudioAssistant.Services.Api
             return voice;
         }
 
-        public async Task<VoiceResponse?> DeleteVoiceAsync(string idElevenlabs, string id)
+        public async Task DeleteVoiceAsync(string idElevenlabs, string id)
         {
             var url = $"{BaseUrl}Voice";
 
@@ -47,7 +45,7 @@ namespace PersonalAudioAssistant.Services.Api
                 Id = id
             };
 
-            return await DeleteAsync<object, VoiceResponse>(url, request);
+            await DeleteAsync(url, request);
         }
 
         public async Task<VoiceResponse?> UpdateVoiceAsync(string voiceId, string userId)
@@ -63,7 +61,7 @@ namespace PersonalAudioAssistant.Services.Api
             return await PutAsync<object, VoiceResponse>(url, request);
         }
 
-        public async Task<VoiceResponse?> CreateVoiceAsync(string voiceId, string name, string userId)
+        public async Task<string> CreateVoiceAsync(string voiceId, string name, string userId)
         {
             var url = $"{BaseUrl}Voice/byid";
 
@@ -74,7 +72,7 @@ namespace PersonalAudioAssistant.Services.Api
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, VoiceResponse>(url, request);
+            var voice = await PostAsync<object, string>(url, request);
 
             return voice;
         }

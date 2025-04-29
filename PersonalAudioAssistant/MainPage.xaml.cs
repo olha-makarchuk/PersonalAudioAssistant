@@ -10,11 +10,11 @@ namespace PersonalAudioAssistant
         private readonly IMediator _mediator;
         private readonly ManageCacheData _manageCacheData;
 
-        public MainPage(IMediator mediator, GoogleUserService googleUserService, ManageCacheData manageCacheData)
+        public MainPage(IMediator mediator, GoogleUserService googleUserService, ManageCacheData manageCacheData, AuthTokenManager authTokenManager)
         {
             InitializeComponent();
             _mediator = mediator;
-            _authTokenManager = new AuthTokenManager(googleUserService, mediator);
+            _authTokenManager = authTokenManager;
             _manageCacheData = manageCacheData;
         }
 

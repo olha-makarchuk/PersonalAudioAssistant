@@ -21,7 +21,7 @@ namespace PersonalAudioAssistant.Persistence.Repositories
 
         public async Task<AppSettings> GetSettingsByUserIdAsync(string Id, CancellationToken cancellationToken)
         {
-            var settings = await _context.AppSettings.FirstOrDefaultAsync(x => x.UserId == Id, cancellationToken);
+            var settings = await _context.AppSettings.FirstOrDefaultAsync(x => x.userId == Id, cancellationToken);
             return settings!;
         }
 

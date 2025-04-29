@@ -2,11 +2,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.ConversationQuery;
 using PersonalAudioAssistant.Contracts.Conversation;
 using PersonalAudioAssistant.Contracts.SubUser;
-using PersonalAudioAssistant.Domain.Entities;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Services.Api;
 using System.Collections.ObjectModel;
 
 namespace PersonalAudioAssistant.ViewModel.History
@@ -16,6 +15,7 @@ namespace PersonalAudioAssistant.ViewModel.History
         private readonly IMediator _mediator;
         private string _userIdQueryAttribute;
         private readonly ManageCacheData _manageCacheData;
+        private readonly ConversationApiClient _conversationApiClient;
 
         [ObservableProperty]
         private SubUserResponse user;
@@ -33,10 +33,11 @@ namespace PersonalAudioAssistant.ViewModel.History
         private bool _hasMoreItems = true;
         private const int PageSize = 10;
 
-        public HistoryViewModel(IMediator mediator, ManageCacheData manageCacheData)
+        public HistoryViewModel(IMediator mediator, ManageCacheData manageCacheData, ConversationApiClient conversationApiClient)
         {
             _mediator = mediator;
             _manageCacheData = manageCacheData;
+            _conversationApiClient = conversationApiClient;
 
             Conversations = new ObservableCollection<AllConversationsResponse>();
         }
@@ -86,17 +87,10 @@ namespace PersonalAudioAssistant.ViewModel.History
                 if (User == null)
                 {
                     var cached = await _manageCacheData.GetUsersAsync();
-                    User = cached.FirstOrDefault(x => x.Id == _userIdQueryAttribute);
+                    User = cached.FirstOrDefault(x => x.id == _userIdQueryAttribute);
                 }
 
-                var command = new GetConversationsBySubUserIdQuery()
-                {
-                    SubUserId = _userIdQueryAttribute,
-                    PageNumber = _currentPage,
-                    PageSize = PageSize
-                };
-
-                var conversationsList = await _mediator.Send(command);
+                var conversationsList = await _conversationApiClient.GetConversationsBySubUserIdAsync(_userIdQueryAttribute, _currentPage, PageSize);
 
                 if (isLoadMore)
                 {

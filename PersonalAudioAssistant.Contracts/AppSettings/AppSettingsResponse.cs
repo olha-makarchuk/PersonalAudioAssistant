@@ -2,9 +2,9 @@
 {
     public class AppSettingsResponse
     {
-        public required string? Id { get; set; }
-        public required string Theme { get; set; }
-        public required decimal Balance { get; set; }
-        public required string? UserId { get; set; }
+        public required string? id { get; set; }
+        public required string theme { get; set; }
+        public required decimal balance { get; set; }
+        public required string? userId { get; set; }
     }
 }

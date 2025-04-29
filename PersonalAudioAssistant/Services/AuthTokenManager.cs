@@ -1,8 +1,5 @@
-﻿using Azure.Core;
-using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.Auth;
-using System;
-using System.Threading.Tasks;
+﻿using MediatR;
+using PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.Services
 {
@@ -10,6 +7,7 @@ namespace PersonalAudioAssistant.Services
     {
         private readonly GoogleUserService _googleAuthService;
         private readonly IMediator _mediator;
+        private readonly AuthApiClient _authApiClient;
 
         public event EventHandler<bool> UserSignInStatusChanged;
 
@@ -23,10 +21,11 @@ namespace PersonalAudioAssistant.Services
             return await CheckIfUserIsSignedIn();
         }
 
-        public AuthTokenManager(GoogleUserService googleAuthService, IMediator mediator)
+        public AuthTokenManager(GoogleUserService googleAuthService, IMediator mediator, AuthApiClient authApiClient)
         {
-            _googleAuthService = googleAuthService ?? throw new ArgumentNullException(nameof(googleAuthService));
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _googleAuthService = googleAuthService;
+            _mediator = mediator;
+            _authApiClient = authApiClient;
         }
 
         public async Task InitializeAsync()
@@ -45,28 +44,16 @@ namespace PersonalAudioAssistant.Services
             var response = await _googleAuthService.SignInAsync();
             DateTime expiryTime = DateTime.UtcNow.AddHours(1);
 
-            var command = new LoginWithGoogleCommand()
-            {
-                Email = response.Email,
-                RefreshToken = response.RefreshToken
-            };
+            var userId = await _authApiClient.LoginWithGoogleAsync(response.Email, response.RefreshToken);
 
             await SecureStorage.SetAsync("is_google", "true");
-
-            var userId = await _mediator.Send(command);
 
             await SignIn(response, userId, expiryTime);
         }
 
         public async Task SignInWithPasswordAsync(string email, string password)
         {
-            var command = new LoginCommand
-            {
-                Email = email,
-                Password = password
-            };
-
-            var tokens = await _mediator.Send(command);
+            var tokens = await _authApiClient.LoginAsync(email, password);
 
             TokenResponse response = new()
             {
@@ -100,14 +87,8 @@ namespace PersonalAudioAssistant.Services
 
         public async Task SignUpWithPasswordAsync(string email, string password)
         {
-            var command = new RegistrationCommand()
-            {
-                Email = email,
-                Password = password
-            };
-
-            var response = await _mediator.Send(command);
-
+            var response = await _authApiClient.RegistrationAsync(email, password);
+            
             TokenResponse tokenResponse = new()
             {
                 AccessToken = response.AccessToken,
@@ -171,13 +152,8 @@ namespace PersonalAudioAssistant.Services
 
             try
             {
-                var refreshCommand = new RefreshTokenCommand()
-                {
-                    AccessToken = currentAccessToken,
-                    RefreshToken = currentRefreshToken
-                };
+                var tokenResponse = await _authApiClient.RefreshTokenAsync(currentAccessToken, currentRefreshToken);
 
-                var tokenResponse = await _mediator.Send(refreshCommand);
                 DateTime expiryTime = DateTime.UtcNow.AddHours(1);
 
                 await SaveTokensAsync(tokenResponse.AccessToken, tokenResponse.RefreshToken, expiryTime);

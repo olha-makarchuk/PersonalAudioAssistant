@@ -5,11 +5,10 @@ using CommunityToolkit.Maui.Alerts;
 using MediatR;
 using Newtonsoft.Json;
 using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.ConversationCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.MessageCommands;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.ViewModel;
 using Plugin.Maui.Audio;
 
@@ -26,17 +25,18 @@ namespace PersonalAudioAssistant.Platforms
         private string PreviousResponseId;
         private IMediator _mediatr;
         private Action? _clearChatMessagesAction;
+        private readonly ConversationApiClient _conversationApiClient;
 
-        public SpeechToTextImplementation(IMediator mediatr)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient)
         {
             _mediatr = mediatr;
+            _conversationApiClient = conversationApiClient;
         }
-
         public SpeechToTextImplementation()
-            : this(MediatorProvider.Mediator)  
+        : this(MediatorProvider.Mediator,
+                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>())
         {
         }
-
 
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction)
         {
@@ -75,8 +75,8 @@ namespace PersonalAudioAssistant.Platforms
                     SubUserResponse? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
                     matchedUser = listUsers.FirstOrDefault(user =>
-                        !string.IsNullOrWhiteSpace(user.StartPhrase) &&
-                        normalizedSentence.Contains(user.StartPhrase.Trim().ToLowerInvariant())
+                        !string.IsNullOrWhiteSpace(user.startPhrase) &&
+                        normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
                     );
 
                     if (matchedUser != null && !processingCommand)
@@ -87,7 +87,7 @@ namespace PersonalAudioAssistant.Platforms
                         {
                             PauseListening();
 
-                            await Toast.Make(matchedUser.StartPhrase).Show(cancellationToken);
+                            await Toast.Make(matchedUser.startPhrase).Show(cancellationToken);
 
                             var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
                             await audioPlayerHelper.PlayAudio(cancellationToken);
@@ -95,13 +95,7 @@ namespace PersonalAudioAssistant.Platforms
                             IsContinueConversation = true;
                             IsFirstRequest = true;
 
-                            var commandCreateConversation = new CreateConversationCommand
-                            {
-                                Description = "",
-                                SubUserId = matchedUser.Id,
-                                
-                            };
-                            var conversationTask = _mediatr.Send(commandCreateConversation, cancellationToken);
+                            var conversationTask = _conversationApiClient.CreateConversationAsync("", matchedUser.id);
 
                             while (IsContinueConversation)
                             {
@@ -142,7 +136,7 @@ namespace PersonalAudioAssistant.Platforms
                                     }
 
                                     var textToSpeech = new ElevenlabsApi();
-                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.VoiceId!, answer.text);
+                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.voiceId!, answer.text);
 
                                     await Task.WhenAll(userTask);
 
@@ -166,11 +160,8 @@ namespace PersonalAudioAssistant.Platforms
                                 }
                             }
                             ApiClientGptResponse description = await apiGPT.ContinueChatAsync("На основі розмови напиши короткий заголовок, який підсумовує основну тему", _prevResponseId);
-                            var command = new UpdateConversationCommand()
-                            {
-                                Description = description.text
-                            };
-                            var TaskDescription = _mediatr.Send(command, cancellationToken);
+
+                            var TaskDescription =  _conversationApiClient.UpdateConversationAsync(conversationTask.Result, description.text);
                         }
                         catch (Exception ex)
                         {

@@ -1,5 +1,4 @@
-﻿using Azure;
-using PersonalAudioAssistant.Application.Interfaces;
+﻿using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Contracts.SubUser;
 using System.Text;
 using System.Text.Json;
@@ -25,9 +24,9 @@ namespace PersonalAudioAssistant.Application.Services
 
                 var dataPayload = JsonSerializer.Serialize(new
                 {
-                    subUser.EndTime,
-                    subUser.UserVoice,
-                    subUser.EndPhrase,
+                    subUser.endTime,
+                    subUser.userVoice,
+                    subUser.endPhrase,
                     IsFirstRequest,
                     PreviousResponseId
                 });

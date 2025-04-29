@@ -2,17 +2,18 @@
 using MediatR;
 using System.Collections.ObjectModel;
 using PersonalAudioAssistant.Contracts.Message;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.MessageQuery;
 using CommunityToolkit.Maui.Core.Extensions;
 using CommunityToolkit.Mvvm.Input;
 using PersonalAudioAssistant.Views.Users;
 using PersonalAudioAssistant.Views.History;
+using PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.ViewModel.History
 {
     public partial class MessagesViewModel : ObservableObject, IQueryAttributable
     {
         private readonly IMediator _mediator;
+        private readonly MessagesApiClient _messagesApiClient;
         private string ConversationIdQueryAttribute;
 
         [ObservableProperty]
@@ -28,9 +29,10 @@ namespace PersonalAudioAssistant.ViewModel.History
         private bool _hasMoreItems = true;
         private const int PageSize = 10;
 
-        public MessagesViewModel(IMediator mediator)
+        public MessagesViewModel(IMediator mediator, MessagesApiClient messagesApiClient)
         {
             _mediator = mediator;
+            _messagesApiClient = messagesApiClient;
             messages = new ObservableCollection<MessageResponse>();
         }
 
@@ -78,14 +80,7 @@ namespace PersonalAudioAssistant.ViewModel.History
 
             try
             {
-                var command = new GetMessagesByConversationIdQuery()
-                {
-                    ConversationId = ConversationIdQueryAttribute,
-                    PageNumber = _currentPage,
-                    PageSize = PageSize
-                };
-
-                var messagesList = await _mediator.Send(command);
+                var messagesList = await _messagesApiClient.GetMessageByConversationIdAsync(ConversationIdQueryAttribute, _currentPage, PageSize);
 
                 if (isLoadMore)
                 {
@@ -128,10 +123,10 @@ namespace PersonalAudioAssistant.ViewModel.History
             {
                 var mediaElement = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
 
-                if (message == null || string.IsNullOrEmpty(message.AudioPath))
+                if (message == null || string.IsNullOrEmpty(message.audioPath))
                     return;
 
-                mediaElement.Source = message.AudioPath;
+                mediaElement.Source = message.audioPath;
 
                 if (mediaElement.CurrentState == CommunityToolkit.Maui.Core.Primitives.MediaElementState.Playing)
                     mediaElement.Pause();

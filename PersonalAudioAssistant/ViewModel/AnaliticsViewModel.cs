@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentHistory;
 using PersonalAudioAssistant.Contracts.PaymentHistory;
-using PersonalAudioAssistant.Contracts.SubUser;
+using PersonalAudioAssistant.Services.Api;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
@@ -29,22 +28,21 @@ namespace PersonalAudioAssistant.ViewModel
         public bool IsTokenTabSelected => SelectedTab == "Token";
         public bool IsPaymentTabSelected => SelectedTab == "Payment";
 
-        public AnaliticsViewModel(IMediator mediator)
+        private PaymentHistoryApiClient _paymentHistoryApiClient;
+        public AnaliticsViewModel(IMediator mediator, PaymentHistoryApiClient paymentHistoryApiClient)
         {
             CurrentAnalyticsContent = new Label { Text = "Вміст: За користувачами" };
             _mediator = mediator;
+            _paymentHistoryApiClient = paymentHistoryApiClient;
             HistoryList = new ObservableCollection<PaymentHistoryResponse>();
         }
 
         public async Task LoadHistoryPayment()
         {
             var userId = await SecureStorage.GetAsync("user_id");
-            var command = new GetPaymentHistoryByUserIdQuery()
-            {
-                UserId = userId
-            };
 
-            var list = await _mediator.Send(command);
+            var list = await _paymentHistoryApiClient.GetPaymentHistoryByUserIdAsync(userId);
+
             if (list == null || !list.Any())
             {
                 await Shell.Current.DisplayAlert("Попередження", "Немає даних для відображення.", "OK");

@@ -2,9 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Services;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
+using PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -12,11 +10,16 @@ namespace PersonalAudioAssistant.ViewModel
     {
         private readonly IMediator _mediator;
         private readonly AuthTokenManager _authTokenManager;
+        private PaymentApiClient _paymentApiClient;
+        private AutoPaymentApiClient _autoPaymentApiClient;
 
-        public RegistrationPageViewModel(IMediator mediator, GoogleUserService googleUserService)
+        public RegistrationPageViewModel(IMediator mediator, GoogleUserService googleUserService, AppSettingsApiClient appSettingsApiClient, PaymentApiClient paymentApiClient, AutoPaymentApiClient autoPaymentApiClient, AuthTokenManager authTokenManager)
         {
             _mediator = mediator;
-            _authTokenManager = new AuthTokenManager(googleUserService, _mediator);
+            _authTokenManager = authTokenManager;
+            _appSettingsApiClient = appSettingsApiClient;
+            _paymentApiClient = paymentApiClient;
+            _autoPaymentApiClient = autoPaymentApiClient;
         }
 
         [ObservableProperty]
@@ -27,6 +30,8 @@ namespace PersonalAudioAssistant.ViewModel
 
         [ObservableProperty]
         private bool isBusy;
+
+        private AppSettingsApiClient _appSettingsApiClient;
 
         [RelayCommand]
         private async Task SignUpAsync()
@@ -85,23 +90,11 @@ namespace PersonalAudioAssistant.ViewModel
         {
             var userId = await SecureStorage.GetAsync("user_id");
 
-            var paymentCommand = new CreatePaymentCommand() 
-            { 
-                UserId = userId,
-            };
-            await _mediator.Send(paymentCommand);
+            await _paymentApiClient.CreatePaymentAsync(userId);
 
-            var autoPaymentCommand = new CreateAutoPaymentCommand()
-            {
-                UserId = userId
-            };
-            await _mediator.Send(autoPaymentCommand);
+            await _autoPaymentApiClient.CreateAutoPaymentAsync(userId);
 
-            var settingsCommand = new CreateAppSettingsCommand()
-            {
-                UserId = userId
-            };
-            await _mediator.Send(settingsCommand);
+            await _appSettingsApiClient.CreateAppSettingsAsync(userId);
 
             //var analiticsCommand = new CreateAnaliticsCommand() { };
             //await _mediator.Send(analiticsCommand);

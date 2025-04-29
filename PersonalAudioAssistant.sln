@@ -1,13 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35828.75 d17.13
+VisualStudioVersion = 17.13.35828.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant", "PersonalAudioAssistant\PersonalAudioAssistant.csproj", "{87CD17CC-7ED8-4943-A89B-424830A6387E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Persistence", "PersonalAudioAssistant.Persistence\PersonalAudioAssistant.Persistence.csproj", "{F36D386C-F702-412C-85A0-D0BC65F47382}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Domain", "PersonalAudioAssistant.Domain\PersonalAudioAssistant.Domain.csproj", "{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalAudioAssistant.Contracts", "PersonalAudioAssistant.Contracts\PersonalAudioAssistant.Contracts.csproj", "{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}"
 EndProject
@@ -25,14 +21,6 @@ Global
 		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{87CD17CC-7ED8-4943-A89B-424830A6387E}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{F36D386C-F702-412C-85A0-D0BC65F47382}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F36D386C-F702-412C-85A0-D0BC65F47382}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F36D386C-F702-412C-85A0-D0BC65F47382}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F36D386C-F702-412C-85A0-D0BC65F47382}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AD23704F-9ECE-4C22-ABDD-4D3B247DB5A5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEE1F86C-CEDD-45DF-89E0-845B45E34B7C}.Release|Any CPU.ActiveCfg = Release|Any CPU

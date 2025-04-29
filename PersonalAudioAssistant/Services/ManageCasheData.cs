@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Contracts.AppSettings;
+using PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.Services
 {
@@ -14,19 +14,22 @@ namespace PersonalAudioAssistant.Services
 
         private readonly IMemoryCache _cache;
         private readonly IMediator _mediator;
-
-        public ManageCacheData(IMemoryCache cache, IMediator mediator)
+        private readonly AppSettingsApiClient _appSettingsApiClient;
+        private readonly SubUserApiClient _subUserApiClient;
+        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient)
         {
             _cache = cache;
             _mediator = mediator;
+            _appSettingsApiClient = appSettingsApiClient;
+            _subUserApiClient = subUserApiClient;
         }
 
         public async Task<List<SubUserResponse>> GetUsersAsync(Action<double> progress = null)
         {
             if (!_cache.TryGetValue(UsersCacheKey, out List<SubUserResponse> users))
             {
-                await Task.Delay(1000); 
-                users = await _mediator.Send(new GetAllUsersByUserIdQuery() { UserId = await SecureStorage.GetAsync("user_id")});
+                await Task.Delay(1000);
+                users = await _subUserApiClient.GetAllUsersByUserIdAsync(await SecureStorage.GetAsync("user_id"));
                 progress?.Invoke(0.5); 
                 await Task.Delay(1000);
                 _cache.Set(UsersCacheKey, users);
@@ -48,7 +51,7 @@ namespace PersonalAudioAssistant.Services
             {
                 await Task.Delay(800); 
                 var userId = await SecureStorage.GetAsync("user_id");
-                settings = await _mediator.Send(new GetSettingsByUserIdQuery { UserId = userId });
+                settings = await _appSettingsApiClient.GetSettingsByUserIdAsync(userId);
                 progress?.Invoke(0.7);
                 await Task.Delay(700);
                 _cache.Set(SettingsCacheKey, settings);

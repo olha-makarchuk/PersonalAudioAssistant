@@ -44,7 +44,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             _isNavigating = true;
             try
             {
-                await Shell.Current.GoToAsync($"/UpdateUserPage?userId={user.Id}");
+                await Shell.Current.GoToAsync($"/UpdateUserPage?userId={user.id}");
             }
             finally
             {
@@ -71,7 +71,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 Random random = new Random();
                 int randomInt = random.Next(1000);
 
-                user.PhotoPath = $"{user.PhotoPath}?nocache={randomInt}";
+                user.photoPath = $"{user.photoPath}?nocache={randomInt}";
                 Users.Add(user);
             }
             OnPropertyChanged(nameof(Users));

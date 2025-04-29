@@ -2,9 +2,9 @@
 {
     public class PaymentHistoryResponse
     {
-        public required string MaskedCardNumber { get; set; }
-        public required DateTime DataTimePayment { get; set; }
-        public required string Description { get; set; }
-        public required decimal Amount { get; set; }
+        public required string maskedCardNumber { get; set; }
+        public required DateTime dataTimePayment { get; set; }
+        public required string description { get; set; }
+        public required decimal amount { get; set; }
     }
 }

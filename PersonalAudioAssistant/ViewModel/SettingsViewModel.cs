@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.MainUserCommands;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Services.Api;
 using System.Collections.ObjectModel;
 
 namespace PersonalAudioAssistant.ViewModel
@@ -12,6 +12,7 @@ namespace PersonalAudioAssistant.ViewModel
         private readonly IMediator _mediator;
         private readonly AuthTokenManager _authTokenManager;
         private readonly ManageCacheData _manageCacheData;
+        private readonly MainUserApiClient _mainUserApiClient;
 
         [ObservableProperty]
         private string email;
@@ -38,11 +39,13 @@ namespace PersonalAudioAssistant.ViewModel
         public SettingsViewModel(
             IMediator mediator,
             AuthTokenManager authTokenManager,
-            ManageCacheData manageCacheData)
+            ManageCacheData manageCacheData,
+            MainUserApiClient mainUserApiClient)
         {
             _mediator = mediator;
             _authTokenManager = authTokenManager;
             _manageCacheData = manageCacheData;
+            _mainUserApiClient = mainUserApiClient;
         }
 
         public async Task LoadSettingsAsync()
@@ -51,8 +54,8 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 var settings = await _manageCacheData.GetAppSettingsAsync();
                 Email = await SecureStorage.GetAsync("user_email");
-                Balance = settings.Balance;
-                Theme = settings.Theme;
+                Balance = settings.balance;
+                Theme = settings.theme;
             }
             catch (Exception ex)
             {
@@ -72,14 +75,7 @@ namespace PersonalAudioAssistant.ViewModel
                     return;
                 }
 
-                var command = new ChangePasswordCommand
-                {
-                    Email = email,
-                    NewPassword = NewPassword,
-                    Password = OldPassword
-                };
-
-                await _mediator.Send(command);
+                await _mainUserApiClient.ChangePasswordAsync(email, OldPassword, NewPassword);
 
                 OldPassword = string.Empty;
                 NewPassword = string.Empty;

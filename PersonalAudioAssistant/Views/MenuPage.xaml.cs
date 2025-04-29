@@ -40,7 +40,7 @@ public partial class MenuPage : Popup, INotifyPropertyChanged
     {
         var balance = Microsoft.Maui.Controls.Application.Current.Handler.MauiContext.Services.GetRequiredService<ManageCacheData>();
         var settings = await balance.GetAppSettingsAsync();
-        Balance = settings.Balance;
+        Balance = settings.balance;
     }
 
     private async void MainPageClicked(object sender, EventArgs e)

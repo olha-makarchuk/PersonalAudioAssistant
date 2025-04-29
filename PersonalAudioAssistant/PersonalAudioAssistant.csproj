@@ -71,6 +71,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
@@ -78,13 +79,16 @@
 		<PackageReference Include="Mopups" Version="1.3.2" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="3.1.0" />
 		<PackageReference Include="Syncfusion.Maui.Popup" Version="29.1.35" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="appsettings.json" />
 	</ItemGroup>
+
 	<ItemGroup>
-		<ProjectReference Include="..\PersonalAudioAssistant.Persistence\PersonalAudioAssistant.Persistence.csproj" />
+	  <ProjectReference Include="..\PersonalAudioAssistant.Application\PersonalAudioAssistant.Application.csproj" />
+	  <ProjectReference Include="..\PersonalAudioAssistant.Contracts\PersonalAudioAssistant.Contracts.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <MauiXaml Update="Views\AnaliticsPage.xaml">

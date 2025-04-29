@@ -1,4 +1,4 @@
-﻿using PersonalAudioAssistant.Contracts.Voice;
+﻿using PersonalAudioAssistant.Contracts.PaymentHistory;
 
 namespace PersonalAudioAssistant.Services.Api
 {
@@ -7,16 +7,16 @@ namespace PersonalAudioAssistant.Services.Api
         public PaymentHistoryApiClient(HttpClient httpClient) : base(httpClient) { }
 
 
-        public async Task<List<VoiceResponse>> GetPaymentHistoryByUserIdAsync(string userId)
+        public async Task<List<PaymentHistoryResponse>> GetPaymentHistoryByUserIdAsync(string userId)
         {
-            var url = $"{BaseUrl}Voice";
+            var url = $"{BaseUrl}PaymentHistory";
 
             var request = new
             {
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, List<VoiceResponse>>(url, request);
+            var voice = await PostAsync<object, List<PaymentHistoryResponse>>(url, request);
 
             return voice;
         }

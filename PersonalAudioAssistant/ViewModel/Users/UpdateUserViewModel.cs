@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUserCommands;
 using PersonalAudioAssistant.Contracts.Voice;
 using System.Collections.ObjectModel;
 using PersonalAudioAssistant.Services;
@@ -10,8 +9,8 @@ using Plugin.Maui.Audio;
 using PersonalAudioAssistant.Model;
 using System.ComponentModel;
 using PersonalAudioAssistant.Application.Services;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
 using PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -21,6 +20,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
+        private readonly SubUserApiClient _subUserApiClient;
         private Stream _recordedAudioStream;
         private Stream _recordedAudioCloneStream;
         private string _selectedAudioFilePath;
@@ -79,13 +79,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
         public string selectedAudioFilePath;
 
         VoiceApiClient _voiceApiClient;
-        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, VoiceApiClient voiceApiClient)
+        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
         {
             _mediator = mediator;
             _audioManager = audioManager;
             _manageCacheData = manageCacheData;
             _audioRecorder = audioManager.CreateRecorder();
 
+            _subUserApiClient = subUserApiClient;
             _voiceApiClient = voiceApiClient;
 
             Filter = new VoiceFilterModel();
@@ -162,22 +163,22 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 var appUserId = await SecureStorage.GetAsync("user_id");
                 var users = await _manageCacheData.GetUsersAsync();
-                var user = users.FirstOrDefault(u => u.Id.ToString() == UserIdQueryAttribute);
-                user.PhotoPath = user.PhotoPath.Split('?')[0];
+                var user = users.FirstOrDefault(u => u.id.ToString() == UserIdQueryAttribute);
+                user.photoPath = user.photoPath.Split('?')[0];
 
-                var voiceList = await _voiceApiClient.GetVoicesAsync(user.Id.ToString());
+                var voiceList = await _voiceApiClient.GetVoicesAsync(user.id.ToString());
 
-                SubUser.UserName = user?.UserName;
-                SubUser.StartPhrase = user.StartPhrase;
-                SubUser.EndPhrase = user.EndPhrase;
-                SubUser.EndTime = user.EndTime;
-                SubUser.VoiceId = user.VoiceId;
-                SubUser.PasswordHash = user.PasswordHash;
-                SubUser.PhotoPath = user.PhotoPath;
-                SubUser.Id = user.Id;
-                SubUser.UserId = user.UserId;
+                SubUser.UserName = user?.userName;
+                SubUser.StartPhrase = user.startPhrase;
+                SubUser.EndPhrase = user.endPhrase;
+                SubUser.EndTime = user.endTime;
+                SubUser.VoiceId = user.voiceId;
+                SubUser.PasswordHash = user.passwordHash;
+                SubUser.PhotoPath = user.photoPath;
+                SubUser.Id = user.id;
+                SubUser.UserId = user.userId;
                 SubUser.IsPasswordEnabled = SubUser.PasswordHash != null;
-                _photoUrl = user.PhotoPath;
+                _photoUrl = user.photoPath;
                 HasPassword = SubUser.PasswordHash != null;
                 
                 if (voiceList != null)
@@ -186,14 +187,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     Voices = new ObservableCollection<VoiceResponse>(allVoices);
 
                     CloneVoice = Voices
-                        .FirstOrDefault(v => v.voiceId == user.VoiceId && v.userId == user.Id)
+                        .FirstOrDefault(v => v.voiceId == user.voiceId && v.userId == user.id)
                         ?? new VoiceResponse();
 
-                    bool isClone = CloneVoice.voiceId == user.VoiceId && CloneVoice.userId == user.Id;
+                    bool isClone = CloneVoice.voiceId == user.voiceId && CloneVoice.userId == user.id;
                     IsVoiceColone = isClone;
                     IsVoiceBase = !isClone;
 
-                    var userVoice = await _voiceApiClient.GetVoiceByIdAsync(user.VoiceId);
+                    var userVoice = await _voiceApiClient.GetVoiceByIdAsync(user.voiceId);
                     
                     VoiceName = userVoice.name;
 
@@ -286,13 +287,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 if (!IsPhotoSelected)
                     await Shell.Current.DisplayAlert("Помилка", $"Виберіть нову основну світлину", "OK");
 
-                var command = new UpdatePhotoCommand()
-                {
-                    PhotoPath = SubUser.PhotoPath,
-                    PhotoURL = _photoUrl
-                };
+                await _subUserApiClient.UpdatePhotoAsync(_photoUrl, SubUser.PhotoPath);
 
-                await _mediator.Send(command);
                 await _manageCacheData.UpdateUsersList();
                 await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
             }
@@ -356,8 +352,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     if (string.IsNullOrWhiteSpace(currentPwd))
                         return;
                     
-                    var removeCmd = new DeletePasswordSubUserCommand {UserId = SubUser.Id, Password = currentPwd };
-                    await _mediator.Send(removeCmd);
+                    await _subUserApiClient.DeletePasswordSubUserAsync(SubUser.Id, currentPwd);
                     await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно видалено", "OK");
                     HasPassword = false;
                 }
@@ -493,12 +488,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             if (CloneVoice.voiceId != null)
             {
-                var command = new DeleteVoiceCommand()
-                {
-                    Id = CloneVoice.voiceId,
-                    IdElevenlabs = _voiceIdElevenlabs
-                };
-                await _mediator.Send(command);
+                await _voiceApiClient.DeleteVoiceAsync(_voiceIdElevenlabs, CloneVoice.voiceId);
             }
             IsVoiceColone = false;
             IsVoiceBase = true;
@@ -543,25 +533,13 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 CloneVoiceModel.Name,
                 audioPath);
 
-            var commandDeleteVoice = new DeleteVoiceCommand()
-            {
-                Id = CloneVoice.voiceId,
-                IdElevenlabs = _voiceIdElevenlabs
-            };
-
-            var createCommand = new CreateVoiceCommand
-            {
-                Name = clonedInfo.VoiceName,
-                VoiceId = clonedInfo.VoiceId,
-                UserId = SubUser.Id
-            };
-            var newVoiceDbId = await _mediator.Send(createCommand);
+            var newVoiceDbId = await _voiceApiClient.CreateVoiceAsync(clonedInfo.VoiceId, clonedInfo.VoiceName, SubUser.Id);
 
             await UpdateUserVoiceAsync(newVoiceDbId);
 
             if (CloneVoice.voiceId != null)
             {
-                await _mediator.Send(commandDeleteVoice);
+                await _voiceApiClient.DeleteVoiceAsync(_voiceIdElevenlabs, CloneVoice.voiceId);
             }
 
             CloneVoice.name = clonedInfo.VoiceName;
@@ -607,11 +585,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 try
                 {
                     IsBusy = true;
-                    var command = new DeleteSubUserCoomand
-                    {
-                        UserId = SubUser.Id.ToString()
-                    };
-                    await _mediator.Send(command);
+
+                    await _subUserApiClient.DeleteSubUserAsync(SubUser.Id.ToString());
+
                     await _manageCacheData.UpdateUsersList();
 
                     var usersListViewModel = Shell.Current.CurrentPage.Handler.MauiContext.Services.GetService(typeof(UsersListViewModel)) as UsersListViewModel;

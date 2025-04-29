@@ -2,9 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using Mopups.Services;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.SubUserQuery;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
 using System.Collections.ObjectModel;
 
 namespace PersonalAudioAssistant.ViewModel.History
@@ -13,6 +13,7 @@ namespace PersonalAudioAssistant.ViewModel.History
     {
         private readonly IMediator _mediator;
         private readonly ManageCacheData _manageCacheData;
+        private readonly SubUserApiClient _subUserApiClient;
 
         [ObservableProperty]
         private ObservableCollection<SubUserResponse> users = new();
@@ -29,10 +30,11 @@ namespace PersonalAudioAssistant.ViewModel.History
         [ObservableProperty]
         private bool isPasswordCorrect = true;
 
-        public GetAccessToHistoryViewModel(IMediator mediator, ManageCacheData manageCacheData)
+        public GetAccessToHistoryViewModel(IMediator mediator, ManageCacheData manageCacheData, SubUserApiClient subUserApiClient)
         {
             _mediator = mediator;
             _manageCacheData = manageCacheData;
+            _subUserApiClient = subUserApiClient;
         }
 
         partial void OnSelectedUserChanged(SubUserResponse value)
@@ -40,7 +42,7 @@ namespace PersonalAudioAssistant.ViewModel.History
             if (value == null)
                 return;
 
-            IsPasswordExists = value.PasswordHash != null;
+            IsPasswordExists = value.passwordHash != null;
             IsPasswordCorrect = true;
             PasswordEntry = string.Empty;
         }
@@ -70,13 +72,7 @@ namespace PersonalAudioAssistant.ViewModel.History
                 return;
             }
 
-            // перевіряємо пароль через MediatR
-            var query = new CheckSubUserPasswordQuery
-            {
-                UserId = SelectedUser.Id,
-                Password = PasswordEntry
-            };
-            var isCorrect = await _mediator.Send(query);
+            var isCorrect = await _subUserApiClient.CheckSubUserPasswordAsync(SelectedUser.id, PasswordEntry);
 
             IsPasswordCorrect = isCorrect;
             if (!isCorrect)
@@ -89,7 +85,7 @@ namespace PersonalAudioAssistant.ViewModel.History
         {
             await MopupService.Instance.PopAsync();
 
-            await Shell.Current.GoToAsync($"//HistoryPage?userId={SelectedUser.Id}");
+            await Shell.Current.GoToAsync($"//HistoryPage?userId={SelectedUser.id}");
         }
 
         [RelayCommand]

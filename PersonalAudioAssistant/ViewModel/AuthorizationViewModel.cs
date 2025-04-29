@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.Services.Api;
 using PersonalAudioAssistant.Services;
 
 namespace PersonalAudioAssistant.ViewModel
@@ -11,10 +10,10 @@ namespace PersonalAudioAssistant.ViewModel
         private readonly IMediator _mediator;
         private readonly AuthTokenManager _authTokenManager;
 
-        public AuthorizationViewModel(IMediator mediator, GoogleUserService googleUserService)
+        public AuthorizationViewModel(IMediator mediator, GoogleUserService googleUserService, AuthTokenManager authTokenManager)
         {
             _mediator = mediator;
-            _authTokenManager = new AuthTokenManager(googleUserService, _mediator);
+            _authTokenManager = authTokenManager;
         }
 
         [ObservableProperty]
@@ -30,8 +29,6 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task SignInAsync()
         {
             IsBusy = true;
-
-            VoicesApi voicesApi = new VoicesApi();
 
             if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
             {

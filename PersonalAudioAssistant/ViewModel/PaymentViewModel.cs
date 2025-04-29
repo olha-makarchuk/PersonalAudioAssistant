@@ -1,15 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Android.Text;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.AutoPaymentsCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.PaymentCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.AutoPaymentsQuery;
-using PersonalAudioAssistant.Application.PlatformFeatures.Queries.PaymentQuery;
 using PersonalAudioAssistant.Application.Services;
-using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.Model.Payment;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Services.Api;
 using System.Text.RegularExpressions;
 
 namespace PersonalAudioAssistant.ViewModel
@@ -19,14 +15,19 @@ namespace PersonalAudioAssistant.ViewModel
         private readonly IMediator _mediator;
         private readonly ApiClientTokens _apiClientTokens;
         private readonly ManageCacheData _manageCacheData;
-
-        public PaymentViewModel(IMediator mediator, ApiClientTokens apiClientTokens, ManageCacheData manageCacheData)
+        private AppSettingsApiClient _appSettingsApiClient;
+        private PaymentApiClient _paymentApiClient;
+        private AutoPaymentApiClient _autoPaymentApiClient;
+        public PaymentViewModel(IMediator mediator, ApiClientTokens apiClientTokens, ManageCacheData manageCacheData, AppSettingsApiClient appSettingsApiClient, PaymentApiClient paymentApiClient, AutoPaymentApiClient autoPaymentApiClient)
         {
+            _appSettingsApiClient = appSettingsApiClient;
             _mediator = mediator;
             CardModel = new CardModel();
             AutoPaymentModel = new AutoPaymentModel();
             _apiClientTokens = apiClientTokens;
             _manageCacheData = manageCacheData;
+            _paymentApiClient = paymentApiClient;
+            _autoPaymentApiClient = autoPaymentApiClient;
         }
 
         [ObservableProperty]
@@ -82,15 +83,16 @@ namespace PersonalAudioAssistant.ViewModel
             if (string.IsNullOrEmpty(userId))
                 return;
 
-            var paymentResult = await _mediator.Send(new GetPaymentByUserIdQuery { UserId = userId });
-            CardModel.MaskedCardNumber = paymentResult.MaskedCardNumber;
-            CardModel.DateExpirience = paymentResult.DataExpired;
+            var paymentResult= await _paymentApiClient.GetPaymentByUserIdAsync(userId);
+
+            CardModel.MaskedCardNumber = paymentResult.maskedCardNumber;
+            CardModel.DateExpirience = paymentResult.dataExpired;
             IsCardPreset = !string.IsNullOrEmpty(CardModel.MaskedCardNumber);
 
-            var autoPaymentResult = await _mediator.Send(new GetAutoPaymentsByUserIdQuery { UserId = userId });
-            AutoPaymentModel.IsAutoPaymentEnabled = autoPaymentResult.IsAutoPayment;
-            AutoPaymentModel.MinimumTokenBalance = autoPaymentResult.MinTokenThreshold;
-            AutoPaymentModel.AutoRechargeAmount = autoPaymentResult.ChargeAmount;
+            var autoPaymentResult = await _autoPaymentApiClient.GetAutoPaymentsByUserIdAsync(userId);
+            AutoPaymentModel.IsAutoPaymentEnabled = autoPaymentResult.isAutoPayment;
+            AutoPaymentModel.MinimumTokenBalance = autoPaymentResult.minTokenThreshold;
+            AutoPaymentModel.AutoRechargeAmount = autoPaymentResult.chargeAmount;
         }
 
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
@@ -148,18 +150,12 @@ namespace PersonalAudioAssistant.ViewModel
 
                 var lastFourDigits = CardModel.CardNumber.Substring(CardModel.CardNumber.Length - 4);
 
-                var fakeCardNumber = $"**** **** **** {lastFourDigits}";
+                var cardNumber = $"**** **** **** {lastFourDigits}";
 
-                CardModel.MaskedCardNumber = fakeCardNumber;
+                CardModel.MaskedCardNumber = cardNumber;
 
-                var command = new UpdatePaymentCommand
-                {
-                    UserId = userId,
-                    MaskedCardNumber = fakeCardNumber,
-                    PaymentGatewayToken = fakeToken,
-                    DataExpiredCard = CardModel.DateExpirience
-                };
-                await _mediator.Send(command);
+                await _paymentApiClient.UpdatePaymentAsync(userId, fakeToken, cardNumber, CardModel.DateExpirience);
+
                 IsCardPreset = true;
             }
             finally
@@ -191,13 +187,7 @@ namespace PersonalAudioAssistant.ViewModel
                 if (string.IsNullOrEmpty(userId))
                     return;
 
-                await _mediator.Send(new UpdatePaymentCommand
-                {
-                    UserId = userId,
-                    MaskedCardNumber = null,
-                    PaymentGatewayToken = null,
-                    DataExpiredCard = null
-                });
+                await _paymentApiClient.UpdatePaymentAsync(userId, null, null, null);
 
                 CardModel.MaskedCardNumber = null;
                 IsCardPreset = false;
@@ -218,13 +208,7 @@ namespace PersonalAudioAssistant.ViewModel
                 if (string.IsNullOrEmpty(userId))
                     return;
 
-                await _mediator.Send(new UpdateAutoPaymentCommand
-                {
-                    UserId = userId,
-                    ChargeAmount = AutoPaymentModel.AutoRechargeAmount,
-                    IsAutoPayment = AutoPaymentModel.IsAutoPaymentEnabled,
-                    MinTokenThreshold = AutoPaymentModel.MinimumTokenBalance,
-                });
+                await _autoPaymentApiClient.UpdateAutoPaymentAsync(userId, AutoPaymentModel.MinimumTokenBalance, AutoPaymentModel.AutoRechargeAmount, AutoPaymentModel.IsAutoPaymentEnabled);
             }
             finally
             {
@@ -248,14 +232,8 @@ namespace PersonalAudioAssistant.ViewModel
                 if (string.IsNullOrEmpty(userId))
                     return;
 
-                var command = new UpdateBalanceCommand()
-                {
-                    RechargeAmountInput = RechargeAmountInput,
-                    UserId = userId,
-                    MaskedCardNumber = CardModel.MaskedCardNumber,
-                    DescriptionPayment = "Поповнення балансу"
-                };
-                await _mediator.Send(command);
+                await _appSettingsApiClient.UpdateBalanceAsync(userId, RechargeAmountInput, CardModel.MaskedCardNumber, "Поповнення балансу");
+                
                 await Shell.Current.DisplayAlert("Успіх", $"Баланс успішно поповнено на {RechargeAmountInput} $", "OK"); 
 
                 await _manageCacheData.UpdateAppSetttingsList();

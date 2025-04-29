@@ -3,26 +3,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using Plugin.Maui.Audio;
-using PersonalAudioAssistant.Persistence.Context;
 using PersonalAudioAssistant.Services;
-using PeronalAudioAssistant.Application.PlatformFeatures;
-using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Persistence.Repositories;
 using PersonalAudioAssistant.ViewModel;
 using PersonalAudioAssistant.Views;
 using PersonalAudioAssistant.Views.Users;
 using PersonalAudioAssistant.ViewModel.Users;
-using PersonalAudioAssistant.Application.Services;
-using Microsoft.EntityFrameworkCore;
-using PersonalAudioAssistant.Application.PlatformFeatures.Commands;
 using PersonalAudioAssistant.Platforms;
 using Mopups.Hosting;
 using Mopups.Interfaces;
 using Mopups.Services;
-using Google.Apis.Drive.v3.Data;
 using PersonalAudioAssistant.Views.History;
 using PersonalAudioAssistant.ViewModel.History;
 using PersonalAudioAssistant.Services.Api;
+
 namespace PersonalAudioAssistant;
 public static class MauiProgram
 {
@@ -54,24 +47,21 @@ public static class MauiProgram
 #endif
 
         // Services
-        builder.Services.AddApplication();
         builder.Services.AddSingleton<IPopupNavigation>(MopupService.Instance);
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
-        builder.Services.AddScoped<TokenBase>();
         builder.Services.AddScoped<ManageCacheData>();
-        builder.Services.AddScoped<PasswordManager>();
-        builder.Services.AddScoped<ElevenlabsApi>();
-        builder.Services.AddScoped<ApiClientAudio>();
-        builder.Services.AddScoped<WebSocketService>(); 
-        builder.Services.AddScoped<ApiClientVoiceEmbedding>(); 
-        builder.Services.AddScoped<ApiClientTokens>(); 
         builder.Services.AddMemoryCache();
-        builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
 
         builder.Services.AddSingleton<VoiceApiClient>();
+        builder.Services.AddSingleton<PaymentHistoryApiClient>();
+        builder.Services.AddSingleton<PaymentApiClient>();
+        builder.Services.AddSingleton<AppSettingsApiClient>();
+        builder.Services.AddSingleton<AutoPaymentApiClient>();
+        builder.Services.AddSingleton<ConversationApiClient>();
+        builder.Services.AddSingleton<MainUserApiClient>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();
@@ -90,30 +80,6 @@ public static class MauiProgram
         builder.Services.AddScoped<MessagesPage, MessagesViewModel>();
         builder.Services.AddScoped<MenuPage>();
 
-        // Repositories
-        builder.Services.AddScoped<IAudioDataProvider, AndroidAudioDataProvider>();
-        builder.Services.AddScoped<IMainUserRepository, MainUserRepository>();
-        builder.Services.AddScoped<IAppSettingsRepository, AppSettingsRepository>();
-        builder.Services.AddScoped<ISubUserRepository, SubUserRepository>();
-        builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-        builder.Services.AddScoped<IAutoPaymentRepository, AutoPaymentRepository>();
-        builder.Services.AddScoped<IPaymentHistoryRepository, PaymentHistoryRepository>();
-        builder.Services.AddScoped<IVoiceRepository, VoiceRepository>();
-        builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
-        builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-
-        builder.Services.AddScoped<IBlobStorage, BlobStorage>();
-        builder.Services.AddSingleton<BlobStorageConfig>();
-
-        // CosmosDb
-        builder.Services.AddDbContext<CosmosDbContext>(options =>
-            options.UseCosmos(
-                _configuration.GetConnectionString("CosmosConnection")!,
-                databaseName: "AudioAssistantDB"),
-            ServiceLifetime.Scoped);
-
-        // in CreateMauiApp(), before builder.Build():
-        builder.Services.AddApplication();
         builder.Services.AddSingleton<ITextToSpeech>(TextToSpeech.Default);
         builder.Services.AddScoped<SpeechToTextImplementation>();
         builder.Services.AddScoped<ISpeechToText, SpeechToTextImplementation>();
