@@ -22,6 +22,7 @@ using Mopups.Services;
 using Google.Apis.Drive.v3.Data;
 using PersonalAudioAssistant.Views.History;
 using PersonalAudioAssistant.ViewModel.History;
+using PersonalAudioAssistant.Services.Api;
 namespace PersonalAudioAssistant;
 public static class MauiProgram
 {
@@ -69,6 +70,8 @@ public static class MauiProgram
         builder.Services.AddScoped<ApiClientTokens>(); 
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
+
+        builder.Services.AddSingleton<VoiceApiClient>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();

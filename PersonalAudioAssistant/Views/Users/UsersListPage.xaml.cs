@@ -19,7 +19,7 @@ public partial class UsersListPage : ContentPage
             await viewModel.LoadUsersAsync();
         }
     }
-
+    /*
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);
@@ -27,5 +27,5 @@ public partial class UsersListPage : ContentPage
         {
             viewModel.OnNavigatedFrom();
         }
-    }
+    }*/
 }

@@ -13,6 +13,7 @@ using Plugin.Maui.Audio;
 using MediatR;
 using PersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceCommands;
 using System.ComponentModel;
+using PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
@@ -61,7 +62,9 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [ObservableProperty]
         public bool isPhotoSelected;
 
-        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient)
+        VoiceApiClient _voiceApiClient;
+
+        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient)
         {
             _mediator = mediator;
             _audioManager = audioManager;
@@ -80,6 +83,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
             Filter.PropertyChanged += (_, __) => ApplyVoiceFilter();
             SubUser.PropertyChanged += ValidateSubUser!;
             CloneVoiceModel.PropertyChanged += ValidateCloneModel;
+
+            _voiceApiClient = voiceApiClient;
 
             this.PropertyChanged += (s, e) =>
             {
@@ -142,11 +147,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
             try
             {
                 var userId = await SecureStorage.GetAsync("user_id");
-                var voiceList = await _mediator.Send(new GetAllVoicesByUserIdQuery(){UserId = null});
+                var voiceList = await _voiceApiClient.GetVoicesAsync(null);
 
                 if (voiceList != null)
                 {
-                    allVoices = voiceList.Where(u => u.UserId == null).ToList();
+                    allVoices = voiceList.Where(u => u.userId == null).ToList();
                     Voices = new ObservableCollection<VoiceResponse>(allVoices);
 
                     InitializeFilterOptions();
@@ -302,7 +307,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 }
                 else
                 {
-                    voiceId = SelectedVoice.Id;
+                    voiceId = SelectedVoice.id;
                 }
 
                 var command = new AddSubUserCoomand
@@ -508,20 +513,20 @@ namespace PersonalAudioAssistant.ViewModel.Users
             var filtered = allVoices.AsEnumerable();
 
             if (!string.IsNullOrWhiteSpace(Filter.Description))
-                filtered = filtered.Where(v => v.Description != null &&
-                    v.Description.Contains(Filter.Description, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(v => v.description != null &&
+                    v.description.Contains(Filter.Description, StringComparison.OrdinalIgnoreCase));
 
             if (!string.IsNullOrWhiteSpace(Filter.Age))
-                filtered = filtered.Where(v => v.Age != null &&
-                    v.Age.Contains(Filter.Age, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(v => v.age != null &&
+                    v.age.Contains(Filter.Age, StringComparison.OrdinalIgnoreCase));
 
             if (!string.IsNullOrWhiteSpace(Filter.Gender))
-                filtered = filtered.Where(v => v.Gender != null &&
-                    v.Gender.Contains(Filter.Gender, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(v => v.gender != null &&
+                    v.gender.Contains(Filter.Gender, StringComparison.OrdinalIgnoreCase));
 
             if (!string.IsNullOrWhiteSpace(Filter.UseCase))
-                filtered = filtered.Where(v => v.UseCase != null &&
-                    v.UseCase.Contains(Filter.UseCase, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(v => v.useCase != null &&
+                    v.useCase.Contains(Filter.UseCase, StringComparison.OrdinalIgnoreCase));
 
             return new ObservableCollection<VoiceResponse>(filtered);
         }
@@ -530,39 +535,39 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             Filter.DescriptionOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.Description))
-                    .Select(v => v.Description)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.description))
+                    .Select(v => v.description)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             Filter.AgeOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.Age))
-                    .Select(v => v.Age)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.age))
+                    .Select(v => v.age)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             Filter.GenderOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.Gender))
-                    .Select(v => v.Gender)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.gender))
+                    .Select(v => v.gender)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             Filter.UseCaseOptions = new ObservableCollection<string>(
                 allVoices
-                    .Where(v => !string.IsNullOrWhiteSpace(v.UseCase))
-                    .Select(v => v.UseCase)
+                    .Where(v => !string.IsNullOrWhiteSpace(v.useCase))
+                    .Select(v => v.useCase)
                     .Distinct()
                     .OrderBy(x => x)
             );
 
             ApplyVoiceFilter();
             SelectedVoice = Voices.FirstOrDefault();
-            SelectedVoiceUrl = SelectedVoice?.URL;
+            SelectedVoiceUrl = SelectedVoice?.url;
         }
 
         public void ResetAllFilters()
@@ -578,7 +583,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             if (value != null)
             {
-                SelectedVoiceUrl = value.URL;
+                SelectedVoiceUrl = value.url;
             }
         }
 
@@ -653,7 +658,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             Voices = new ObservableCollection<VoiceResponse>(allVoices);
             SelectedVoice = Voices.FirstOrDefault();
-            SelectedVoiceUrl = SelectedVoice?.URL;
+            SelectedVoiceUrl = SelectedVoice?.url;
         }
     }
 }

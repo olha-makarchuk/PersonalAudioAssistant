@@ -290,13 +290,13 @@
 
                             <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
                                 <Label
-                                    Text="{Binding CloneVoice.Name, StringFormat='Клонований голос: {0}'}"
+                                    Text="{Binding CloneVoice.name, StringFormat='Клонований голос: {0}'}"
                                     FontSize="14"
                                     TextColor="#555555"
                                     IsVisible="{Binding IsVoiceColone}" />
 
                                 <Label
-                                    Text="{Binding SelectedVoice.Name, StringFormat='Базовий голос: {0}'}"
+                                    Text="{Binding SelectedVoice.name, StringFormat='Базовий голос: {0}'}"
                                     FontSize="14"
                                     TextColor="#555555"
                                     IsVisible="{Binding IsVoiceBase}" />
@@ -438,7 +438,7 @@
                                     <Picker
                                         Grid.Column="0"
                                         ItemsSource="{Binding Voices}"
-                                        ItemDisplayBinding="{Binding Name}"
+                                        ItemDisplayBinding="{Binding name}"
                                         SelectedItem="{Binding SelectedVoice}"
                                         BackgroundColor="#F0F0F0"
                                         HeightRequest="50"

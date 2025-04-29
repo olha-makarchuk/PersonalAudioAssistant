@@ -25,15 +25,15 @@ namespace PersonalAudioAssistant.Application.PlatformFeatures.Queries.VoiceQuery
 
                 var voiceResponse = new VoiceResponse()
                 {
-                    Description = voice.Description,
-                    Age = voice.Age,
-                    Gender = voice.Gender,
-                    Id = voice.Id.ToString(),
-                    Name = voice.Name,
-                    URL = voice.URL,
-                    UseCase = voice.UseCase,
-                    UserId = voice.UserId,
-                    VoiceId = voice.VoiceId
+                    description = voice.Description,
+                    age = voice.Age,
+                    gender = voice.Gender,
+                    id = voice.Id.ToString(),
+                    name = voice.Name,
+                    url = voice.URL,
+                    useCase = voice.UseCase,
+                    userId = voice.UserId,
+                    voiceId = voice.VoiceId
                 };
 
                 return voiceResponse;
