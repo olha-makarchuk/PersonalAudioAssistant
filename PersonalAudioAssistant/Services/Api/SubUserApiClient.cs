@@ -1,5 +1,7 @@
-﻿using MediatR;
-using PersonalAudioAssistant.Contracts.SubUser;
+﻿using PersonalAudioAssistant.Contracts.SubUser;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace PersonalAudioAssistant.Services.Api
 {
@@ -11,23 +13,44 @@ namespace PersonalAudioAssistant.Services.Api
 
             public async Task<string> AddSubUserAsync(AddSubUserCommand command)
             {
-                var url = $"{BaseUrl}SubUser";
+                var url = $"{BaseUrl}SubUser/create";
 
-                // Упевненість, що поля не null
-                var payload = new
+                using var form = new MultipartFormDataContent();
+
+                // Додаємо файл
+                using var fileStream = File.OpenRead(command.PhotoPath);
+                var fileName = Path.GetFileName(command.PhotoPath);
+                var fileContent = new StreamContent(fileStream);
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                form.Add(fileContent, "file", fileName); // ключ — "file", бо на сервері FromForm IFormFile file
+
+                // Створюємо новий об'єкт без шляху до фото, замінивши його на null
+                var commandToSend = new
                 {
-                    UserName = command.UserName,
-                    StartPhrase = command.StartPhrase,
-                    EndPhrase = command.EndPhrase ?? string.Empty,
-                    EndTime = command.EndTime ?? string.Empty,
-                    VoiceId = command.VoiceId,
-                    UserVoice = command.UserVoice,
-                    PhotoPath = command.PhotoPath ?? string.Empty,
-                    UserId = command.UserId
+                    command.UserName,
+                    command.StartPhrase,
+                    command.EndPhrase,
+                    command.EndTime,
+                    command.VoiceId,
+                    command.UserVoice,
+                    command.Password,
+                    command.UserId,
+                    Photo = (string)null // просто заглушка, бо файл уже окремо
                 };
 
-                return await PostAsync<object, string>(url, payload);
+                // Серіалізуємо команду як JSON
+                var json = JsonSerializer.Serialize(commandToSend);
+                var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
+                form.Add(jsonContent, "command"); // ключ має збігатися з ім’ям параметра в методі API, якщо він був би позначений як [FromForm] AddSubUserCommand command
+
+                var response = await _httpClient.PostAsync(url, form);
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadAsStringAsync();
             }
+
+
+
 
             public async Task DeletePasswordSubUserAsync(string userId, string password)
             {
@@ -71,8 +94,6 @@ namespace PersonalAudioAssistant.Services.Api
                 var response = await _httpClient.PostAsync(url, form);
                 response.EnsureSuccessStatusCode();
             }
-
-
 
             public async Task UpdateSubUserAsync(UpdateSubUserCommand subUser)
             {

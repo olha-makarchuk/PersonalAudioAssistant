@@ -17,9 +17,9 @@ namespace PersonalAudioAssistant.Services.Api
                 SubUserId = subUserId
             };
 
-            var voice = await PostAsync<object, string>(url, request);
+            var conversationId = await PostAsync<object, ConversationIdResponse>(url, request);
 
-            return voice;
+            return conversationId.ConversationId;
         }
 
         public async Task UpdateConversationAsync(string conversationId, string description)
@@ -75,5 +75,9 @@ namespace PersonalAudioAssistant.Services.Api
 
             return voice;
         }
+    }
+    public class ConversationIdResponse
+    {
+        public string ConversationId { get; set; }
     }
 }

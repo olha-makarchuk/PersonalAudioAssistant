@@ -79,9 +79,9 @@ async def receive_id(websocket):
 
         data = json.loads(init_message)
 
-        end_time = data.get("EndTime")
-        user_voice = data.get("UserVoice")
-        end_phrase = data.get("EndPhrase")
+        end_time = data.get("endTime")
+        user_voice = data.get("userVoice")
+        end_phrase = data.get("endPhrase")
         isFirstRequest = data.get("IsFirstRequest")
         previousResponseId = data.get("PreviousResponseId")
         

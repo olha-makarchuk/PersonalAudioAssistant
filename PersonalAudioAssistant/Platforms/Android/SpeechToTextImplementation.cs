@@ -26,15 +26,16 @@ namespace PersonalAudioAssistant.Platforms
         private IMediator _mediatr;
         private Action? _clearChatMessagesAction;
         private readonly ConversationApiClient _conversationApiClient;
+        private readonly MessagesApiClient _messagesApiClient;
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
+            _messagesApiClient = messagesApiClient;
         }
-        public SpeechToTextImplementation()
-        : this(MediatorProvider.Mediator,
-                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>())
+        public SpeechToTextImplementation() : this(MediatorProvider.Mediator,
+                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>())
         {
         }
 
@@ -63,8 +64,6 @@ namespace PersonalAudioAssistant.Platforms
 
                     taskResult.TrySetException(new Exception("Failure in speech engine - " + ex));
                 },
-
-                //Error = ex => taskResult.TrySetException(new Exception("Failure in speech engine - " + ex)),
 
                 PartialResults = async sentence =>
                 {
@@ -105,7 +104,6 @@ namespace PersonalAudioAssistant.Platforms
                                     var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
-                                    //string transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
 
                                     await Toast.Make($"Відповідь: {transcription.Response}").Show(cancellationToken);
                                     TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
@@ -117,7 +115,7 @@ namespace PersonalAudioAssistant.Platforms
                                     _prevResponseId = answer.responseId;
                                     chatMessageProgress.Report(new ChatMessage { Text = answer.text, IsUser = false });
 
-                                    var careteMessageUser = new CreateMessageCommand
+                                    var careteMessageUser = new CreateMessageCommand()
                                     {
                                         ConversationId = conversationTask.Result,
                                         Text = response.Request,
@@ -125,7 +123,7 @@ namespace PersonalAudioAssistant.Platforms
                                         Audio = transcription.Audio,
                                         LastRequestId = answer.responseId
                                     };
-                                    var userTask = _mediatr.Send(careteMessageUser, cancellationToken);
+                                    var userTask = _messagesApiClient.CreateMessageAsync(careteMessageUser);
 
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
@@ -140,14 +138,14 @@ namespace PersonalAudioAssistant.Platforms
 
                                     await Task.WhenAll(userTask);
 
-                                    var careteMessageAI = new CreateMessageCommand
+                                    var careteMessageAI = new CreateMessageCommand()
                                     {
                                         ConversationId = conversationTask.Result,
                                         Text = answer.text,
                                         UserRole = "ai",
                                         Audio = audioBytes
                                     };
-                                    var aiTask = _mediatr.Send(careteMessageAI, cancellationToken);
+                                    var aiTask = _messagesApiClient.CreateMessageAsync(careteMessageAI);
 
                                     await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
                                     await Task.WhenAll(aiTask);

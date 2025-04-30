@@ -300,7 +300,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     createdVoicevoiceId.voiceId = SelectedVoice.id;
                 }
 
-                var command = new AddSubUserCommand
+                var command = new AddSubUserCommand()
                 {
                     UserId = await SecureStorage.GetAsync("user_id"),
                     UserName = SubUser.UserName,

@@ -178,7 +178,7 @@
                         <StackLayout IsVisible="{Binding SubUser.IsPasswordEnabled}" Spacing="5">
                             <StackLayout IsVisible="{Binding HasPassword}">
                                 <Label
-                                    Text="Пароль до історії розмов:"
+                                    Text="Змінити пароль до історії розмов:"
                                     FontSize="16"
                                     FontAttributes="Bold"
                                     TextColor="#333333"
