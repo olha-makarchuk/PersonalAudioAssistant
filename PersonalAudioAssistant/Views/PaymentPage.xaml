@@ -9,10 +9,18 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <Style x:Key="CardActionButtonStyle" TargetType="Button">
+                <Setter Property="CornerRadius" Value="25" />
+                <Setter Property="HeightRequest" Value="45" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="Margin" Value="8,0" />
+                <Setter Property="HorizontalOptions" Value="FillAndExpand" />
+            </Style>
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
-    
+
     <Grid>
         <ScrollView IsEnabled="{Binding IsNotBusy}">
             <VerticalStackLayout Padding="24" Spacing="24">
@@ -25,65 +33,87 @@
                        TextColor="#444" 
                        HorizontalOptions="Center"/>
                 <!-- Card container: always visible, shows edit or masked view -->
-                <Frame Padding="16" CornerRadius="20" BackgroundColor="#3966c8" HasShadow="True" WidthRequest="320" HorizontalOptions="Center">
+                <Frame Padding="16" CornerRadius="20" BackgroundColor="#3966c8" HasShadow="True" HeightRequest="200" WidthRequest="340" HorizontalOptions="Center">
                     <Grid>
                         <!-- Edit/New entry form -->
-                        <StackLayout Spacing="16"
-                                     IsVisible="{Binding IsCardPreset, Converter={StaticResource InvertedBoolConverter}}"
-                                     BindingContext="{Binding .}">
-                            <Label Text="Нова картка" FontSize="14" TextColor="White" HorizontalOptions="Center" />
-                            <Entry Text="{Binding CardModel.CardNumber}"
-                                   Placeholder="0000 0000 0000 0000"
-                                   Keyboard="Numeric"
-                                   FontSize="18"
-                                   BackgroundColor="Transparent"
-                                   TextColor="White" />
-                            <HorizontalStackLayout Spacing="10">
-                                <Entry Text="{Binding CardModel.DateExpirience}"
-                                       Placeholder="MM/YY"
-                                       WidthRequest="100"
-                                       FontSize="16"
-                                       BackgroundColor="Transparent"
-                                       TextColor="White" />
-                                <Entry Text="{Binding CardModel.CVV_number}"
-                                       Placeholder="CVV"
-                                       WidthRequest="100"
-                                       FontSize="16"
-                                       IsPassword="True"
-                                       BackgroundColor="Transparent"
-                                       TextColor="White" />
-                            </HorizontalStackLayout>
-                        </StackLayout>
+                        <Grid VerticalOptions="Center" HorizontalOptions="Center" IsVisible="{Binding IsCardPreset, Converter={StaticResource InvertedBoolConverter}}">
+                                <StackLayout Spacing="20" HorizontalOptions="Center"
+                                             >
+                                            <Label Text="Нова картка"
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="White"
+                                                   HorizontalOptions="Center" />
+
+                                            <Entry Text="{Binding CardModel.CardNumber}"
+                                                   Placeholder="0000 0000 0000 0000"
+                                                   Keyboard="Numeric"
+                                                   FontSize="20"
+                                                   BackgroundColor="Transparent"
+                                                   TextColor="White"
+                                                   HorizontalTextAlignment="Center" />
+
+                                    <HorizontalStackLayout Spacing="40" HorizontalOptions="Center">
+                                        <Entry Text="{Binding CardModel.DateExpirience}"
+                                               Placeholder="MM/YY"
+                                               WidthRequest="100"
+                                               FontSize="18"
+                                               BackgroundColor="Transparent"
+                                               TextColor="White"
+                                               HorizontalTextAlignment="Center" />
+
+                                        <Entry Text="{Binding CardModel.CVV_number}"
+                                               Placeholder="CVV"
+                                               WidthRequest="100"
+                                               FontSize="18"
+                                               IsPassword="True"
+                                               BackgroundColor="Transparent"
+                                               TextColor="White"
+                                               HorizontalTextAlignment="Center" />
+                                    </HorizontalStackLayout>
+                                </StackLayout>
+                        </Grid>
+
 
                         <!-- Masked card view -->
-                        <StackLayout Spacing="16"
-                                     IsVisible="{Binding IsCardPreset}">
-                            <Label Text="Ваша картка" FontSize="14" TextColor="White" HorizontalOptions="Center" />
-                            <Entry Text="{Binding CardModel.MaskedCardNumber}"
-                                   IsReadOnly="True"
-                                   Keyboard="Numeric"
-                                   FontSize="18"
-                                   BackgroundColor="Transparent"
-                                   TextColor="White" />
-                            <HorizontalStackLayout Spacing="10">
-                                <Entry Text="{Binding CardModel.DateExpirience}"
-                                       IsReadOnly="True"
-                                       Placeholder="MM/YY"
-                                       WidthRequest="100"
+                        <Grid VerticalOptions="Center" HorizontalOptions="Center" IsVisible="{Binding IsCardPreset}">
+                            <StackLayout Spacing="20" HorizontalOptions="Center">
+                                <Label Text="Ваша картка"
                                        FontSize="16"
-                                       BackgroundColor="Transparent"
-                                       TextColor="White" />
-                                <Entry Text="•••"
-                                       IsReadOnly="True"
-                                       Placeholder="CVV"
-                                       WidthRequest="100"
-                                       FontSize="18"
-                                       IsPassword="True"
-                                       BackgroundColor="Transparent"
-                                       TextColor="White" />
-                            </HorizontalStackLayout>
-                        </StackLayout>
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" />
 
+                                <Entry Text="{Binding CardModel.MaskedCardNumber}"
+                                       IsReadOnly="True"
+                                       Keyboard="Numeric"
+                                       FontSize="20"
+                                       BackgroundColor="Transparent"
+                                       TextColor="White"
+                                       HorizontalTextAlignment="Center" />
+
+                                <HorizontalStackLayout HorizontalOptions="Center" Spacing="40">
+                                    <Entry Text="{Binding CardModel.DateExpirience}"
+                                           IsReadOnly="True"
+                                           Placeholder="MM/YY"
+                                           WidthRequest="100"
+                                           FontSize="18"
+                                           BackgroundColor="Transparent"
+                                           TextColor="White"
+                                           HorizontalTextAlignment="Center" />
+
+                                    <Entry Text="•••"
+                                           IsReadOnly="True"
+                                           Placeholder="CVV"
+                                           WidthRequest="100"
+                                           FontSize="22"
+                                           IsPassword="True"
+                                           BackgroundColor="Transparent"
+                                           TextColor="White"
+                                           HorizontalTextAlignment="Center" />
+                                </HorizontalStackLayout>
+                            </StackLayout>
+                        </Grid>
                     </Grid>
                 </Frame>
 
@@ -144,7 +174,7 @@
                         </Grid>
 
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Мінімальне значення токенів"
+                            <Label Text="Мінімальне значення суми"
                                    FontSize="16"
                                    TextColor="#444" />
                             <Entry Placeholder="100"
@@ -220,16 +250,17 @@
 
                         <!-- Заголовок із підзаголовком та інструкцією -->
                         <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
-                            <Label Text="📊 Калькулятор токенів"
-                                   FontSize="24"
-                                   FontAttributes="Bold"
-                                   TextColor="#333" />
-                            <Label Text="Скористайтеся цим інструментом, щоб візуально побачити кількість токенів, які буде витрачено вашим запитом або відповіддю."
-                                   FontSize="14"
-                                   TextColor="#666"
-                                   HorizontalTextAlignment="Center"
-                                   LineBreakMode="WordWrap" />
+                            <Label Text="📊 Калькулятор вартості"
+           FontSize="24"
+           FontAttributes="Bold"
+           TextColor="#333" />
+                            <Label Text="Цей калькулятор допоможе вам дізнатися, скільки приблизно коштує запит до системи: розпізнавання голосу, відповідь GPT і озвучення."
+           FontSize="14"
+           TextColor="#666"
+           HorizontalTextAlignment="Center"
+           LineBreakMode="WordWrap" />
                         </VerticalStackLayout>
+
 
                         <Label Text="Введіть речення для аналізу:"
                                FontSize="16"
@@ -253,7 +284,7 @@
                         </Frame>
 
                         <!-- Кнопка розрахунку -->
-                        <Button Text="Розрахувати кількість токенів"
+                        <Button Text="Розрахувати вартість"
                                 FontSize="18"
                                 FontAttributes="Bold"
                                 HeightRequest="50"
@@ -261,6 +292,24 @@
                                 BackgroundColor="#4CAF50"
                                 TextColor="White"
                                 Command="{Binding CalculatePriceCommand}" />
+                        <StackLayout IsVisible="{Binding IsResultExist}">
+                            <Label Text="РЕЗУЛЬТАТ:"
+                                   FontSize="16"
+                                   HorizontalOptions="Center"
+                                   Margin="10,0,0,-30"
+                                   TextColor="#444" />
+                            <Frame Padding="10"
+                                   Margin="0,10,0,0"
+                                   BorderColor="#ccc"
+                                   CornerRadius="10"
+                                   HasShadow="True"
+                                   BackgroundColor="White">
+                                <Label Text="{Binding TokenCalculationResult}"
+                                       FontSize="14"
+                                       TextColor="#333"
+                                       LineBreakMode="WordWrap" />
+                            </Frame>
+                        </StackLayout>
 
                     </VerticalStackLayout>
 

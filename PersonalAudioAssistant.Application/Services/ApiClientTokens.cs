@@ -1,12 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using PersonalAudioAssistant.Application.Interfaces;
-using PersonalAudioAssistant.Contracts.Api;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PersonalAudioAssistant.Application.Services
 {

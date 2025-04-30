@@ -12,12 +12,23 @@ namespace PersonalAudioAssistant.ViewModel
 {
     public partial class PaymentViewModel : ObservableObject
     {
+        private string _backupCardNumber;
+        private string _backupDateExpirience;
+        private string _backupCvv;
+
         private readonly IMediator _mediator;
         private readonly ApiClientTokens _apiClientTokens;
         private readonly ManageCacheData _manageCacheData;
         private AppSettingsApiClient _appSettingsApiClient;
         private PaymentApiClient _paymentApiClient;
         private AutoPaymentApiClient _autoPaymentApiClient;
+
+        [ObservableProperty]
+        private string tokenCalculationResult;
+
+        [ObservableProperty]
+        private bool isResultExist;
+
         public PaymentViewModel(IMediator mediator, ApiClientTokens apiClientTokens, ManageCacheData manageCacheData, AppSettingsApiClient appSettingsApiClient, PaymentApiClient paymentApiClient, AutoPaymentApiClient autoPaymentApiClient)
         {
             _appSettingsApiClient = appSettingsApiClient;
@@ -98,15 +109,68 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
         private async Task UpdateCard()
         {
+            // зберігаємо старі значення
+            _backupCardNumber = CardModel.CardNumber;
+            _backupDateExpirience = CardModel.DateExpirience;
+            _backupCvv = CardModel.CVV_number;
+
+            // переключаємося в режим введення
             IsCardPreset = false;
             IsUpdatingCard = true;
+
+            // очищаємо поля форми
+            CardModel.CardNumber = string.Empty;
+            CardModel.DateExpirience = string.Empty;
+            CardModel.CVV_number = string.Empty;
         }
 
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
         private async Task CancelUpdateCard()
         {
+            // повертаємо старі значення
+            CardModel.CardNumber = _backupCardNumber;
+            CardModel.DateExpirience = _backupDateExpirience;
+            CardModel.CVV_number = _backupCvv;
+
+            // повертаємося до перегляду картки
             IsCardPreset = true;
             IsUpdatingCard = false;
+        }
+
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task AddCard()
+        {
+            IsBusy = true;
+            try
+            {
+                await Validate();
+
+                var userId = await SecureStorage.GetAsync("user_id");
+                if (string.IsNullOrEmpty(userId))
+                    return;
+
+                // формуємо токен та маску
+                var fakeToken = Guid.NewGuid().ToString();
+                var last4 = CardModel.CardNumber[^4..];
+                var cardMask = $"**** **** **** {last4}";
+
+                await _paymentApiClient.UpdatePaymentAsync(userId, fakeToken, cardMask, CardModel.DateExpirience);
+
+                // оновлюємо модель і повертаємося в режим перегляду
+                CardModel.MaskedCardNumber = cardMask;
+                IsCardPreset = true;
+                IsUpdatingCard = false;
+
+                // очищуємо кеш-резерви,
+                // щоб нове натискання «Змінити» починалося з чистих полів
+                _backupCardNumber = string.Empty;
+                _backupDateExpirience = string.Empty;
+                _backupCvv = string.Empty;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         private async Task Validate()
@@ -128,39 +192,6 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 await Shell.Current.DisplayAlert("Помилка", "CVV має містити 3 або 4 цифри.", "OK");
                 return;
-            }
-        }
-
-        // --- Команди ---
-        [RelayCommand(CanExecute = nameof(IsNotBusy))]
-        private async Task AddCard()
-        {
-            IsBusy = true;
-            try
-            {
-                await Validate();
-
-                var userId = await SecureStorage.GetAsync("user_id");
-                if (string.IsNullOrEmpty(userId))
-                    return;
-
-
-                var random = new Random();
-                var fakeToken = Guid.NewGuid().ToString();
-
-                var lastFourDigits = CardModel.CardNumber.Substring(CardModel.CardNumber.Length - 4);
-
-                var cardNumber = $"**** **** **** {lastFourDigits}";
-
-                CardModel.MaskedCardNumber = cardNumber;
-
-                await _paymentApiClient.UpdatePaymentAsync(userId, fakeToken, cardNumber, CardModel.DateExpirience);
-
-                IsCardPreset = true;
-            }
-            finally
-            {
-                IsBusy = false;
             }
         }
 
@@ -272,16 +303,39 @@ namespace PersonalAudioAssistant.ViewModel
             var howManyRequestsFiveDollars = (5 / totalCost);  // Кількість запитів за $5
 
             var summary = $"""
-                   🧠 Відповідь(приклад): "{answer}"
-                   🎙️ Транскрипція: {durationInSeconds:F1} сек → ${transcriptionCost:F5}
-                   🤖 GPT Input: {inputTokenCount} токенів → ${gptInCost:F5}
-                   📤 GPT Output: {outputTokenCount} токенів → ${gptOutCost:F5}
-                   🗣️ Озвучення: {charCount} символів → ${ttsCost:F5}
-                   💰 Загалом: ${totalCost:F5}
-                   💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} схожих запитів
-                   """;
+            🧠 Ваша відповідь: "{answer}"
+            🎙️ Тривалість транскрипції: {durationInSeconds:F1} сек → ${transcriptionCost:F5}
+            🤖 Вартість обробки запиту GPT: {inputTokenCount} токенів → ${gptInCost:F5}
+            📤 Вартість відповіді GPT: {outputTokenCount} токенів → ${gptOutCost:F5}
+            🗣️ Вартість озвучення тексту: {charCount} символів → ${ttsCost:F5}
+            💰 Загальна вартість: ${totalCost:F5}
+            💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} подібних запитів
+            """;
 
-            await Shell.Current.DisplayAlert("Оцінка", summary, "OK");
+            IsResultExist = true;
+            TokenCalculationResult = summary;
+        }
+
+        public void OnNavigatedFrom()
+        {
+            CardModel.CardNumber = string.Empty;
+            CardModel.DateExpirience = string.Empty;
+            CardModel.CVV_number = string.Empty;
+            CardModel.MaskedCardNumber = string.Empty;
+
+            AutoPaymentModel.IsAutoPaymentEnabled = false;
+            AutoPaymentModel.MinimumTokenBalance = 0;
+            AutoPaymentModel.AutoRechargeAmount = 0;
+
+            RechargeAmountInput = 0;
+            TextInput = string.Empty;
+
+            IsResultExist = false;
+            IsCardPreset = false;
+            IsUpdatingCard = false;
+            paymentGatewayToken = null;
+
+            TokenCalculationResult = string.Empty;
         }
     }
 }

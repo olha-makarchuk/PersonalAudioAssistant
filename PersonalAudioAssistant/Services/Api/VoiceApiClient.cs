@@ -61,9 +61,9 @@ namespace PersonalAudioAssistant.Services.Api
             return await PutAsync<object, VoiceResponse>(url, request);
         }
 
-        public async Task<string> CreateVoiceAsync(string voiceId, string name, string userId)
+        public async Task<CreatedVoice> CreateVoiceAsync(string voiceId, string name, string userId)
         {
-            var url = $"{BaseUrl}Voice/byid";
+            var url = $"{BaseUrl}Voice";
 
             var request = new
             {
@@ -72,9 +72,14 @@ namespace PersonalAudioAssistant.Services.Api
                 UserId = userId
             };
 
-            var voice = await PostAsync<object, string>(url, request);
+            var voice = await PostAsync<object, CreatedVoice>(url, request);
 
             return voice;
         }
+    }
+
+    public class CreatedVoice
+    {
+        public string voiceId { get; set; }
     }
 }

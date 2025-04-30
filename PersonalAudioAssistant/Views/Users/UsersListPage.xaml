@@ -54,7 +54,7 @@
                                     VerticalOptions="Center"
                                     HorizontalOptions="Center">
                                     <Image.Source>
-                                        <UriImageSource Uri="{Binding PhotoPath}" 
+                                        <UriImageSource Uri="{Binding photoPath}" 
                                                         CachingEnabled="False"/>
                                     </Image.Source>
                                 </Image>
@@ -62,7 +62,7 @@
 
                             <!-- Ім'я користувача -->
                             <Label Grid.Column="1"
-                                   Text="{Binding UserName}" 
+                                   Text="{Binding userName}" 
                                    FontSize="18"
                                    FontAttributes="None"
                                    VerticalOptions="Center"
@@ -71,7 +71,7 @@
 
                             <!-- Додаткова інформація -->
                             <Label Grid.Column="2"
-                                   Text="{Binding StartPhrase}"
+                                   Text="{Binding startPhrase}"
                                    FontSize="12"
                                    VerticalOptions="Center"
                                    TextColor="Gray"

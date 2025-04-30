@@ -15,6 +15,9 @@ using Mopups.Services;
 using PersonalAudioAssistant.Views.History;
 using PersonalAudioAssistant.ViewModel.History;
 using PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Application.Services;
+using PersonalAudioAssistant.Application.Interfaces;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -53,6 +56,12 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
         builder.Services.AddScoped<ManageCacheData>();
+        builder.Services.AddScoped<AuthApiClient>();
+        builder.Services.AddScoped<TokenBase>();
+        builder.Services.AddScoped<PasswordManager>();
+        builder.Services.AddScoped<ApiClientTokens>();
+        builder.Services.AddScoped<ElevenlabsApi>();
+        builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
         builder.Services.AddMemoryCache();
 
         builder.Services.AddSingleton<VoiceApiClient>();
@@ -62,6 +71,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<AutoPaymentApiClient>();
         builder.Services.AddSingleton<ConversationApiClient>();
         builder.Services.AddSingleton<MainUserApiClient>();
+        builder.Services.AddSingleton<SubUserApiClient>();
+        builder.Services.AddSingleton<MessagesApiClient>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();
@@ -84,6 +95,7 @@ public static class MauiProgram
         builder.Services.AddScoped<SpeechToTextImplementation>();
         builder.Services.AddScoped<ISpeechToText, SpeechToTextImplementation>();
 
+        builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
         var app = builder.Build();
 

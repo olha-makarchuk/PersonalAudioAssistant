@@ -18,7 +18,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
     public partial class AddUserViewModel : ObservableObject
     {
         private readonly IApiClient _apiClient;
-        private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
@@ -63,9 +62,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         VoiceApiClient _voiceApiClient;
 
-        public AddUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
+        public AddUserViewModel(IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
         {
-            _mediator = mediator;
             _audioManager = audioManager;
             _manageCacheData = manageCacheData;
             _apiClient = apiClient;
@@ -93,8 +91,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 if (e.PropertyName == nameof(IsNotValid.IsPhotoPathNotValid))
                     IsNotValid.IsPhotoPathNotValid = false;
             };
-
-            LoadVoicesAsync();
         }
 
         #region Validation
@@ -140,14 +136,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
         #endregion
 
         #region LoadVoices
-        private async Task LoadVoicesAsync()
+        public async Task LoadVoicesAsync()
         {
             IsBusy = true;
 
             try
             {
                 var userId = await SecureStorage.GetAsync("user_id");
-                var voiceList = await _voiceApiClient.GetVoicesAsync(null);
+                var voiceList = await _voiceApiClient.GetVoicesAsync("");
 
                 if (voiceList != null)
                 {
@@ -293,15 +289,15 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 }
 
                 var embedding = await _apiClient.CreateVoiceEmbedding(_recordedAudioStream);
-                string voiceId;
+                CreatedVoice createdVoicevoiceId = new();
 
                 if (CloneVoiceModel.IsCloneVoiceSelected)
                 {
-                    voiceId = await _voiceApiClient.CreateVoiceAsync(_cloneVoiceId, CloneVoiceModel.Name, "");
+                    createdVoicevoiceId = await _voiceApiClient.CreateVoiceAsync(_cloneVoiceId, CloneVoiceModel.Name, "");
                 }
                 else
                 {
-                    voiceId = SelectedVoice.id;
+                    createdVoicevoiceId.voiceId = SelectedVoice.id;
                 }
 
                 var command = new AddSubUserCommand
@@ -312,7 +308,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     StartPhrase = SubUser.StartPhrase!,
                     EndPhrase = EndOptionsModel.IsEndPhraseSelected ? SubUser.EndPhrase : null,
                     EndTime = EndOptionsModel.IsEndTimeSelected ? EndOptionsModel.SelectedEndTime.ToString() : null,
-                    VoiceId = voiceId,
+                    VoiceId = createdVoicevoiceId.voiceId,
                     PhotoPath = SubUser.PhotoPath,
                     UserVoice = embedding
                 };
@@ -320,7 +316,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 if (CloneVoiceModel.IsCloneVoiceSelected)
                 {
-                    await _voiceApiClient.UpdateVoiceAsync(voiceId, userId);
+                    await _voiceApiClient.UpdateVoiceAsync(createdVoicevoiceId.voiceId, userId);
                 }
 
                 await _manageCacheData.UpdateUsersList();

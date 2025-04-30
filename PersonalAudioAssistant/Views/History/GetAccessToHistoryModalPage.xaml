@@ -108,7 +108,7 @@
                     Style="{StaticResource PickerStyle}"
                     Title="Користувач..."
                     ItemsSource="{Binding Users}"
-                    ItemDisplayBinding="{Binding UserName}"
+                    ItemDisplayBinding="{Binding userName}"
                     SelectedItem="{Binding SelectedUser}" />
 
                 <!-- Підпорядковуючий текст для пароля -->

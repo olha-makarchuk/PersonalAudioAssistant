@@ -21,5 +21,14 @@ public partial class AddUserPage : ContentPage
         }
     }
 
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is AddUserViewModel viewModel)
+        {
+            await viewModel.LoadVoicesAsync();
+        }
+    }
+
     public MediaElement MediaElement => mediaElement;
 }

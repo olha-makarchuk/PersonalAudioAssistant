@@ -232,7 +232,7 @@
                             </Grid.ColumnDefinitions>
                             <Picker Grid.Column="0"
                                     ItemsSource="{Binding Voices}"
-                                    ItemDisplayBinding="{Binding Name}"
+                                    ItemDisplayBinding="{Binding name}"
                                     SelectedItem="{Binding SelectedVoice}"
                                     BackgroundColor="#F0F0F0"
                                     HeightRequest="50"

@@ -11,16 +11,17 @@ using System.ComponentModel;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
+using static Java.Lang.Character;
 
 namespace PersonalAudioAssistant.ViewModel.Users
 {
     public partial class UpdateUserViewModel : ObservableObject, IQueryAttributable
     {
-        private readonly IMediator _mediator;
         private readonly IAudioManager _audioManager;
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
         private readonly SubUserApiClient _subUserApiClient;
+        private string _voiceIdElevenlabs;
         private Stream _recordedAudioStream;
         private Stream _recordedAudioCloneStream;
         private string _selectedAudioFilePath;
@@ -79,9 +80,8 @@ namespace PersonalAudioAssistant.ViewModel.Users
         public string selectedAudioFilePath;
 
         VoiceApiClient _voiceApiClient;
-        public UpdateUserViewModel(IMediator mediator, IAudioManager audioManager, ManageCacheData manageCacheData, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
+        public UpdateUserViewModel(IAudioManager audioManager, ManageCacheData manageCacheData, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
         {
-            _mediator = mediator;
             _audioManager = audioManager;
             _manageCacheData = manageCacheData;
             _audioRecorder = audioManager.CreateRecorder();
@@ -180,7 +180,13 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 SubUser.IsPasswordEnabled = SubUser.PasswordHash != null;
                 _photoUrl = user.photoPath;
                 HasPassword = SubUser.PasswordHash != null;
-                
+
+                if (!String.IsNullOrEmpty(user.endPhrase))
+                {
+                    EndOptionsModel.IsEndPhraseSelected = true;
+                    EndOptionsModel.IsEndTimeSelected = false;
+                }
+
                 if (voiceList != null)
                 {
                     allVoices = voiceList;
@@ -249,17 +255,17 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     return;
                 }
 
-                var command = new UpdateSubUserCommand()
+                var command = new UpdatePersonalInformationCommand()
                 {
                     Id = SubUser.Id,
-                    UserId = SubUser.UserId,
+                    UserId = await SecureStorage.GetAsync("user_id"),
                     UserName = SubUser.UserName,
                     StartPhrase = SubUser.StartPhrase!,
                     EndPhrase = EndOptionsModel.IsEndPhraseSelected ? SubUser.EndPhrase : null,
                     EndTime = EndOptionsModel.IsEndTimeSelected ? EndOptionsModel.SelectedEndTime.ToString() : null
                 };
+                await _subUserApiClient.UpdatePersonalInformationAsync(command);
 
-                await _mediator.Send(command);
                 await _manageCacheData.UpdateUsersList();
                 await Shell.Current.DisplayAlert("Успішно", $"Інформацію оновлено", "OK");
 
@@ -363,12 +369,13 @@ namespace PersonalAudioAssistant.ViewModel.Users
                     if (IsNotValid.IsPasswordNotValid)
                         return;
 
-                    var addCmd = new UpdateSubUserCommand 
+                    var addCmd = new UpdatePasswordCommand 
                     {
                         Id = SubUser.Id,
+                        Password = "",
                         NewPassword = SubUser.NewPassword 
                     };
-                    await _mediator.Send(addCmd);
+                    await _subUserApiClient.UpdatePasswordAsync(addCmd);
                     await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно додано", "OK");
                     HasPassword = true;
                 }
@@ -378,14 +385,16 @@ namespace PersonalAudioAssistant.ViewModel.Users
                 {
                     if (IsNotValid.IsPasswordNotValid)
                         return;
-                    
-                    var changeCmd = new UpdateSubUserCommand()
+
+                    var changeCmd = new UpdatePasswordCommand
                     {
                         Id = SubUser.Id,
                         Password = SubUser.OldPassword,
                         NewPassword = SubUser.NewPassword
                     };
-                    await _mediator.Send(changeCmd);
+                    await _subUserApiClient.UpdatePasswordAsync(changeCmd);
+                    SubUser.OldPassword = string.Empty;
+                    SubUser.NewPassword = string.Empty;
                     await Shell.Current.DisplayAlert("Успішно", $"Пароль успішно змінено", "OK");
                 }
             }
@@ -419,11 +428,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             try
             {
-                var command = new UpdateSubUserCommand()
-                {
-                    Id = SubUser.Id,
-                    UserVoice = _recordedAudioStream
-                };
+                var audioBytes = ((MemoryStream)_recordedAudioStream).ToArray();
+
+                await _subUserApiClient.UpdateUserVoiceAsync(SubUser.Id, audioBytes);
+
                 _recordedAudioStream = null;
                 IsAudioRecorded = false;
                
@@ -479,12 +487,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         private async Task UpdateBaseVoiceAsync()
         {
-            var updateCommand = new UpdateSubUserCommand
-            {
-                Id = SubUser.Id,
-                VoiceId = SelectedVoice.id
-            };
-            await _mediator.Send(updateCommand);
+            await _subUserApiClient.UpdateVoiceAsync(SubUser.Id, SelectedVoice.id);
 
             if (CloneVoice.voiceId != null)
             {
@@ -495,7 +498,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             await Shell.Current.DisplayAlert("Успішно", $"Голос озвучування успішно змінено", "OK");
         }
 
-        private string _voiceIdElevenlabs;
         private async Task UpdateCloneVoiceAsync()
         {
             string audioPath;
@@ -535,7 +537,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
             var newVoiceDbId = await _voiceApiClient.CreateVoiceAsync(clonedInfo.VoiceId, clonedInfo.VoiceName, SubUser.Id);
 
-            await UpdateUserVoiceAsync(newVoiceDbId);
+            await _subUserApiClient.UpdateVoiceAsync(SubUser.Id, newVoiceDbId.voiceId);
 
             if (CloneVoice.voiceId != null)
             {
@@ -543,10 +545,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
             }
 
             CloneVoice.name = clonedInfo.VoiceName;
-            CloneVoice.voiceId = newVoiceDbId;
+            CloneVoice.voiceId = newVoiceDbId.voiceId;
             _voiceIdElevenlabs = clonedInfo.VoiceId;
 
-            if (!string.IsNullOrEmpty(newVoiceDbId))
+            if (!string.IsNullOrEmpty(newVoiceDbId.voiceId))
             {
                 await ShowSuccessAsync("Голос успішно клоновано!");
             }
@@ -559,15 +561,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             IsVoiceBase = false;
         }
 
-        private async Task UpdateUserVoiceAsync(string voiceId)
-        {
-            var updateCommand = new UpdateSubUserCommand
-            {
-                Id = SubUser.Id,
-                VoiceId = voiceId
-            };
-            await _mediator.Send(updateCommand);
-        }
         private Task ShowErrorAsync(string message) => Shell.Current.DisplayAlert("Помилка", message, "OK");
         private Task ShowSuccessAsync(string message) => Shell.Current.DisplayAlert("Успіх", message, "OK");
         #endregion

@@ -31,18 +31,18 @@
                    HasShadow="True">
                                     <Frame.Triggers>
                                         <DataTrigger TargetType="Frame"
-                                 Binding="{Binding UserRole}"
+                                 Binding="{Binding userRole}"
                                  Value="user">
                                             <Setter Property="BackgroundColor" Value="#90CAF9" />
                                         </DataTrigger>
                                         <DataTrigger TargetType="Frame"
-                                 Binding="{Binding UserRole}"
+                                 Binding="{Binding userRole}"
                                  Value="ai">
                                             <Setter Property="BackgroundColor" Value="#E1BEE7" />
                                         </DataTrigger>
                                     </Frame.Triggers>
 
-                                    <Label Text="{Binding Text}"
+                                    <Label Text="{Binding text}"
                        TextColor="#0d1996"/>
                                 </Frame>
 
@@ -60,14 +60,14 @@
                                     <Button.Triggers>
                                         <!-- Move the button to the left only if it's an AI message -->
                                         <DataTrigger TargetType="Button"
-                                 Binding="{Binding UserRole}"
+                                 Binding="{Binding userRole}"
                                  Value="ai">
                                             <Setter Property="Grid.Column" Value="0" />
                                         </DataTrigger>
 
                                         <!-- Move the button to the right if it's a user message -->
                                         <DataTrigger TargetType="Button"
-                                 Binding="{Binding UserRole}"
+                                 Binding="{Binding userRole}"
                                  Value="user">
                                             <Setter Property="Grid.Column" Value="2" />
                                         </DataTrigger>

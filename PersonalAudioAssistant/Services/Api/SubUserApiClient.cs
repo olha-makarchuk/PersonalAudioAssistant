@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using PersonalAudioAssistant.Contracts.SubUser;
-using PersonalAudioAssistant.Contracts.Voice;
 
 namespace PersonalAudioAssistant.Services.Api
 {
@@ -57,16 +56,23 @@ namespace PersonalAudioAssistant.Services.Api
 
             public async Task UpdatePhotoAsync(string photoURL, string photoPath)
             {
-                var url = $"{BaseUrl}SubUser/photo";
+                var url = $"{BaseUrl}SubUser/change-photo";
 
-                var payload = new
-                {
-                    PhotoURL = photoURL,
-                    PhotoPath = photoPath
-                };
+                using var form = new MultipartFormDataContent();
+                using var fileStream = File.OpenRead(photoPath);
+                var fileName = Path.GetFileName(photoPath);
 
-                await PutAsync<object, string>(url, payload);
+                // Додаємо файл з правильним ключем — має збігатися з назвою властивості у класі
+                form.Add(new StreamContent(fileStream), "Photo", fileName);
+
+                // Додаємо текстове поле
+                form.Add(new StringContent(photoURL), "PhotoURL");
+
+                var response = await _httpClient.PostAsync(url, form);
+                response.EnsureSuccessStatusCode();
             }
+
+
 
             public async Task UpdateSubUserAsync(UpdateSubUserCommand subUser)
             {
@@ -75,13 +81,12 @@ namespace PersonalAudioAssistant.Services.Api
                 var payload = new
                 {
                     Id = subUser.Id,
-                    UserId = subUser.UserId,
-                    UserName = subUser.UserName,
-                    StartPhrase = subUser.StartPhrase,
+                    UserId = subUser.UserId ?? string.Empty,
+                    UserName = subUser.UserName ?? string.Empty,
+                    StartPhrase = subUser.StartPhrase ?? string.Empty,
                     EndPhrase = subUser.EndPhrase ?? string.Empty,
                     EndTime = subUser.EndTime ?? string.Empty,
-                    VoiceId = subUser.VoiceId,
-                    UserVoice = subUser.UserVoice,
+                    VoiceId = subUser.VoiceId ?? string.Empty,
                     Password = subUser.Password ?? string.Empty,
                     NewPassword = subUser.NewPassword ?? string.Empty,
                     PhotoPath = subUser.PhotoPath ?? string.Empty
@@ -89,6 +94,64 @@ namespace PersonalAudioAssistant.Services.Api
 
                 await PutAsync<object, string>(url, payload);
             }
+
+            public async Task UpdatePersonalInformationAsync(UpdatePersonalInformationCommand subUser)
+            {
+                var url = $"{BaseUrl}SubUser/update-personal-information";
+
+                var payload = new
+                {
+                    Id = subUser.Id,
+                    UserId = subUser.UserId ?? string.Empty,
+                    UserName = subUser.UserName ?? string.Empty,
+                    StartPhrase = subUser.StartPhrase ?? string.Empty,
+                    EndPhrase = subUser.EndPhrase ?? string.Empty,
+                    EndTime = subUser.EndTime ?? string.Empty,
+                };
+
+                await PostAsync<object, string>(url, payload);
+            }
+
+            public async Task UpdatePasswordAsync(UpdatePasswordCommand subUser)
+            {
+                var url = $"{BaseUrl}SubUser/update-password";
+
+                var payload = new
+                {
+                    Id = subUser.Id,
+                    Password = subUser.Password,
+                    NewPassword = subUser.NewPassword
+                };
+
+                await PostAsync<object, string>(url, payload);
+            }
+
+            public async Task UpdateUserVoiceAsync(string userId, byte[] userVoice)
+            {
+                var url = $"{BaseUrl}SubUser/update-user-voice";
+
+                var payload = new
+                {
+                    UserId = userId,
+                    UserVoice = userVoice,
+                };
+
+                await PostAsync<object, string>(url, payload);
+            }
+
+            public async Task UpdateVoiceAsync(string id, string voiceId)
+            {
+                var url = $"{BaseUrl}SubUser/update-voice";
+
+                var payload = new
+                {
+                    Id = id,
+                    VoiceId = voiceId
+                };
+
+                await PostAsync<object, string>(url, payload);
+            }
+
 
             public async Task<bool> CheckSubUserPasswordAsync(string userId, string password)
             {
@@ -162,10 +225,27 @@ namespace PersonalAudioAssistant.Services.Api
             public string? EndPhrase { get; set; }
             public string? EndTime { get; set; }
             public string VoiceId { get; set; }
-            public Stream UserVoice { get; set; }
+            public byte[] UserVoice { get; set; }
             public string? Password { get; set; }
             public string? NewPassword { get; set; }
             public string PhotoPath { get; set; }
+        }
+
+        public class UpdatePersonalInformationCommand
+        {
+            public string? Id { get; set; }
+            public string? UserId { get; set; }
+            public string? UserName { get; set; }
+            public string? StartPhrase { get; set; }
+            public string? EndPhrase { get; set; }
+            public string? EndTime { get; set; }
+        }
+
+        public class UpdatePasswordCommand
+        {
+            public string? Id { get; set; }
+            public string? Password { get; set; }
+            public string? NewPassword { get; set; }
         }
     }
 }

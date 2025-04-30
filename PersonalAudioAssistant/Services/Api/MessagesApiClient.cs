@@ -9,7 +9,7 @@ namespace PersonalAudioAssistant.Services.Api
 
         public async Task CreateMessageAsync(CreateMessageCommand createMessageCommand)
         {
-            var url = $"{BaseUrl}Conversation";
+            var url = $"{BaseUrl}Message";
 
             var request = new
             {
@@ -25,7 +25,7 @@ namespace PersonalAudioAssistant.Services.Api
 
         public async Task DeleteMessagesByConversationIdAsync(string idConversation)
         {
-            var url = $"{BaseUrl}Conversation";
+            var url = $"{BaseUrl}Message";
 
             var request = new
             {
@@ -35,9 +35,9 @@ namespace PersonalAudioAssistant.Services.Api
             await DeleteAsync(url, request);
         }
 
-        public async Task<List<MessageResponse>> GetMessageByConversationIdAsync(string conversationId, int pageNumber, int pageSize)
+        public async Task<List<MessageResponse>> GetMessagesByConversationIdAsync(string conversationId, int pageNumber, int pageSize)
         {
-            var url = $"{BaseUrl}Conversation/byconversationid";
+            var url = $"{BaseUrl}Message/byconversationid";
 
             var request = new
             {

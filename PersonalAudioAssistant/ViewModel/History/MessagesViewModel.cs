@@ -80,7 +80,7 @@ namespace PersonalAudioAssistant.ViewModel.History
 
             try
             {
-                var messagesList = await _messagesApiClient.GetMessageByConversationIdAsync(ConversationIdQueryAttribute, _currentPage, PageSize);
+                var messagesList = await _messagesApiClient.GetMessagesByConversationIdAsync(ConversationIdQueryAttribute, _currentPage, PageSize);
 
                 if (isLoadMore)
                 {

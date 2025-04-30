@@ -11,7 +11,7 @@ public partial class UpdateUserPage : ContentPage
         Shell.SetTitleView(this, null);
         BindingContext = viewModel;
     }
-    /*
+    
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);
@@ -20,7 +20,7 @@ public partial class UpdateUserPage : ContentPage
             viewModel.OnNavigatedFrom();
         }
     }
-    */
+    
     protected override async void OnAppearing()
     {
         base.OnAppearing();
