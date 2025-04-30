@@ -610,31 +610,19 @@ namespace PersonalAudioAssistant.ViewModel.Users
         [RelayCommand]
         public void OnNavigatedFrom()
         {
-            SubUser.UserName = null;
             SelectedVoice = null;
             SelectedVoiceUrl = null;
             IsPhotoSelected = false;
-            EndOptionsModel.IsEndPhraseSelected = false;
-            EndOptionsModel.IsEndTimeSelected = true;
-            EndOptionsModel.SelectedEndTime = 2;
-            SubUser.IsPasswordEnabled = false;
+            EndOptionsModel.Reset();
             IsAudioRecorded = false;
             _recordedAudioStream = null;
             _selectedAudioFilePath = null;
             SelectedAudioFilePath = null;
             IsBaseVoiceSelected = true;
-            CloneVoiceModel.IsRecordSelected = false;
-            CloneVoiceModel.IsCloneAudioRecorded = false;
-            CloneVoiceModel.IsCloneVoiceSelected = false;
-            CloneVoiceModel.IsFragmentSelectionVisible = false;
-
-            IsNotValid.IsUserNameNotValid = false;
-            IsNotValid.IsStartPhraseNotValid = false;
-            IsNotValid.IsEndPhraseNotValid = false;
-            IsNotValid.IsCloneVoiceNotValid = false;
-            IsNotValid.IsUserVoiceNotValid = false;
-            IsNotValid.IsPasswordNotValid = false;
-            IsNotValid.IsPhotoPathNotValid = false;
+            CloneVoiceModel.Reset();
+            SubUser.Reset();
+            CloneVoiceModel.Reset();
+            IsNotValid.Reset();
 
             ResetDescriptionFilter();
             ResetAgeFilter();

@@ -1,11 +1,16 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Android.Speech.Tts;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using Mopups.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
+using PersonalAudioAssistant.Contracts.Voice;
+using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
+using Plugin.Maui.Audio;
 using System.Collections.ObjectModel;
+using static Java.Lang.Character;
 
 namespace PersonalAudioAssistant.ViewModel.History
 {
@@ -92,6 +97,14 @@ namespace PersonalAudioAssistant.ViewModel.History
         public async Task CloseMopup()
         {
             await MopupService.Instance.PopAsync();
+        }
+
+        public void OnNavigatedFrom()
+        {
+            SelectedUser = null;
+            PasswordEntry = string.Empty;
+            IsPasswordExists = false;
+            IsPasswordCorrect = true;
         }
     }
 }

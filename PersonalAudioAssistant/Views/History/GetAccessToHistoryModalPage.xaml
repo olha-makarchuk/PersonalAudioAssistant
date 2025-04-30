@@ -89,15 +89,19 @@
             <VerticalStackLayout Spacing="10">
 
                 <!-- Заголовок -->
-                <Label
-                    Text="Доступ до історії"
-                    FontSize="20"
-                    FontAttributes="Bold"
-                    Margin="0,0,0,20"
-                    TextColor="{StaticResource AccentColor}"
-                    HorizontalOptions="Center" />
+                    <Label
+                        Text="Доступ до історії особистих розмов"
+                        FontSize="20"
+                        FontAttributes="Bold"
+                        Margin="0,0,0,20"
+                        TextColor="{StaticResource AccentColor}"
+                        HorizontalOptions="Center"
+                        HorizontalTextAlignment="Center"
+                        VerticalTextAlignment="Center"
+                        LineBreakMode="WordWrap"
+                    />
 
-                <!-- Підпорядковуючий текст -->
+                    <!-- Підпорядковуючий текст -->
                 <Label
                     Text="Оберіть користувача:"
                     FontSize="14"
@@ -123,7 +127,7 @@
                 <StackLayout IsVisible="{Binding IsPasswordExists}">
                     <Entry
                         Style="{StaticResource InputStyle}"
-                        Text="{Binding Password}"
+                        Text="{Binding PasswordEntry}"
                         IsPassword="True"
                         Placeholder="Пароль" />
                     <Label

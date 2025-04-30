@@ -18,4 +18,13 @@ public partial class GetAccessToHistoryModalPage
             await viewModel.LoadUsersAsync();
         }
     }
+
+    protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+    {
+        base.OnNavigatedFrom(args);
+        if (BindingContext is GetAccessToHistoryViewModel viewModel)
+        {
+            viewModel.OnNavigatedFrom();
+        }
+    }
 }

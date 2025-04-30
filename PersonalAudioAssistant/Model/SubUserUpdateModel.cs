@@ -47,5 +47,22 @@ namespace PersonalAudioAssistant.Model
 
         [ObservableProperty]
         public string photoPath;
+
+        public void Reset()
+        {
+            Id = null;
+            UserId = null;
+            StartPhrase = string.Empty;
+            EndPhrase = string.Empty;
+            EndTime = string.Empty;
+            VoiceId = string.Empty;
+            UserVoice = new List<double>();
+            UserName = string.Empty;
+            OldPassword = string.Empty;
+            NewPassword = string.Empty;
+            IsPasswordEnabled = false;
+            PasswordHash = null;
+            PhotoPath = string.Empty;
+        }
     }
 }

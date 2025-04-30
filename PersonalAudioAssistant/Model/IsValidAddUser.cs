@@ -29,5 +29,17 @@ namespace PersonalAudioAssistant.Model
 
         [ObservableProperty]
         public bool isPhotoPathNotValid = false;
+
+        public void Reset()
+        {
+            IsUserNameNotValid = false;
+            IsStartPhraseNotValid = false;
+            IsEndPhraseNotValid = false;
+            IsPasswordNotValid = false;
+            IsAudioTimeNotValid = false;
+            IsCloneVoiceNotValid = false;
+            IsUserVoiceNotValid = false;
+            IsPhotoPathNotValid = false;
+        }
     }
 }

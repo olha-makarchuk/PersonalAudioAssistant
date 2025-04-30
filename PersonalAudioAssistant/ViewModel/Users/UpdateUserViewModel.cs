@@ -38,10 +38,10 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private List<VoiceResponse> allVoices = new List<VoiceResponse>();
 
         public VoiceFilterModel Filter { get; }
-        public EndOptionsModel EndOptionsModel { get; }
-        public SubUserUpdateModel SubUser { get; }
-        public CloneVoiceModel CloneVoiceModel { get; }
-        public IsNotValidAddUser IsNotValid { get; }
+        public EndOptionsModel EndOptionsModel { get; set; }
+        public SubUserUpdateModel SubUser { get; set; }
+        public CloneVoiceModel CloneVoiceModel { get; set; }
+        public IsNotValidAddUser IsNotValid { get; set; }
 
         [ObservableProperty]
         private bool isBusy;
@@ -837,28 +837,18 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         public void OnNavigatedFrom()
         {
-            SubUser.UserName = null;
             SelectedVoice = null;
             SelectedVoiceUrl = null;
-            EndOptionsModel.IsEndPhraseSelected = false;
-            EndOptionsModel.IsEndTimeSelected = true;
-            EndOptionsModel.SelectedEndTime = 2;
-            SubUser.IsPasswordEnabled = false;
-            SubUser.OldPassword = null;
-            SubUser.NewPassword = null;
             _recordedAudioStream = null;
             IsAudioRecorded = false;
             _selectedAudioFilePath = null;
             IsBaseVoiceSelected = true;
-            CloneVoiceModel.IsCloneVoiceSelected = false;
-
-            IsNotValid.IsUserNameNotValid = false;
-            IsNotValid.IsStartPhraseNotValid = false;
-            IsNotValid.IsEndPhraseNotValid = false;
-            IsNotValid.IsCloneVoiceNotValid = false;
-            IsNotValid.IsUserVoiceNotValid = false;
-            IsNotValid.IsPasswordNotValid = false;
+            CloneVoiceModel.Reset();
+            SubUser.Reset();
+            EndOptionsModel.Reset();
+            EndOptionsModel.SelectedEndTime = 2;
             IsPhotoSelected = false;
+            IsNotValid.Reset();
 
             ResetDescriptionFilter();
             ResetAgeFilter();
@@ -869,6 +859,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             SelectedVoice = Voices.FirstOrDefault();
             SelectedVoiceUrl = SelectedVoice?.url;
         }
+
         public async void ApplyQueryAttributes(IDictionary<string, object> query)
         {
             if (query.ContainsKey("userId"))

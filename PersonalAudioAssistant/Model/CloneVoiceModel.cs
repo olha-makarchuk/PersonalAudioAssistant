@@ -73,5 +73,19 @@ namespace PersonalAudioAssistant.Model
             IsUploadSelected = false;
             IsRecordSelected = false;
         }
+
+        public void Reset()
+        {
+            IsCloneGenerated = false;
+            Name = string.Empty;
+            IsCloneVoiceSelected = false;
+            IsCloneAudioRecorded = false;
+            IsFragmentSelectionVisible = false;
+            IsUploadSelected = false;
+            IsRecordSelected = false;
+            IsCreateCloneVoiceMode = false;
+            CloneSourceButtonText = "Обрати новий голос";
+            CloneSourceButtonColor = Color.FromArgb("#4CAF50");
+        }
     }
 }

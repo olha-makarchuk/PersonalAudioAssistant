@@ -16,5 +16,13 @@ namespace PersonalAudioAssistant.Model
 
         [ObservableProperty]
         private ObservableCollection<int> endTimeOptions = new ObservableCollection<int>(Enumerable.Range(2, 9));
+
+        public void Reset()
+        {
+            IsEndPhraseSelected = false;
+            IsEndTimeSelected = true;
+            SelectedEndTime = 2;
+            EndTimeOptions = new ObservableCollection<int>(Enumerable.Range(2, 9));
+        }
     }
 }
