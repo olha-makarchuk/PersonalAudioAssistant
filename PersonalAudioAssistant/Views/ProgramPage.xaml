@@ -12,7 +12,7 @@
             <local:BoolToColorConverter x:Key="BoolToColorConverterChat"/>
 
             <Style x:Key="PlayButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="#4A90E2" />
+                <Setter Property="BackgroundColor" Value="#8584df" />
                 <Setter Property="TextColor" Value="White" />
                 <Setter Property="FontSize" Value="18" />
                 <Setter Property="FontFamily" Value="sans-serif-medium" />
@@ -35,36 +35,58 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-
-    <Grid RowDefinitions="*,0,Auto,Auto" Padding="10,0,0,0">
+    <!-- Grid adjusted to avoid overlapping -->
+    <Grid RowDefinitions="*,Auto,Auto,Auto" Padding="10,0,0,0">
         <!-- Основна область повідомлень -->
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="10">
                 <CollectionView ItemsSource="{Binding ChatMessages}" 
-                            SelectedItem="{Binding SelectedMessage, Mode=TwoWay}" 
-                            RemainingItemsThreshold="5"
-                            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
-                            Margin="10">
+                                SelectedItem="{Binding SelectedMessage, Mode=TwoWay}" 
+                                RemainingItemsThreshold="5"
+                                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
+                                Margin="10">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="10,5" ColumnDefinitions="Auto,*,Auto">
                                 <!-- Оболонка повідомлення -->
+                                <!-- Аватар користувача -->
+                                <Frame Grid.Column="0"
+                                   WidthRequest="70"
+                                   HeightRequest="70"
+                                   CornerRadius="40"
+                                   Margin="10,0,0,0"
+                                   HasShadow="False"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   BackgroundColor="Transparent">
+                                    <Image
+                                    Aspect="AspectFill"
+                                    WidthRequest="80"
+                                    HeightRequest="80"
+                                    VerticalOptions="Center"
+                                    HorizontalOptions="Center">
+                                        <Image.Source>
+                                            <UriImageSource Uri="{Binding SubUserPhoto}" 
+                                                        CachingEnabled="False"/>
+                                        </Image.Source>
+                                    </Image>
+                                </Frame>
                                 <Frame Grid.Column="1"
-                                   Padding="10"
-                                   CornerRadius="12"
-                                   WidthRequest="300"
-                                   HasShadow="True">
+                                       Padding="10"
+                                       CornerRadius="12"
+                                       WidthRequest="300"
+                                       HasShadow="True">
                                     <Frame.Triggers>
                                         <DataTrigger TargetType="Frame"
-                                                 Binding="{Binding UserRole}"
-                                                 Value="user">
-                                            <Setter Property="BackgroundColor" Value="#90CAF9" />
+                                                     Binding="{Binding UserRole}"
+                                                     Value="user">
+                                            <Setter Property="BackgroundColor" Value="#bfe0ff" />
                                             <Setter Property="HorizontalOptions" Value="End" />
                                         </DataTrigger>
                                         <DataTrigger TargetType="Frame"
-                                                 Binding="{Binding UserRole}"
-                                                 Value="ai">
-                                            <Setter Property="BackgroundColor" Value="#E1BEE7" />
+                                                     Binding="{Binding UserRole}"
+                                                     Value="ai">
+                                            <Setter Property="BackgroundColor" Value="#e5e3fe" />
                                             <Setter Property="HorizontalOptions" Value="Start" />
                                         </DataTrigger>
                                     </Frame.Triggers>
@@ -72,15 +94,14 @@
                                     <VerticalStackLayout Spacing="5">
                                         <!-- Текст повідомлення -->
                                         <Label Text="{Binding Text}" 
-                                           TextColor="#0d1996" 
-                                           HorizontalOptions="Start" />
-
+                                               FontSize="16"
+                                               HorizontalOptions="Start" />
                                         <Button Style="{StaticResource PlayButtonStyle}"
-                                            WidthRequest="30"
-                                            HeightRequest="30"
-                                            Text="▶"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
-                                            CommandParameter="{Binding .}">
+                                                WidthRequest="30"
+                                                HeightRequest="30"
+                                                Text="▶"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
+                                                CommandParameter="{Binding .}">
                                             <Button.Triggers>
                                                 <DataTrigger TargetType="Button"
                                                              Binding="{Binding UserRole}"
@@ -94,7 +115,6 @@
                                                 </DataTrigger>
                                             </Button.Triggers>
                                         </Button>
-
                                     </VerticalStackLayout>
                                 </Frame>
                             </Grid>
@@ -104,81 +124,98 @@
                     <CollectionView.Footer>
                         <Grid Padding="10" HorizontalOptions="Center">
                             <ActivityIndicator IsVisible="{Binding IsLoadingMore}"
-                                           IsRunning="{Binding IsLoadingMore}"
-                                           WidthRequest="30"
-                                           HeightRequest="30"
-                                           Color="Black" />
+                                               IsRunning="{Binding IsLoadingMore}"
+                                               WidthRequest="30"
+                                               HeightRequest="30"
+                                               Color="Black" />
                         </Grid>
                     </CollectionView.Footer>
                 </CollectionView>
-
-                <Label Text="{Binding RecognitionText}" 
-                   FontSize="18"
-                   HorizontalOptions="Center"
-                   Margin="0,10,0,0" />
             </VerticalStackLayout>
         </ScrollView>
 
         <!-- 🔻 Переміщений блок керування аудіо -->
-        <VerticalStackLayout Grid.Row="2"
-                     Padding="20">
+        <VerticalStackLayout Grid.Row="1">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*"
+      VerticalOptions="Center"
+      HorizontalOptions="Center">
+                <Frame CornerRadius="25"
+           Padding="0"
+           HasShadow="False"
+           BackgroundColor="Transparent"
+           HorizontalOptions="Center">
+                    <StackLayout Orientation="Horizontal" Spacing="0"
+                     BackgroundColor="Transparent">
+                        <!-- First button -->
+                        <Button Text="◀"
+                    Command="{Binding PreviousCommand}"
+                    IsEnabled="{Binding CanPrevious}"
+                    FontSize="20"
+                    BackgroundColor="#7356dc"
+                    CornerRadius="0"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    Margin="0" />
 
-            <Grid ColumnSpacing="15"
-          ColumnDefinitions="Auto,Auto,Auto,*"
-          VerticalOptions="Center"
-          HorizontalOptions="Center">
-                <Button Grid.Column="0"
-                Text="◀"
-                Command="{Binding PreviousCommand}"
-                IsEnabled="{Binding CanPrevious}"
-                FontSize="20"
-                CornerRadius="20"
-                WidthRequest="50"
-                HeightRequest="50" />
-                <Button Grid.Column="1"
-                Text="⏯"
-                Command="{Binding PlayPauseCommand}"
-                IsEnabled="{Binding CanPlayPause}"
-                FontSize="20"
-                CornerRadius="20"
-                WidthRequest="50"
-                HeightRequest="50" />
-                <Button Grid.Column="2"
-                Text="▶"
-                Command="{Binding NextCommand}"
-                IsEnabled="{Binding CanNext}"
-                FontSize="20"
-                CornerRadius="20"
-                WidthRequest="50"
-                HeightRequest="50" />
+                        <!-- White vertical line -->
+                        <BoxView WidthRequest="1"
+                     HeightRequest="50"
+                     Color="White"
+                     VerticalOptions="Center" />
+
+                        <!-- Middle button -->
+                        <Button Text="⏯"
+                    Command="{Binding PlayPauseCommand}"
+                    IsEnabled="{Binding CanPlayPause}"
+                    FontSize="20"
+                    CornerRadius="0"
+                    BackgroundColor="#7356dc"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    Margin="0" />
+
+                        <!-- White vertical line -->
+                        <BoxView WidthRequest="1"
+                     HeightRequest="50"
+                     Color="White"
+                     VerticalOptions="Center" />
+
+                        <!-- Last button -->
+                        <Button Text="▶"
+                    Command="{Binding NextCommand}"
+                    IsEnabled="{Binding CanNext}"
+                    FontSize="20"
+                    CornerRadius="0"
+                    BackgroundColor="#7356dc"
+                    WidthRequest="50"
+                    HeightRequest="50"
+                    Margin="0" />
+                    </StackLayout>
+                </Frame>
             </Grid>
 
-            <HorizontalStackLayout HorizontalOptions="Center"
-                   VerticalOptions="Center"
-                   Spacing="20"
-                   Margin="0,20,0,0"
-                   Padding="10, 0">
-                
+
+
+            <HorizontalStackLayout HorizontalOptions="End"
+                                   VerticalOptions="Center"
+                                   Padding="0,-10,20,0">
                 <HorizontalStackLayout>
                     <!-- Мітка для автозапуску -->
                     <Label Text="Автовідтворення:"
-                   VerticalOptions="Center"
-                   FontSize="14"
-                   HorizontalOptions="Center" />
-
+                           VerticalOptions="Center"
+                           FontSize="14"
+                           HorizontalOptions="End" />
                     <!-- Перемикач для автозапуску -->
                     <Switch IsToggled="{Binding IsAutoPlay}"
-                    VerticalOptions="Center"
-                    HorizontalOptions="Start" />
+                            VerticalOptions="Center"
+                            HorizontalOptions="End" />
                 </HorizontalStackLayout>
-
             </HorizontalStackLayout>
         </VerticalStackLayout>
 
-
         <!-- Buttons Section -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*" Padding="0,10,0,10">
-            <BoxView Grid.Column="0" BackgroundColor="Transparent"/>
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*" Padding="0,0,0,10">
+            <BoxView Grid.Column="0" BackgroundColor="Transparent" VerticalOptions="End"/>
 
             <Button Grid.Column="1"
                     Text="{Binding IsListening, Converter={StaticResource ListenButtonTextConverter}}"
@@ -196,24 +233,16 @@
                         <Setter Property="BackgroundColor" Value="#8A75F8" />
                     </DataTrigger>
                     <DataTrigger TargetType="Button" Binding="{Binding IsListening}" Value="False">
-                        <Setter Property="BackgroundColor" Value="#5E42F6" />
+                        <Setter Property="BackgroundColor" Value="#512bd4" />
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
-
-            <Button Grid.Column="2"
-                    Text="Pause"
-                    WidthRequest="70"
-                    HeightRequest="70"
-                    CornerRadius="35"
-                    IsVisible="{Binding IsListening}"
-                    BackgroundColor="#a6a6a6"/>
-
         </Grid>
+
         <!-- Прихований MediaElement -->
         <toolkit:MediaElement x:Name="mediaElement"
-                      Source="{Binding SelectedMessage.URL}"
-                      IsVisible="False"
-                      Grid.Row="3"/>
+                              Source="{Binding SelectedMessage.URL}"
+                              IsVisible="False"
+                              Grid.Row="3"/>
     </Grid>
 </ContentPage>

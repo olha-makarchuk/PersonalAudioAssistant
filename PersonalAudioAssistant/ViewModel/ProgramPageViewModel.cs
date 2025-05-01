@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Contracts.Message;
+using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Views;
@@ -26,7 +27,7 @@ namespace PersonalAudioAssistant.ViewModel
         private bool isLoadingMessages;
         private bool allMessagesLoaded = false;
         private int _currentIndex = -1;
-
+        private List<SubUserResponse> _subUsers;
         private string? conversationId;
 
         private ChatMessage _selectedMessage;
@@ -120,19 +121,26 @@ namespace PersonalAudioAssistant.ViewModel
             }
 
             // Додаємо в початок колекції, оскільки це старіші повідомлення
+            _subUsers = await _manageCacheData.GetUsersAsync();
+
             foreach (var msg in messages.Reverse<MessageResponse>())
             {
+                var matchingUser = _subUsers.FirstOrDefault(u => u.id == msg.SubUserId);
                 ChatMessages.Insert(0, new ChatMessage
                 {
                     Text = msg.text,
                     UserRole = msg.userRole,
                     DateTimeCreated = msg.dateTimeCreated,
-                    URL = msg.audioPath
+                    URL = msg.audioPath,
+                    LastRequestId = msg.lastRequestId,
+                    SubUserPhoto = matchingUser?.photoPath 
                 });
             }
 
             currentPage++;
             isLoadingMessages = false;
+
+            _subUsers = await _manageCacheData.GetUsersAsync();
         }
 
         public async Task LoadMoreMessagesIfNeeded(double scrollY)
@@ -316,6 +324,8 @@ namespace PersonalAudioAssistant.ViewModel
         public string UserRole { get; set; }
         public DateTime DateTimeCreated { get; set; }
         public string URL { get; set; }
+        public string SubUserPhoto { get; set; }
+        public string LastRequestId { get; set; }
     }
 
     public class BoolToColorConverterChat : IValueConverter
