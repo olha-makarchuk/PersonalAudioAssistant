@@ -158,8 +158,9 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
                     break
 
         if not speech_detected:
+            await websocket.send_text("STOP")
             print(f"Timeout: no speech detected in {init_timeout} s")
-            return np.array([]), False
+            return "none", False
 
     # 2) Основний цикл: збираємо весь потік + перевіряємо end_time / end_phrase
     stop_event = threading.Event()

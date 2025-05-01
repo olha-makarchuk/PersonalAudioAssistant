@@ -9,6 +9,8 @@ public partial class MessagesPage : ContentPage
 		InitializeComponent();
         Shell.SetTitleView(this, null);
         BindingContext = viewModel;
+
+        mediaElement.MediaEnded += OnMediaEnded;
     }
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
@@ -25,6 +27,15 @@ public partial class MessagesPage : ContentPage
         if (BindingContext is MessagesViewModel viewModel)
         {
             await viewModel.LoadMessagesAsync();
+        }
+    }
+
+    private async void OnMediaEnded(object sender, EventArgs e)
+    {
+        if (BindingContext is MessagesViewModel vm && vm.IsAutoPlay)
+        {
+            if (vm.NextCommand.CanExecute(null))
+                await vm.NextAsync();
         }
     }
 

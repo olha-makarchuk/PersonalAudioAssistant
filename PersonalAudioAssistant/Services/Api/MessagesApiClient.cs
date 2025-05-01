@@ -7,7 +7,7 @@ namespace PersonalAudioAssistant.Services.Api
         public MessagesApiClient(HttpClient httpClient) : base(httpClient) { }
 
 
-        public async Task CreateMessageAsync(CreateMessageCommand createMessageCommand)
+        public async Task<MessageResponse> CreateMessageAsync(CreateMessageCommand createMessageCommand)
         {
             var url = $"{BaseUrl}Message";
 
@@ -20,7 +20,8 @@ namespace PersonalAudioAssistant.Services.Api
                 LastRequestId = createMessageCommand.LastRequestId
             };
 
-            await PostAsync<object, string>(url, request);
+            var message = await PostAsync<object, MessageResponse>(url, request);
+            return message;
         }
 
         public async Task DeleteMessagesByConversationIdAsync(string idConversation)

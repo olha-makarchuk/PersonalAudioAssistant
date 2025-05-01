@@ -1,6 +1,8 @@
-﻿using MediatR;
+﻿using Google.Apis.Drive.v3.Data;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Services.Api;
 
 namespace PersonalAudioAssistant
 {
@@ -9,13 +11,15 @@ namespace PersonalAudioAssistant
         private AuthTokenManager _authTokenManager;
         private readonly IMediator _mediator;
         private readonly ManageCacheData _manageCacheData;
+        private readonly ConversationApiClient _conversationApiClient;
 
-        public MainPage(IMediator mediator, GoogleUserService googleUserService, ManageCacheData manageCacheData, AuthTokenManager authTokenManager)
+        public MainPage(IMediator mediator, GoogleUserService googleUserService, ManageCacheData manageCacheData, AuthTokenManager authTokenManager, ConversationApiClient conversationApiClient)
         {
             InitializeComponent();
             _mediator = mediator;
             _authTokenManager = authTokenManager;
             _manageCacheData = manageCacheData;
+            _conversationApiClient = conversationApiClient;
         }
 
         protected override async void OnAppearing()
@@ -23,9 +27,9 @@ namespace PersonalAudioAssistant
             base.OnAppearing();
             await InitializeApp();
         }
-
         private async Task InitializeApp()
         {
+
             LoadingProgressBar.IsVisible = true;
             LoadingProgressBar.Progress = 0;
 
@@ -43,7 +47,7 @@ namespace PersonalAudioAssistant
             if (await _authTokenManager.IsSignedInAsync())
             {
                 await LoadDataInCache();
-                LoadingProgressBar.Progress = 1.0; 
+                LoadingProgressBar.Progress = 1.0;
 
                 Shell.Current?.GoToAsync("//ProgramPage");
             }
@@ -73,6 +77,8 @@ namespace PersonalAudioAssistant
                     LoadingProgressBar.Progress = 0.6 + (0.4 * progress);
                 });
             });
+
+            var conversation = await _manageCacheData.GetСonversationAsync();
         }
     }
 }

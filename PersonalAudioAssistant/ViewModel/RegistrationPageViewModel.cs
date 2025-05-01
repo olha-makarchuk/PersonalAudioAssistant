@@ -12,14 +12,16 @@ namespace PersonalAudioAssistant.ViewModel
         private readonly AuthTokenManager _authTokenManager;
         private PaymentApiClient _paymentApiClient;
         private AutoPaymentApiClient _autoPaymentApiClient;
+        private ConversationApiClient _conversationApiClient;
 
-        public RegistrationPageViewModel(IMediator mediator, GoogleUserService googleUserService, AppSettingsApiClient appSettingsApiClient, PaymentApiClient paymentApiClient, AutoPaymentApiClient autoPaymentApiClient, AuthTokenManager authTokenManager)
+        public RegistrationPageViewModel(IMediator mediator, GoogleUserService googleUserService, AppSettingsApiClient appSettingsApiClient, PaymentApiClient paymentApiClient, AutoPaymentApiClient autoPaymentApiClient, AuthTokenManager authTokenManager, ConversationApiClient conversationApiClient)
         {
             _mediator = mediator;
             _authTokenManager = authTokenManager;
             _appSettingsApiClient = appSettingsApiClient;
             _paymentApiClient = paymentApiClient;
             _autoPaymentApiClient = autoPaymentApiClient;
+            _conversationApiClient = conversationApiClient;
         }
 
         [ObservableProperty]
@@ -95,6 +97,8 @@ namespace PersonalAudioAssistant.ViewModel
             await _autoPaymentApiClient.CreateAutoPaymentAsync(userId);
 
             await _appSettingsApiClient.CreateAppSettingsAsync(userId);
+
+            await _conversationApiClient.CreateConversationAsync("", userId);
 
             //var analiticsCommand = new CreateAnaliticsCommand() { };
             //await _mediator.Send(analiticsCommand);

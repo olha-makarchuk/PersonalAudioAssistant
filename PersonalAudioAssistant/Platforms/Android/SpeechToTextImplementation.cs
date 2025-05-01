@@ -27,15 +27,19 @@ namespace PersonalAudioAssistant.Platforms
         private Action? _clearChatMessagesAction;
         private readonly ConversationApiClient _conversationApiClient;
         private readonly MessagesApiClient _messagesApiClient;
+        private readonly ManageCacheData _manageCacheData;
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient)
+        public bool IsPrivateConversation { get; set; }
+
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
             _messagesApiClient = messagesApiClient;
+            _manageCacheData = manageCacheData;
         }
         public SpeechToTextImplementation() : this(MediatorProvider.Mediator,
-                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>())
+                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>(), MediatorProvider.Services!.GetRequiredService<ManageCacheData>())
         {
         }
 
@@ -73,10 +77,15 @@ namespace PersonalAudioAssistant.Platforms
 
                     SubUserResponse? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
+
+                    bool isPrivateConversation = normalizedSentence.Contains("особиста розмова");
+
                     matchedUser = listUsers.FirstOrDefault(user =>
                         !string.IsNullOrWhiteSpace(user.startPhrase) &&
                         normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
                     );
+                    var convMain = await _manageCacheData.GetСonversationAsync();
+                    //string convId = convMain[0].IdConversation;
 
                     if (matchedUser != null && !processingCommand)
                     {
@@ -105,50 +114,70 @@ namespace PersonalAudioAssistant.Platforms
 
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
 
-                                    await Toast.Make($"Відповідь: {transcription.Response}").Show(cancellationToken);
                                     TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
-                                    chatMessageProgress.Report(new ChatMessage { Text = response.Request, IsUser = true });
-                                    await Task.WhenAll(conversationTask);
+                                    if (response.Request == "none")
+                                    {
+                                        IsContinueConversation = false;
+                                        return;
+                                    }
+
+                                    await Toast.Make($"Відповідь: {transcription.Response}").Show(cancellationToken);
 
                                     ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
                                     _prevResponseId = answer.responseId;
-                                    chatMessageProgress.Report(new ChatMessage { Text = answer.text, IsUser = false });
 
-                                    var careteMessageUser = new CreateMessageCommand()
+                                    var createUserCmd = new CreateMessageCommand
                                     {
                                         ConversationId = conversationTask.Result,
                                         Text = response.Request,
                                         UserRole = "user",
                                         Audio = transcription.Audio,
-                                        LastRequestId = answer.responseId
+                                        LastRequestId = _prevResponseId
                                     };
-                                    var userTask = _messagesApiClient.CreateMessageAsync(careteMessageUser);
+                                    var createdUser = await _messagesApiClient.CreateMessageAsync(createUserCmd);
+
+                                    chatMessageProgress.Report(new ChatMessage
+                                    {
+                                        Text = createdUser.text,
+                                        UserRole = "user",
+                                        DateTimeCreated = createdUser.dateTimeCreated,
+                                        URL = createdUser.audioPath
+                                    });
 
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
                                     if(!IsContinueConversation)
                                     {
                                         _prevResponseId = null;
-                                      clearChatMessagesAction?.Invoke();
+                                      //clearChatMessagesAction?.Invoke();
                                     }
 
                                     var textToSpeech = new ElevenlabsApi();
                                     var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.voiceId!, answer.text);
 
-                                    await Task.WhenAll(userTask);
+                                    //await Task.WhenAll(userTask);
 
                                     var careteMessageAI = new CreateMessageCommand()
                                     {
                                         ConversationId = conversationTask.Result,
                                         Text = answer.text,
                                         UserRole = "ai",
-                                        Audio = audioBytes
+                                        Audio = audioBytes,
+                                        LastRequestId = _prevResponseId
                                     };
-                                    var aiTask = _messagesApiClient.CreateMessageAsync(careteMessageAI);
+                                    var createdAI = await _messagesApiClient.CreateMessageAsync(careteMessageAI);
+
+                                    chatMessageProgress.Report(new ChatMessage
+                                    {
+                                        Text = createdAI.text,
+                                        UserRole = "ai",
+                                        DateTimeCreated = createdAI.dateTimeCreated,
+                                        URL = createdAI.audioPath
+                                    });
 
                                     await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
-                                    await Task.WhenAll(aiTask);
+                                    //await Task.WhenAll(aiTask);
                                     await Task.Delay(100);
                                 }
                                 catch(Exception ex)
@@ -187,7 +216,7 @@ namespace PersonalAudioAssistant.Platforms
             await using (cancellationToken.Register(() =>
             {
                 StopRecording();
-                clearChatMessagesAction?.Invoke();
+                //clearChatMessagesAction?.Invoke();
                 taskResult.TrySetResult(string.Empty);
             }))
             {
@@ -251,7 +280,7 @@ namespace PersonalAudioAssistant.Platforms
             speechRecognizer?.Destroy();
             speechRecognizer = null;
 
-            _clearChatMessagesAction?.Invoke();
+            //_clearChatMessagesAction?.Invoke();
         }
         private void StartListening(CultureInfo culture)
         {

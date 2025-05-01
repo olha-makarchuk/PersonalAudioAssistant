@@ -7,6 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 using PersonalAudioAssistant.Views.Users;
 using PersonalAudioAssistant.Views.History;
 using PersonalAudioAssistant.Services.Api;
+using CommunityToolkit.Maui.Core.Primitives;
+using Android.Content;
+using System.Globalization;
 
 namespace PersonalAudioAssistant.ViewModel.History
 {
@@ -15,6 +18,7 @@ namespace PersonalAudioAssistant.ViewModel.History
         private readonly IMediator _mediator;
         private readonly MessagesApiClient _messagesApiClient;
         private string ConversationIdQueryAttribute;
+        private string PreviewId;
 
         [ObservableProperty]
         private ObservableCollection<MessageResponse> messages;
@@ -28,6 +32,19 @@ namespace PersonalAudioAssistant.ViewModel.History
         private bool _isLoadingMore;
         private bool _hasMoreItems = true;
         private const int PageSize = 10;
+        private int _currentIndex = -1;
+
+        [ObservableProperty]
+        private bool canPlayPause;
+
+        [ObservableProperty]
+        private bool canNext;
+
+        [ObservableProperty]
+        private bool canPrevious;
+
+        [ObservableProperty]
+        private bool isAutoPlay;
 
         public MessagesViewModel(IMediator mediator, MessagesApiClient messagesApiClient)
         {
@@ -102,6 +119,18 @@ namespace PersonalAudioAssistant.ViewModel.History
                 {
                     _currentPage++;
                 }
+                if (!isLoadMore && Messages.Any())
+                {
+                    _currentIndex = 0;
+                    UpdateButtonStates();
+
+                    if (IsAutoPlay)
+                    {
+                        // Якщо вмикнено автоплей — запустити перше повідомлення
+                        await PlayByIndexAsync(_currentIndex);
+                    }
+                }
+                PreviewId = Messages.First().lastRequestId;
             }
             catch (Exception ex)
             {
@@ -148,11 +177,114 @@ namespace PersonalAudioAssistant.ViewModel.History
             }
         }
 
-        [RelayCommand]
         public void OnNavigatedFrom()
         {
+            try
+            {
+                var media = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
+                media.Stop();
+            }
+            catch (Exception)
+            {
+            }
+
             SelectedMessage = null;
             Messages.Clear();
+            PreviewId = null;
+            IsAutoPlay = false;
+        }
+
+
+        [RelayCommand]
+        public void ContinueConversationCommand()
+        {
+            //PreviewId
+        }
+
+        [RelayCommand(CanExecute = nameof(CanExecutePlayPause))]
+        private void PlayPause()
+        {
+            var media = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
+            if (media.CurrentState == MediaElementState.Playing)
+                media.Pause();
+            else
+                media.Play();
+        }
+
+        private bool CanExecutePlayPause() => _currentIndex >= 0;
+
+        [RelayCommand(CanExecute = nameof(CanExecuteNext))]
+        public async Task NextAsync()
+        {
+            if (_currentIndex < Messages.Count - 1)
+            {
+                _currentIndex++;
+                await PlayByIndexAsync(_currentIndex);
+                UpdateButtonStates();
+            }
+        }
+
+        private bool CanExecuteNext() => _currentIndex < Messages?.Count - 1;
+
+        [RelayCommand(CanExecute = nameof(CanExecutePrevious))]
+        private async Task PreviousAsync()
+        {
+            if (_currentIndex > 0)
+            {
+                _currentIndex--;
+                await PlayByIndexAsync(_currentIndex);
+                UpdateButtonStates();
+            }
+        }
+
+        private bool CanExecutePrevious() => _currentIndex > 0;
+
+        private async Task PlayByIndexAsync(int index)
+        {
+            var msg = Messages[index];
+            if (msg == null || string.IsNullOrEmpty(msg.audioPath))
+                return;
+
+            var media = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
+            media.Source = msg.audioPath;
+            media.Play();
+
+            SelectedMessage = msg;
+            await Task.CompletedTask;
+        }
+
+        private void UpdateButtonStates()
+        {
+            CanPlayPause = _currentIndex >= 0;
+            CanNext = CanExecuteNext();
+            CanPrevious = CanExecutePrevious();
+
+            PlayPauseCommand.NotifyCanExecuteChanged();
+            NextCommand.NotifyCanExecuteChanged();
+            PreviousCommand.NotifyCanExecuteChanged();
         }
     }
+
+    public class BoolToPlayPauseTextConverter : IValueConverter
+    {
+        // value буде вашим булевим полем з VM (наприклад IsPlaying або IsAutoPlay)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool b)
+                return b ? "Пауза" : "Відтворити";
+            return "Відтворити";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    public class InverseBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+            !(bool)value;
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+            !(bool)value;
+    }
+
 }

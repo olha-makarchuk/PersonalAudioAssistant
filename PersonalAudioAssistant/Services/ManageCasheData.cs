@@ -11,17 +11,21 @@ namespace PersonalAudioAssistant.Services
     {
         private const string UsersCacheKey = "UsersList";
         private const string SettingsCacheKey = "AppSettings";
+        private const string ConversationCacheKey = "Conversation";
 
         private readonly IMemoryCache _cache;
         private readonly IMediator _mediator;
         private readonly AppSettingsApiClient _appSettingsApiClient;
         private readonly SubUserApiClient _subUserApiClient;
-        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient)
+        private readonly ConversationApiClient _conversationApiClient;
+
+        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient, ConversationApiClient conversationApiClient)
         {
             _cache = cache;
             _mediator = mediator;
             _appSettingsApiClient = appSettingsApiClient;
             _subUserApiClient = subUserApiClient;
+            _conversationApiClient = conversationApiClient;
         }
 
         public async Task<List<SubUserResponse>> GetUsersAsync(Action<double> progress = null)
@@ -43,6 +47,27 @@ namespace PersonalAudioAssistant.Services
         {
             _cache.Remove(UsersCacheKey);
             await GetUsersAsync();
+        }
+
+        public async Task<ConversationIdResponse> GetСonversationAsync(Action<double> progress = null)
+        {
+            if (!_cache.TryGetValue(ConversationCacheKey, out ConversationIdResponse conversation))
+            {
+                await Task.Delay(800);
+                var userId = await SecureStorage.GetAsync("user_id");
+                var conversations = await _conversationApiClient.GetConversationsBySubUserIdAsync(userId, 1, 1);
+
+                conversation = new ConversationIdResponse
+                {
+                    ConversationId = conversations[0].IdConversation
+                };
+
+                progress?.Invoke(0.7);
+                await Task.Delay(700);
+                _cache.Set(SettingsCacheKey, conversation);
+                progress?.Invoke(1.0);
+            }
+            return conversation;
         }
 
         public async Task<AppSettingsResponse> GetAppSettingsAsync(Action<double> progress = null)
@@ -71,6 +96,7 @@ namespace PersonalAudioAssistant.Services
         {
             _cache.Remove(UsersCacheKey);
             _cache.Remove(SettingsCacheKey);
+            _cache.Remove(ConversationCacheKey);
         }
     }
 }
