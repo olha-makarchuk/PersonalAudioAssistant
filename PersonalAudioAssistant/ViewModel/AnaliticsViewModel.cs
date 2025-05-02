@@ -3,14 +3,19 @@ using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Contracts.PaymentHistory;
 using PersonalAudioAssistant.Services.Api;
+using SkiaSharp;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using Microcharts;
+
 
 namespace PersonalAudioAssistant.ViewModel
 {
     public partial class AnaliticsViewModel : ObservableObject
     {
         private readonly IMediator _mediator;
+        private readonly MoneyUsedApiClient _moneyUsedApiClient;
+        private readonly MoneyUsersUsedApiClient _moneyUsersUsedApiClient;
 
         [ObservableProperty]
         private View currentAnalyticsContent;
@@ -29,12 +34,14 @@ namespace PersonalAudioAssistant.ViewModel
         public bool IsPaymentTabSelected => SelectedTab == "Payment";
 
         private PaymentHistoryApiClient _paymentHistoryApiClient;
-        public AnaliticsViewModel(IMediator mediator, PaymentHistoryApiClient paymentHistoryApiClient)
+        public AnaliticsViewModel(IMediator mediator, PaymentHistoryApiClient paymentHistoryApiClient, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient)
         {
             CurrentAnalyticsContent = new Label { Text = "Вміст: За користувачами" };
             _mediator = mediator;
             _paymentHistoryApiClient = paymentHistoryApiClient;
             HistoryList = new ObservableCollection<PaymentHistoryResponse>();
+            _moneyUsedApiClient = moneyUsedApiClient;
+            _moneyUsersUsedApiClient = moneyUsersUsedApiClient;
         }
 
         public async Task LoadHistoryPayment()
@@ -55,14 +62,70 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
+        [ObservableProperty]
+        private Chart userMoneyPieChart;
+
+        public async Task LoadUserMoneyUsedAsync()
+        {
+            var userId = await SecureStorage.GetAsync("user_id");
+            var list = await _moneyUsersUsedApiClient.GetMoneyUsersUsedAsync(userId);
+
+            if (list == null || !list.Any())
+            {
+                await Shell.Current.DisplayAlert("Попередження", "Немає даних для відображення.", "OK");
+                return;
+            }
+
+            // Формуємо дані для кругової діаграми
+            var entries = list.Select(user => new ChartEntry((float)user.amountMoney)
+            {
+                Label = user.subUserId,
+                ValueLabel = user.amountMoney.ToString("F2"),
+                Color = SKColor.Parse("#" + RandomColor())
+            }).ToList();
+
+            UserMoneyPieChart = new PieChart
+            {
+                Entries = entries,
+                LabelTextSize = 30,
+                BackgroundColor = SKColors.Transparent
+            };
+        }
+
+        // Генератор випадкових кольорів
+        private string RandomColor()
+        {
+            var random = new Random();
+            return String.Format("{0:X6}", random.Next(0x1000000));
+        }
+
+
         [RelayCommand]
-        private void SelectUserTab()
+        private async Task SelectUserTab()
         {
             SelectedTab = "User";
             CurrentAnalyticsContent = new Label { Text = "Вміст: За користувачами" };
             OnPropertyChanged(nameof(IsUserTabSelected));
             OnPropertyChanged(nameof(IsTokenTabSelected));
             OnPropertyChanged(nameof(IsPaymentTabSelected));
+
+            if (IsBusy)
+                return;
+
+            IsBusy = true;
+
+            try
+            {
+                await LoadUserMoneyUsedAsync();
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Сталася помилка: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         [RelayCommand]

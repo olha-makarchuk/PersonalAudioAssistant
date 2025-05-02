@@ -1,6 +1,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.AnaliticsPage"
+             xmlns:charts="clr-namespace:Microcharts.Maui;assembly=Microcharts.Maui"
              Title="Аналітика"
              xmlns:vm="clr-namespace:PersonalAudioAssistant.ViewModel"
              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
@@ -71,9 +72,8 @@
                  HeightRequest="1"
                  Color="#cccccc"
                  Margin="10,0" />
-        
 
-            <ContentView Grid.Row="2" Padding="20" IsVisible="{Binding IsPaymentTabSelected}">
+                <ContentView Grid.Row="2" Padding="20" IsVisible="{Binding IsPaymentTabSelected}">
                 <StackLayout>
                     <!-- Заголовки колонок -->
                     <Grid Padding="0,0,0,10">
@@ -150,7 +150,17 @@
             </ContentView>
 
 
-            <ContentView Content="{Binding CurrentAnalyticsContent}" Grid.Row="2" Padding="300" />
+                <ContentView Grid.Row="2" Padding="20" IsVisible="{Binding IsUserTabSelected}">
+                    <StackLayout>
+
+                        <charts:ChartView Chart="{Binding UserMoneyPieChart}" 
+                                            HeightRequest="300"
+                                            WidthRequest="300"
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Center"/>
+                    </StackLayout>
+                </ContentView>
+                <ContentView Content="{Binding CurrentAnalyticsContent}" Grid.Row="2" Padding="300" />
 
     </Grid>
     </ScrollView>

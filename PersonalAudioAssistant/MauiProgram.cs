@@ -18,6 +18,7 @@ using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Application.Interfaces;
+using Microcharts.Maui;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -38,6 +39,7 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
             .ConfigureMopups()
+            .UseMicrocharts() 
             .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {
@@ -73,6 +75,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<MainUserApiClient>();
         builder.Services.AddSingleton<SubUserApiClient>();
         builder.Services.AddSingleton<MessagesApiClient>();
+        builder.Services.AddSingleton<MoneyUsedApiClient>();
+        builder.Services.AddSingleton<MoneyUsersUsedApiClient>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();

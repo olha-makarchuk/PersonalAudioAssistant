@@ -137,10 +137,11 @@ namespace PersonalAudioAssistant.Platforms
                                         Text = response.Request,
                                         UserRole = "user",
                                         Audio = transcription.Audio,
-                                        LastRequestId = _prevResponseId
+                                        LastRequestId = _prevResponseId,
+                                        SubUserId = matchedUser.id
                                     };
                                     var createdUser = await _messagesApiClient.CreateMessageAsync(createUserCmd);
-                                    await CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
+                                    //await CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
 
                                     chatMessageProgress.Report(new ChatMessage
                                     {
@@ -169,7 +170,8 @@ namespace PersonalAudioAssistant.Platforms
                                         Text = answer.text,
                                         UserRole = "ai",
                                         Audio = audioBytes,
-                                        LastRequestId = _prevResponseId
+                                        LastRequestId = _prevResponseId,
+                                        SubUserId = matchedUser.id
                                     };
                                     var createdAI = await _messagesApiClient.CreateMessageAsync(careteMessageAI);
 
