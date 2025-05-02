@@ -100,36 +100,24 @@ namespace PersonalAudioAssistant.ViewModel.History
                 var messagesList = await _messagesApiClient.GetMessagesByConversationIdAsync(ConversationIdQueryAttribute, _currentPage, PageSize);
 
                 if (isLoadMore)
-                {
                     foreach (var message in messagesList)
-                    {
                         Messages.Add(message);
-                    }
-                }
                 else
-                {
                     Messages = messagesList.ToObservableCollection();
-                }
 
                 if (messagesList.Count < PageSize)
-                {
                     _hasMoreItems = false;
-                }
                 else
-                {
                     _currentPage++;
-                }
-                if (!isLoadMore && Messages.Any())
+
+                // only auto-play if the switch is on
+                if (!isLoadMore && Messages.Any() && IsAutoPlay)
                 {
                     _currentIndex = 0;
+                    await PlayByIndexAsync(_currentIndex);
                     UpdateButtonStates();
-
-                    if (IsAutoPlay)
-                    {
-                        // Якщо вмикнено автоплей — запустити перше повідомлення
-                        await PlayByIndexAsync(_currentIndex);
-                    }
                 }
+
                 PreviewId = Messages.First().lastRequestId;
             }
             catch (Exception ex)
@@ -138,10 +126,8 @@ namespace PersonalAudioAssistant.ViewModel.History
             }
             finally
             {
-                if (isLoadMore)
-                    _isLoadingMore = false;
-                else
-                    IsBusy = false;
+                if (isLoadMore) _isLoadingMore = false;
+                else IsBusy = false;
             }
         }
 
@@ -150,17 +136,22 @@ namespace PersonalAudioAssistant.ViewModel.History
         {
             try
             {
-                var mediaElement = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
-
                 if (message == null || string.IsNullOrEmpty(message.audioPath))
                     return;
 
+                // sync our internal pointer to whichever message was tapped
+                _currentIndex = Messages.IndexOf(message);
+
+                var mediaElement = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
                 mediaElement.Source = message.audioPath;
 
-                if (mediaElement.CurrentState == CommunityToolkit.Maui.Core.Primitives.MediaElementState.Playing)
+                if (mediaElement.CurrentState == MediaElementState.Playing)
                     mediaElement.Pause();
                 else
                     mediaElement.Play();
+
+                // now enable/disable Prev/Next correctly
+                UpdateButtonStates();
             }
             catch (Exception ex)
             {

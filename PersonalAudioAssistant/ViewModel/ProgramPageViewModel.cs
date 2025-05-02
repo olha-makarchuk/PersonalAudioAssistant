@@ -125,7 +125,7 @@ namespace PersonalAudioAssistant.ViewModel
 
             foreach (var msg in messages.Reverse<MessageResponse>())
             {
-                var matchingUser = _subUsers.FirstOrDefault(u => u.id == msg.SubUserId);
+                var matchingUser = _subUsers.FirstOrDefault(u => u.id == msg.subUserId);
                 ChatMessages.Insert(0, new ChatMessage
                 {
                     Text = msg.text,

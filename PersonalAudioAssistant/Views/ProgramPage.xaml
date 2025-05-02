@@ -14,7 +14,7 @@
             <Style x:Key="PlayButtonStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="#8584df" />
                 <Setter Property="TextColor" Value="White" />
-                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontSize" Value="14" />
                 <Setter Property="FontFamily" Value="sans-serif-medium" />
                 <Setter Property="CornerRadius" Value="30" />
                 <Setter Property="WidthRequest" Value="60" />
@@ -36,7 +36,7 @@
     </ContentPage.Resources>
 
     <!-- Grid adjusted to avoid overlapping -->
-    <Grid RowDefinitions="*,Auto,Auto,Auto" Padding="10,0,0,0">
+    <Grid RowDefinitions="*,Auto,Auto,Auto">
         <!-- Основна область повідомлень -->
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="10">
@@ -47,71 +47,66 @@
                                 Margin="10">
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="10,5" ColumnDefinitions="Auto,*,Auto">
-                                <!-- Оболонка повідомлення -->
-                                <!-- Аватар користувача -->
+                            <Grid Margin="0,2" ColumnDefinitions="Auto,*">
+                                <Grid.Triggers>
+                                    <DataTrigger TargetType="Grid" Binding="{Binding UserRole}" Value="user">
+                                        <Setter Property="FlowDirection" Value="RightToLeft" />
+                                    </DataTrigger>
+                                </Grid.Triggers>
+
+                                <!-- Аватарка -->
                                 <Frame Grid.Column="0"
-                                   WidthRequest="70"
-                                   HeightRequest="70"
-                                   CornerRadius="40"
-                                   Margin="10,0,0,0"
-                                   HasShadow="False"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"
-                                   BackgroundColor="Transparent">
-                                    <Image
-                                    Aspect="AspectFill"
-                                    WidthRequest="80"
-                                    HeightRequest="80"
-                                    VerticalOptions="Center"
-                                    HorizontalOptions="Center">
+                                       WidthRequest="40"
+                                       HeightRequest="40"
+                                       CornerRadius="40"
+                                       Margin="0,0,1,0"
+                                       HasShadow="False"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="Center"
+                                       BackgroundColor="Transparent">
+                                                            <Image
+                                                                Aspect="AspectFill"
+                                                                WidthRequest="80"
+                                                                HeightRequest="80"
+                                                                VerticalOptions="Center"
+                                                                HorizontalOptions="Center">
                                         <Image.Source>
-                                            <UriImageSource Uri="{Binding SubUserPhoto}" 
-                                                        CachingEnabled="False"/>
+                                            <UriImageSource Uri="{Binding SubUserPhoto}" CachingEnabled="False"/>
                                         </Image.Source>
                                     </Image>
                                 </Frame>
+
+                                <!-- Повідомлення -->
                                 <Frame Grid.Column="1"
                                        Padding="10"
                                        CornerRadius="12"
-                                       WidthRequest="300"
+                                       WidthRequest="200"
                                        HasShadow="True">
                                     <Frame.Triggers>
-                                        <DataTrigger TargetType="Frame"
-                                                     Binding="{Binding UserRole}"
-                                                     Value="user">
+                                        <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="user">
                                             <Setter Property="BackgroundColor" Value="#bfe0ff" />
-                                            <Setter Property="HorizontalOptions" Value="End" />
+                                            <Setter Property="HorizontalOptions" Value="Start" />
                                         </DataTrigger>
-                                        <DataTrigger TargetType="Frame"
-                                                     Binding="{Binding UserRole}"
-                                                     Value="ai">
+                                        <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="ai">
                                             <Setter Property="BackgroundColor" Value="#e5e3fe" />
                                             <Setter Property="HorizontalOptions" Value="Start" />
                                         </DataTrigger>
                                     </Frame.Triggers>
 
                                     <VerticalStackLayout Spacing="5">
-                                        <!-- Текст повідомлення -->
-                                        <Label Text="{Binding Text}" 
-                                               FontSize="16"
-                                               HorizontalOptions="Start" />
+                                        <Label Text="{Binding Text}" FontSize="16" HorizontalOptions="Start" />
                                         <Button Style="{StaticResource PlayButtonStyle}"
-                                                WidthRequest="30"
-                                                HeightRequest="30"
+                                                WidthRequest="25"
+                                                HeightRequest="25"
                                                 Text="▶"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
                                                 CommandParameter="{Binding .}">
                                             <Button.Triggers>
-                                                <DataTrigger TargetType="Button"
-                                                             Binding="{Binding UserRole}"
-                                                             Value="ai">
+                                                <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="ai">
                                                     <Setter Property="HorizontalOptions" Value="Start" />
                                                 </DataTrigger>
-                                                <DataTrigger TargetType="Button"
-                                                             Binding="{Binding UserRole}"
-                                                             Value="user">
-                                                    <Setter Property="HorizontalOptions" Value="End" />
+                                                <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="user">
+                                                    <Setter Property="HorizontalOptions" Value="Start" />
                                                 </DataTrigger>
                                             </Button.Triggers>
                                         </Button>
@@ -119,10 +114,11 @@
                                 </Frame>
                             </Grid>
                         </DataTemplate>
+
                     </CollectionView.ItemTemplate>
 
                     <CollectionView.Footer>
-                        <Grid Padding="10" HorizontalOptions="Center">
+                        <Grid HorizontalOptions="Center">
                             <ActivityIndicator IsVisible="{Binding IsLoadingMore}"
                                                IsRunning="{Binding IsLoadingMore}"
                                                WidthRequest="30"
@@ -164,16 +160,15 @@
                      VerticalOptions="Center" />
 
                         <!-- Middle button -->
-                        <Button Text="⏯"
+                        <Button Text="❚❚"
                     Command="{Binding PlayPauseCommand}"
                     IsEnabled="{Binding CanPlayPause}"
-                    FontSize="20"
+                    FontSize="16"
                     CornerRadius="0"
                     BackgroundColor="#7356dc"
                     WidthRequest="50"
                     HeightRequest="50"
                     Margin="0" />
-
                         <!-- White vertical line -->
                         <BoxView WidthRequest="1"
                      HeightRequest="50"

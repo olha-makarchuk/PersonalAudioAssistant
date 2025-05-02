@@ -8,7 +8,7 @@
         public string userRole { get; set; }
         public string audioPath { get; set; }
         public string lastRequestId { get; set; }
-        public string SubUserId { get; set; }
+        public string subUserId { get; set; }
         public DateTime dateTimeCreated { get; set; }
     }
 }

@@ -11,7 +11,7 @@
             <vm:InverseBoolConverter x:Key="InverseBoolConverter"/>
 
             <Style x:Key="PlayButtonStyle" TargetType="Button">
-                <Setter Property="BackgroundColor" Value="#4A90E2" />
+                <Setter Property="BackgroundColor" Value="#8584df" />
                 <Setter Property="TextColor" Value="White" />
                 <Setter Property="FontSize" Value="18" />
                 <Setter Property="FontFamily" Value="sans-serif-medium" />
@@ -57,41 +57,37 @@
                                         <DataTrigger TargetType="Frame"
                                                      Binding="{Binding userRole}"
                                                      Value="user">
-                                            <Setter Property="BackgroundColor" Value="#90CAF9" />
+                                            <Setter Property="BackgroundColor" Value="#bfe0ff" />
                                             <Setter Property="HorizontalOptions" Value="End" />
                                         </DataTrigger>
                                         <DataTrigger TargetType="Frame"
                                                      Binding="{Binding userRole}"
                                                      Value="ai">
-                                            <Setter Property="BackgroundColor" Value="#E1BEE7" />
+                                            <Setter Property="BackgroundColor" Value="#e5e3fe" />
                                             <Setter Property="HorizontalOptions" Value="Start" />
                                         </DataTrigger>
                                     </Frame.Triggers>
-
                                     <VerticalStackLayout Spacing="5">
                                         <!-- Текст повідомлення -->
                                         <Label Text="{Binding text}" 
-                                               TextColor="#0d1996" 
                                                HorizontalOptions="Start" />
 
                                         <!-- Кнопка відтворення для AI або користувача -->
-
-
                                         <Button Style="{StaticResource PlayButtonStyle}"
                                                 WidthRequest="30"
                                                 HeightRequest="30"
-        Text="▶"
-        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=PlaySelectedMessageCommand}"
-        CommandParameter="{Binding .}">
+                                                Text="▶"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MessagesViewModel}}, Path=PlaySelectedMessageCommand}"
+                                                CommandParameter="{Binding .}">
                                             <Button.Triggers>
                                                 <DataTrigger TargetType="Button"
-                     Binding="{Binding userRole}"
-                     Value="ai">
+                                                             Binding="{Binding userRole}"
+                                                             Value="ai">
                                                     <Setter Property="HorizontalOptions" Value="Start" />
                                                 </DataTrigger>
                                                 <DataTrigger TargetType="Button"
-                     Binding="{Binding userRole}"
-                     Value="user">
+                                                             Binding="{Binding userRole}"
+                                                             Value="user">
                                                     <Setter Property="HorizontalOptions" Value="End" />
                                                 </DataTrigger>
                                             </Button.Triggers>
@@ -123,38 +119,63 @@
 
         <!-- 🔻 Переміщений блок керування аудіо -->
         <VerticalStackLayout Grid.Row="2"
-                         Padding="20">
+                             Padding="20">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*"
+                  VerticalOptions="Center"
+                  HorizontalOptions="Center">
+                <Frame CornerRadius="25"
+                       Padding="0"
+                       HasShadow="False"
+                       BackgroundColor="Transparent"
+                       HorizontalOptions="Center">
+                    <StackLayout Orientation="Horizontal"
+                                 BackgroundColor="Transparent">
+                        <!-- First button -->
+                        <Button Text="◀"
+                                Command="{Binding PreviousCommand}"
+                                IsEnabled="{Binding CanPrevious}"
+                                FontSize="20"
+                                BackgroundColor="#7356dc"
+                                CornerRadius="0"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                Margin="0" />
 
-            <Grid ColumnSpacing="15"
-              ColumnDefinitions="Auto,Auto,Auto,*"
-              VerticalOptions="Center"
-              HorizontalOptions="Center">
-                <Button Grid.Column="0"
-                    Text="◀"
-                    Command="{Binding PreviousCommand}"
-                    IsEnabled="{Binding CanPrevious}"
-                    FontSize="20"
-                    CornerRadius="20"
-                    WidthRequest="50"
-                    HeightRequest="50" />
-                <Button Grid.Column="1"
-                    Text="⏯"
-                    Command="{Binding PlayPauseCommand}"
-                    IsEnabled="{Binding CanPlayPause}"
-                    FontSize="20"
-                    CornerRadius="20"
-                    WidthRequest="50"
-                    HeightRequest="50" />
-                <Button Grid.Column="2"
-                    Text="▶"
-                    Command="{Binding NextCommand}"
-                    IsEnabled="{Binding CanNext}"
-                    FontSize="20"
-                    CornerRadius="20"
-                    WidthRequest="50"
-                    HeightRequest="50" />
+                        <!-- White vertical line -->
+                        <BoxView WidthRequest="1"
+                                 HeightRequest="50"
+                                 Color="White"
+                                 VerticalOptions="Center" />
+
+                        <!-- Middle button -->
+                        <Button Text="❚❚"
+                                Command="{Binding PlayPauseCommand}"
+                                IsEnabled="{Binding CanPlayPause}"
+                                FontSize="16"
+                                CornerRadius="0"
+                                BackgroundColor="#7356dc"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                Margin="0" />
+                        <!-- White vertical line -->
+                        <BoxView WidthRequest="1"
+                                 HeightRequest="50"
+                                 Color="White"
+                                 VerticalOptions="Center" />
+
+                        <!-- Last button -->
+                        <Button Text="▶"
+                                Command="{Binding NextCommand}"
+                                IsEnabled="{Binding CanNext}"
+                                FontSize="20"
+                                CornerRadius="0"
+                                BackgroundColor="#7356dc"
+                                WidthRequest="50"
+                                HeightRequest="50"
+                                Margin="0" />
+                    </StackLayout>
+                </Frame>
             </Grid>
-
             <HorizontalStackLayout HorizontalOptions="Center"
                        VerticalOptions="Center"
                        Spacing="20"
@@ -165,7 +186,7 @@
                 <Button Text="Продовжити розмову"
                         Command="{Binding ContinueConversationCommand}"
                         FontSize="14"
-                        BackgroundColor="#aaaaaa"
+                        BackgroundColor="#a59de1"
                         TextColor="White"
                         CornerRadius="20"
                         Padding="10,5"

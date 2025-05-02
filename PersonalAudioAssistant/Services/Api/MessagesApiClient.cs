@@ -17,6 +17,7 @@ namespace PersonalAudioAssistant.Services.Api
                 Text = createMessageCommand.Text,
                 UserRole = createMessageCommand.UserRole,
                 Audio = createMessageCommand.Audio,
+                SubUserId = createMessageCommand.SubUserId,
                 LastRequestId = createMessageCommand.LastRequestId
             };
 
@@ -56,6 +57,7 @@ namespace PersonalAudioAssistant.Services.Api
     public class CreateMessageCommand
     {
         public string ConversationId { get; set; }
+        public string SubUserId { get; set; }
         public string Text { get; set; }
         public string UserRole { get; set; }
         public byte[] Audio { get; set; }
