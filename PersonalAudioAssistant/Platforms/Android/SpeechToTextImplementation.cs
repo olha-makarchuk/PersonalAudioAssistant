@@ -27,19 +27,23 @@ namespace PersonalAudioAssistant.Platforms
         private Action? _clearChatMessagesAction;
         private readonly ConversationApiClient _conversationApiClient;
         private readonly MessagesApiClient _messagesApiClient;
+        private readonly MoneyUsedApiClient _moneyUsedApiClient;
+        private readonly MoneyUsersUsedApiClient _moneyUsersUsedApiClient;
         private readonly ManageCacheData _manageCacheData;
 
         public bool IsPrivateConversation { get; set; }
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
             _messagesApiClient = messagesApiClient;
             _manageCacheData = manageCacheData;
+            _moneyUsedApiClient = moneyUsedApiClient;
+            _moneyUsersUsedApiClient = moneyUsersUsedApiClient;
         }
         public SpeechToTextImplementation() : this(MediatorProvider.Mediator,
-                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>(), MediatorProvider.Services!.GetRequiredService<ManageCacheData>())
+                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>(), MediatorProvider.Services!.GetRequiredService<ManageCacheData>(), MediatorProvider.Services!.GetRequiredService<MoneyUsedApiClient>(), MediatorProvider.Services!.GetRequiredService<MoneyUsersUsedApiClient>())
         {
         }
 
@@ -136,6 +140,7 @@ namespace PersonalAudioAssistant.Platforms
                                         LastRequestId = _prevResponseId
                                     };
                                     var createdUser = await _messagesApiClient.CreateMessageAsync(createUserCmd);
+                                    await CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
 
                                     chatMessageProgress.Report(new ChatMessage
                                     {
@@ -234,6 +239,42 @@ namespace PersonalAudioAssistant.Platforms
 
         }
 
+        public async Task CalculatePrice(double audioDurationRequest, ApiClientGptResponse gptResponse, string subUserId, string mainUserId)
+        {
+            var transcriptionCost = (audioDurationRequest / 60.0) * 0.006;
+
+            var gptInCost = gptResponse.inputTokens * 0.000002;
+            var gptOutCost = gptResponse.outputTokens * 0.000008;
+
+            var charCount = gptResponse.text.Length;
+            var ttsCost = (charCount / 1000.0) * 0.0833;
+
+            double totalCost = transcriptionCost + gptInCost + gptOutCost + ttsCost;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _moneyUsedApiClient.CreateMoneyUsedAsync(mainUserId, subUserId, totalCost);
+                }
+                catch (Exception ex)
+                {
+                }
+            });
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _moneyUsersUsedApiClient.CreateMoneyUsersUsedAsync(subUserId, totalCost);
+                }
+                catch (Exception ex)
+                {
+                }
+            });
+        }
+
+
         private Intent CreateSpeechIntent(CultureInfo culture)
         {
             var intent = new Intent(RecognizerIntent.ActionRecognizeSpeech);
@@ -314,9 +355,7 @@ namespace PersonalAudioAssistant.Platforms
     public class TranscriptionResponse
     {
         public string Request { get; set; }
-        public string Transcripts { get; set; }
+        public double AudioDuration { get; set; }
         public bool IsContinuous { get; set; }
-        public string ConversationId { get; set; }
-        public string AIconversationId { get; set; }
     }
 }

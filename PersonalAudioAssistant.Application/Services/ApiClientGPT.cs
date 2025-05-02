@@ -40,7 +40,9 @@ namespace PersonalAudioAssistant.Application.Services
             var response = new ApiClientGptResponse
             {
                 responseId = myDeserializedClass.id,
-                text = myDeserializedClass.output[0].content[0].text
+                text = myDeserializedClass.output[0].content[0].text,
+                inputTokens = myDeserializedClass.usage.input_tokens,
+                outputTokens = myDeserializedClass.usage.output_tokens
             };
 
             return response;
@@ -51,6 +53,8 @@ namespace PersonalAudioAssistant.Application.Services
     {
         public string responseId { get; set; }
         public string text { get; set; }
+        public int inputTokens { get; set; }
+        public int outputTokens { get; set; }
     }
 
     public class Content

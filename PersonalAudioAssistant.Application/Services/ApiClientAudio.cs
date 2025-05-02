@@ -97,17 +97,5 @@ namespace PersonalAudioAssistant.Application.Services
                 }
             }
         }
-
-
-
-        public class TranscriptionResponse
-        {
-            public string Request { get; set; }
-            public string Transcripts { get; set; }
-            public bool IsContinuous { get; set; }
-            public string ConversationId { get; set; }
-            public string AIconversationId { get; set; }
-            public string audio { get; set; }
-        }
     }
 }

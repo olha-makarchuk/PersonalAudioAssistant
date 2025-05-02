@@ -269,18 +269,25 @@ def process_audio_segments(full_audio, user_voice):
 
 def transcribe_audio(final_audio_segments):
     transcription = "none"
+    duration_seconds = 0.0
+
     if final_audio_segments:
         combined_audio = np.concatenate(final_audio_segments)
+        duration_seconds = len(combined_audio) / RATE 
         final_audio_file = "final_audio.wav"
         sf.write(final_audio_file, combined_audio, RATE)
+
         with open(final_audio_file, "rb") as audio_file:
-            transcription = client.audio.transcriptions.create(
+            transcription_response = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
                 language="uk"
             )
+            transcription = transcription_response.text if hasattr(transcription_response, "text") else str(transcription_response)
+
         os.remove(final_audio_file)
-    return transcription
+
+    return transcription, duration_seconds
 
 load_known_speakers()
 post_processing_params = load_yaml_config()

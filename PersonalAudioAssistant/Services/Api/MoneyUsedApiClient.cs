@@ -6,7 +6,7 @@ namespace PersonalAudioAssistant.Services.Api
     {
         public MoneyUsedApiClient(HttpClient httpClient) : base(httpClient) { }
 
-        public async Task CreateMoneyUsedAsync(string mainUserId, string subUserId, decimal amountMoney)
+        public async Task CreateMoneyUsedAsync(string mainUserId, string subUserId, double amountMoney)
         {
             var url = $"{BaseUrl}MoneyUsed/create";
 
