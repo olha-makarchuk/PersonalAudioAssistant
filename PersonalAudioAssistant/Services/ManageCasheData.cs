@@ -18,14 +18,16 @@ namespace PersonalAudioAssistant.Services
         private readonly AppSettingsApiClient _appSettingsApiClient;
         private readonly SubUserApiClient _subUserApiClient;
         private readonly ConversationApiClient _conversationApiClient;
+        private readonly VoiceApiClient _voiceApiClient;
 
-        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient, ConversationApiClient conversationApiClient)
+        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient, ConversationApiClient conversationApiClient, VoiceApiClient voiceApiClient)
         {
             _cache = cache;
             _mediator = mediator;
             _appSettingsApiClient = appSettingsApiClient;
             _subUserApiClient = subUserApiClient;
             _conversationApiClient = conversationApiClient;
+            _voiceApiClient = voiceApiClient;
         }
 
         public async Task<List<SubUserResponse>> GetUsersAsync(Action<double> progress = null)

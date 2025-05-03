@@ -29,11 +29,12 @@ namespace PersonalAudioAssistant.Platforms
         private readonly MessagesApiClient _messagesApiClient;
         private readonly MoneyUsedApiClient _moneyUsedApiClient;
         private readonly MoneyUsersUsedApiClient _moneyUsersUsedApiClient;
+        private readonly VoiceApiClient _voiceApiClient;
         private readonly ManageCacheData _manageCacheData;
 
         public bool IsPrivateConversation { get; set; }
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
@@ -41,9 +42,10 @@ namespace PersonalAudioAssistant.Platforms
             _manageCacheData = manageCacheData;
             _moneyUsedApiClient = moneyUsedApiClient;
             _moneyUsersUsedApiClient = moneyUsersUsedApiClient;
+            _voiceApiClient = voiceApiClient;
         }
         public SpeechToTextImplementation() : this(MediatorProvider.Mediator,
-                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>(), MediatorProvider.Services!.GetRequiredService<ManageCacheData>(), MediatorProvider.Services!.GetRequiredService<MoneyUsedApiClient>(), MediatorProvider.Services!.GetRequiredService<MoneyUsersUsedApiClient>())
+                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>(), MediatorProvider.Services!.GetRequiredService<ManageCacheData>(), MediatorProvider.Services!.GetRequiredService<MoneyUsedApiClient>(), MediatorProvider.Services!.GetRequiredService<MoneyUsersUsedApiClient>(), MediatorProvider.Services!.GetRequiredService<VoiceApiClient>())
         {
         }
 
@@ -113,6 +115,7 @@ namespace PersonalAudioAssistant.Platforms
                             {
                                 try
                                 {
+                                    var voice = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
                                     IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                                     var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
 
@@ -141,7 +144,7 @@ namespace PersonalAudioAssistant.Platforms
                                         SubUserId = matchedUser.id
                                     };
                                     var createdUser = await _messagesApiClient.CreateMessageAsync(createUserCmd);
-                                    //await CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
+                                    await CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
 
                                     chatMessageProgress.Report(new ChatMessage
                                     {
@@ -160,7 +163,7 @@ namespace PersonalAudioAssistant.Platforms
                                     }
 
                                     var textToSpeech = new ElevenlabsApi();
-                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(matchedUser.voiceId!, answer.text);
+                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voice.voiceId, answer.text);
 
                                     //await Task.WhenAll(userTask);
 

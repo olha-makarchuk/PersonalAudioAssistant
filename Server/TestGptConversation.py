@@ -1,3 +1,5 @@
+'''
+
 from openai import OpenAI
 
 OPENAI_API_KEY = "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"
@@ -25,7 +27,6 @@ response = client.responses.create(
 print(response.output_text)
 
 
-'''
 def continue_chat(user_message, prev_response_id=None):
     response_params = {
         "model": "gpt-4o-mini",
@@ -46,3 +47,20 @@ def continue_chat(user_message, prev_response_id=None):
 
 continue_chat("яке було моє попереднє запитання?", "resp_680515fcaeb08192a564398e5fd913900da8b8fd6c8fe0aa")
 '''
+
+
+from elevenlabs.client import ElevenLabs
+from elevenlabs import play
+
+# Ініціалізація клієнта з вашим API-ключем
+client = ElevenLabs(api_key="sk_b76dddc4f56ebe8383b50692c9120c637a2243fed76b371f")
+
+# Генерація аудіо з тексту
+audio = client.generate(
+    text="Привіт! Це тест.",
+    voice="Rachel",  # Ви можете змінити на інший доступний голос
+    model="eleven_multilingual_v2"
+)
+
+# Програвання згенерованого аудіо
+play(audio)

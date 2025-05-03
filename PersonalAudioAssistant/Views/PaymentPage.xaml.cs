@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.ViewModel;
 using PersonalAudioAssistant.ViewModel.Users;
 
@@ -26,4 +27,6 @@ public partial class PaymentPage : ContentPage
             viewModel.OnNavigatedFrom();
         }
     }
+    public MediaElement MediaElementAnswer => mediaElementAnswer;
+    public MediaElement MediaElementRequest => mediaElementRequest;
 }

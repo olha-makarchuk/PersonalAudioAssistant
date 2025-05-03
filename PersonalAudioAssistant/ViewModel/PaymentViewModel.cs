@@ -1,4 +1,6 @@
 ﻿using Android.Text;
+using CommunityToolkit.Maui.Core.Primitives;
+using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
@@ -6,7 +8,11 @@ using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Model.Payment;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Views;
+using PersonalAudioAssistant.Views.History;
+using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
+using static Com.Google.Android.Exoplayer2.Upstream.Experimental.SlidingWeightedAverageBandwidthStatistic;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -28,6 +34,15 @@ namespace PersonalAudioAssistant.ViewModel
 
         [ObservableProperty]
         private bool isResultExist;
+
+        [ObservableProperty]
+        private string audioRequestPath;
+
+        [ObservableProperty]
+        private string audioAnswerPath;
+
+        [ObservableProperty]
+        private bool isAnswerPathAvailable;
 
         public PaymentViewModel(IMediator mediator, ApiClientTokens apiClientTokens, ManageCacheData manageCacheData, AppSettingsApiClient appSettingsApiClient, PaymentApiClient paymentApiClient, AutoPaymentApiClient autoPaymentApiClient)
         {
@@ -72,20 +87,29 @@ namespace PersonalAudioAssistant.ViewModel
         [ObservableProperty]
         private string textInput;
 
+        public ObservableCollection<ExamplesPaymentResponse> Examples { get; } = new();
+
+        [ObservableProperty]
+        private bool isExampleSelected;
+
         public async Task InitializeAsync()
         {
-            if (IsBusy)
-                return;
-
+            if (IsBusy) return;
             IsBusy = true;
             try
             {
                 await LoadPaymentInfo();
+                await LoadExamplesAsync();
             }
-            finally
-            {
-                IsBusy = false;
-            }
+            finally { IsBusy = false; }
+        }
+
+        private async Task LoadExamplesAsync()
+        {
+            var examples = await new ExamplesPayment().GetExamplesPayment();
+            Examples.Clear();
+            foreach (var ex in examples)
+                Examples.Add(ex);
         }
 
         private async Task LoadPaymentInfo()
@@ -247,6 +271,85 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
+        [ObservableProperty]
+        private bool isExample1Selected;
+
+        [ObservableProperty]
+        private bool isExample2Selected;
+
+        [ObservableProperty]
+        private bool isExample3Selected;
+
+        partial void OnIsExample1SelectedChanged(bool value)
+        {
+            if (value)
+            {
+                AudioRequestPath = null;
+                AudioAnswerPath = null;
+                IsAnswerPathAvailable = false;
+                IsExample2Selected = false;
+                IsExample3Selected = false;
+
+                GetExamplesPayment(0);
+            }
+        }
+
+        partial void OnIsExample2SelectedChanged(bool value)
+        {
+            if (value)
+            {
+                AudioRequestPath = null;
+                AudioAnswerPath = null;
+                IsAnswerPathAvailable = false;
+                IsExample1Selected = false;
+                IsExample3Selected = false;
+
+                GetExamplesPayment(1);
+            }
+        }
+
+        partial void OnIsExample3SelectedChanged(bool value)
+        {
+            if (value)
+            {
+                AudioRequestPath = null;
+                AudioAnswerPath = null;
+                IsAnswerPathAvailable = false;
+                IsExample1Selected = false;
+                IsExample2Selected = false;
+
+                GetExamplesPayment(2);
+            }
+        }
+
+        private async Task GetExamplesPayment(int numberExample)
+        {
+            ExamplesPayment examplesPayment = new ExamplesPayment();
+            var examplesList = await examplesPayment.GetExamplesPayment();
+
+            var example = examplesList[numberExample];
+            TextInput = example.textRequest;
+
+            var totalCost = example.transcriptionCost + example.inputCost + example.outputCost + example.ttsCost;
+            var howManyRequestsFiveDollars = (5 / totalCost);  
+
+            var summary = $"""
+                🧠 Відповідь: "{example.textAnswer}"
+                🎙️ Тривалість транскрипції: {example.audioRequestDuration:F1} сек → ${example.transcriptionCost:F5}
+                🤖 Вартість обробки запиту GPT: {example.inputTokens} токенів → ${example.inputCost:F5}
+                📤 Вартість відповіді GPT: {example.outputTokens} токенів → ${example.outputCost:F5}
+                🗣️ Вартість озвучення тексту: {example.charCount} символів → ${example.ttsCost:F5}
+                💰 Загальна вартість: ${totalCost:F5}
+                💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} подібних запитів
+                """;
+            
+            IsResultExist = true;
+            IsAnswerPathAvailable = true;
+            TokenCalculationResult = summary;
+            AudioRequestPath = example.audioRequestPath;
+            AudioAnswerPath = example.audioAnswerPath;
+        }
+
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
         private async Task RechargeBalance()
         {
@@ -303,7 +406,7 @@ namespace PersonalAudioAssistant.ViewModel
             var howManyRequestsFiveDollars = (5 / totalCost);  // Кількість запитів за $5
 
             var summary = $"""
-            🧠 Ваша відповідь: "{answer}"
+            🧠 Відповідь: "{answer}"
             🎙️ Тривалість транскрипції: {durationInSeconds:F1} сек → ${transcriptionCost:F5}
             🤖 Вартість обробки запиту GPT: {inputTokenCount} токенів → ${gptInCost:F5}
             📤 Вартість відповіді GPT: {outputTokenCount} токенів → ${gptOutCost:F5}
@@ -311,10 +414,88 @@ namespace PersonalAudioAssistant.ViewModel
             💰 Загальна вартість: ${totalCost:F5}
             💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} подібних запитів
             """;
-
+            AudioRequestPath = null;
+            AudioAnswerPath = null;
+            IsAnswerPathAvailable = false;
             IsResultExist = true;
             TokenCalculationResult = summary;
         }
+
+
+
+        [ObservableProperty]
+        private bool canPlayRequest;
+
+        [ObservableProperty]
+        private bool canPlayAnswer;
+
+        partial void OnAudioRequestPathChanged(string value)
+        {
+            CanPlayRequest = !string.IsNullOrEmpty(value);
+            PlayRequestCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnAudioAnswerPathChanged(string value)
+        {
+            CanPlayAnswer = !string.IsNullOrEmpty(value);
+            PlayAnswerCommand.NotifyCanExecuteChanged();
+        }
+
+
+        private bool isPlayingRequest;
+
+        [RelayCommand(CanExecute = nameof(CanPlayRequest))]
+        private async Task PlayRequest()
+        {
+            try 
+            { 
+                var mediaElement = ((PaymentPage)Shell.Current.CurrentPage).MediaElementRequest;
+                mediaElement.Source = AudioRequestPath;
+
+                if (isPlayingRequest)
+                {
+                    mediaElement.Pause();
+                    isPlayingRequest = false;
+                }
+                else
+                {
+                    mediaElement.Play();
+                    isPlayingRequest = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Не вдалося відтворити голос: {ex.Message}", "OK");
+            }
+        }
+
+        private bool isPlayingAnswer;
+
+        [RelayCommand(CanExecute = nameof(CanPlayRequest))]
+        private async Task PlayAnswer()
+        {
+            try
+            {
+                var mediaElement = ((PaymentPage)Shell.Current.CurrentPage).MediaElementAnswer;
+                mediaElement.Source = AudioAnswerPath;
+
+                if (isPlayingAnswer)
+                {
+                    mediaElement.Pause();
+                    isPlayingAnswer = false;
+                }
+                else
+                {
+                    mediaElement.Play();
+                    isPlayingAnswer = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Не вдалося відтворити голос: {ex.Message}", "OK");
+            }
+        }
+
 
         public void OnNavigatedFrom()
         {

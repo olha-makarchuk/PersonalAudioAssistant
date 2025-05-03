@@ -236,7 +236,7 @@
 
         <!-- Прихований MediaElement -->
         <toolkit:MediaElement x:Name="mediaElement"
-                              Source="{Binding SelectedMessage.URL}"
+                              Source="{Binding AudioPath}"
                               IsVisible="False"
                               Grid.Row="3"/>
     </Grid>
