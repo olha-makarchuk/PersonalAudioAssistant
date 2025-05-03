@@ -63,6 +63,7 @@ public static class MauiProgram
         builder.Services.AddScoped<PasswordManager>();
         builder.Services.AddScoped<ApiClientTokens>();
         builder.Services.AddScoped<ElevenlabsApi>();
+        builder.Services.AddScoped<ApiClientGPT>();
         builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
         builder.Services.AddMemoryCache();
 
@@ -103,15 +104,12 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        // 1) give MediatorProvider the real IServiceProvider
-        MediatorProvider.Services = app.Services;
+        DataProvider.Services = app.Services;
 
-        // 2) set your SpeechToText.Default to the DI-created instance
         SpeechToText.SetDefault(
             app.Services.GetRequiredService<ISpeechToText>()
         );
 
         return app;
-
     }
 }

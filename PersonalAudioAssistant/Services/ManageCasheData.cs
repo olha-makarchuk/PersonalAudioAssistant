@@ -51,7 +51,7 @@ namespace PersonalAudioAssistant.Services
             await GetUsersAsync();
         }
 
-        public async Task<ConversationIdResponse> GetСonversationAsync(Action<double> progress = null)
+        public async Task<string> GetСonversationAsync(Action<double> progress = null)
         {
             if (!_cache.TryGetValue(ConversationCacheKey, out ConversationIdResponse conversation))
             {
@@ -69,7 +69,7 @@ namespace PersonalAudioAssistant.Services
                 _cache.Set(SettingsCacheKey, conversation);
                 progress?.Invoke(1.0);
             }
-            return conversation;
+            return conversation.ConversationId;
         }
 
         public async Task<AppSettingsResponse> GetAppSettingsAsync(Action<double> progress = null)

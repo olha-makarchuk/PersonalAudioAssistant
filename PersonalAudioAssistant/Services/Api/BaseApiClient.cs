@@ -5,7 +5,7 @@ namespace PersonalAudioAssistant.Services.Api
     public abstract class BaseApiClient
     {
         protected readonly HttpClient _httpClient;
-        public string BaseUrl = $"http://192.168.0.155:8080/api/v1/";
+        public string BaseUrl = $"http://192.168.0.199:8080/api/v1/";
         
         protected BaseApiClient(HttpClient httpClient)
         {

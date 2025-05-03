@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using Android.Content;
 using Android.Speech;
-using Azure;
 using CommunityToolkit.Maui.Alerts;
 using MediatR;
 using Newtonsoft.Json;
@@ -32,10 +31,12 @@ namespace PersonalAudioAssistant.Platforms
         private readonly MoneyUsersUsedApiClient _moneyUsersUsedApiClient;
         private readonly VoiceApiClient _voiceApiClient;
         private readonly ManageCacheData _manageCacheData;
+        private ApiClientGPT _apiClientGPT;
+
         private bool _hasCleared = false;
         public bool IsPrivateConversation { get; set; }
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient, ApiClientGPT apiClientGPT)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
@@ -44,9 +45,10 @@ namespace PersonalAudioAssistant.Platforms
             _moneyUsedApiClient = moneyUsedApiClient;
             _moneyUsersUsedApiClient = moneyUsersUsedApiClient;
             _voiceApiClient = voiceApiClient;
+            _apiClientGPT = apiClientGPT;
         }
-        public SpeechToTextImplementation() : this(MediatorProvider.Mediator,
-                MediatorProvider.Services!.GetRequiredService<ConversationApiClient>(), MediatorProvider.Services!.GetRequiredService<MessagesApiClient>(), MediatorProvider.Services!.GetRequiredService<ManageCacheData>(), MediatorProvider.Services!.GetRequiredService<MoneyUsedApiClient>(), MediatorProvider.Services!.GetRequiredService<MoneyUsersUsedApiClient>(), MediatorProvider.Services!.GetRequiredService<VoiceApiClient>())
+        public SpeechToTextImplementation() : this(DataProvider.Mediator, DataProvider.ConversationApiClient
+                , DataProvider.MessagesApiClient, DataProvider.ManageCacheData, DataProvider.MoneyUsedApiClient, DataProvider.MoneyUsersUsedApiClient, DataProvider.VoiceApiClient, DataProvider.ApiClientGPT)
         {
         }
 
@@ -80,7 +82,6 @@ namespace PersonalAudioAssistant.Platforms
                 {
                     bool processingCommand = false;
                     recognitionResult?.Report(sentence);
-                    var apiGPT = new ApiClientGPT();
 
                     SubUserResponse? matchedUser = null;
                     string normalizedSentence = sentence.Trim().ToLowerInvariant();
@@ -89,7 +90,6 @@ namespace PersonalAudioAssistant.Platforms
 
                     if (isPrivateConversation && !_hasCleared)
                     {
-                        // Одна-єдина очистка чату
                         clearChatMessagesAction?.Invoke();
                         _hasCleared = true;
                         IsPrivateConversation = true;
@@ -98,8 +98,6 @@ namespace PersonalAudioAssistant.Platforms
                         !string.IsNullOrWhiteSpace(user.startPhrase) &&
                         normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
                     );
-                    var convMain = await _manageCacheData.GetСonversationAsync();
-                    //string convId = convMain[0].IdConversation;
 
                     if (matchedUser != null && !processingCommand)
                     {
@@ -108,65 +106,51 @@ namespace PersonalAudioAssistant.Platforms
                         try
                         {
                             PauseListening();
-
-                            await Toast.Make(matchedUser.startPhrase).Show(cancellationToken);
-
+                            //await Toast.Make(matchedUser.startPhrase).Show(cancellationToken);
                             var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
                             await audioPlayerHelper.PlayAudio(cancellationToken);
 
                             IsContinueConversation = true;
                             IsFirstRequest = true;
+                            TranscriptionResponse response = new();
 
-                            string conversationId;
-
+                            Task<string> conversationIdTask;
                             if (isPrivateConversation)
                             {
-                                conversationId = await _conversationApiClient.CreateConversationAsync("", matchedUser.id);
+                                conversationIdTask = _conversationApiClient.CreateConversationAsync("", matchedUser.id);
                             }
                             else
                             {
-                                var conv = await _manageCacheData.GetСonversationAsync();
-                                conversationId = conv.ConversationId;
+                                conversationIdTask = _manageCacheData.GetСonversationAsync();
                             }
-                            TranscriptionResponse response = new();
 
                             while (IsContinueConversation)
                             {
                                 try
                                 {
-                                    var voice = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
                                     IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                                     var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
-
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
-
                                     response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
-                                    if (response.Request == "none" || !response.IsContinuous)
+                                    if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation) 
                                     {
-                                        // скидаємо стан
                                         _prevResponseId = null;
-
-                                        // 2) відновлюємо загальний чат
                                         await restoreChatMessagesAction();
-
-                                        // більше не приватна
                                         IsPrivateConversation = false;
                                         _hasCleared = false;
-
-                                        // повертаємо результат Listen
                                         taskResult.TrySetResult(response.Request);
                                         return;
                                     }
 
-                                    await Toast.Make($"Відповідь: {transcription.Response}").Show(cancellationToken);
-
-                                    ApiClientGptResponse answer = await apiGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
                                     _prevResponseId = answer.responseId;
+                                    var voiceTask = _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
 
+                                    await Task.WhenAll(conversationIdTask);
                                     var createUserCmd = new CreateMessageCommand
                                     {
-                                        ConversationId = conversationId,
+                                        ConversationId = conversationIdTask.Result,
                                         Text = response.Request,
                                         UserRole = "user",
                                         Audio = transcription.Audio,
@@ -174,8 +158,6 @@ namespace PersonalAudioAssistant.Platforms
                                         SubUserId = matchedUser.id
                                     };
                                     var createdUser = await _messagesApiClient.CreateMessageAsync(createUserCmd);
-                                    await CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
-
                                     chatMessageProgress.Report(new ChatMessage
                                     {
                                         Text = createdUser.text,
@@ -186,60 +168,55 @@ namespace PersonalAudioAssistant.Platforms
                                         URL = createdUser.audioPath
                                     });
 
+                                    var task = CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
-                                    if(!IsContinueConversation)
-                                    {
-                                        _prevResponseId = null;
-                                      //clearChatMessagesAction?.Invoke();
-                                    }
 
                                     var textToSpeech = new ElevenlabsApi();
-                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voice.voiceId, answer.text);
+                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
 
-                                    //await Task.WhenAll(userTask);
+                                    var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
 
                                     var careteMessageAI = new CreateMessageCommand()
                                     {
-                                        ConversationId = conversationId,
+                                        ConversationId = conversationIdTask.Result,
                                         Text = answer.text,
                                         UserRole = "ai",
                                         Audio = audioBytes,
                                         LastRequestId = _prevResponseId,
                                         SubUserId = matchedUser.id
                                     };
-                                    var createdAI = await _messagesApiClient.CreateMessageAsync(careteMessageAI);
-
+                                    var createdAItask = _messagesApiClient.CreateMessageAsync(careteMessageAI);
+                                    await Task.WhenAll(createdAItask);
                                     chatMessageProgress.Report(new ChatMessage
                                     {
-                                        Text = createdAI.text,
+                                        Text = createdAItask.Result.text,
                                         UserRole = "ai",
                                         LastRequestId = _prevResponseId,
                                         SubUserPhoto = matchedUser.photoPath,
-                                        DateTimeCreated = createdAI.dateTimeCreated,
-                                        URL = createdAI.audioPath
+                                        DateTimeCreated = createdAItask.Result.dateTimeCreated,
+                                        URL = createdAItask.Result.audioPath
                                     });
 
-                                    await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
-                                    //await Task.WhenAll(aiTask);
+                                    await Task.WhenAll(playAnswerTask);
                                     await Task.Delay(100);
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
                                     StopRecording();
                                     return;
                                 }
                             }
 
-                            ApiClientGptResponse description = await apiGPT.ContinueChatAsync("На основі розмови напиши короткий заголовок, який підсумовує основну тему", _prevResponseId);
+                            //ApiClientGptResponse description = await _apiClientGPT.ContinueChatAsync("На основі розмови напиши короткий заголовок, який підсумовує основну тему", _prevResponseId);
 
-                            var TaskDescription =  _conversationApiClient.UpdateConversationAsync(conversationId, description.text);
+                            //var TaskDescription = _conversationApiClient.UpdateConversationAsync(conversationId, description.text);
                         }
                         catch (Exception ex)
                         {
                             StopRecording();
                             await Toast.Make("Помилка з listener: " + ex.Message).Show(cancellationToken);
-                            return; 
+                            return;
                         }
 
                         await Task.Delay(1000);
@@ -384,12 +361,31 @@ namespace PersonalAudioAssistant.Platforms
         }
     }
 
-    public static class MediatorProvider
+    public static class DataProvider
     {
         public static IServiceProvider? Services { get; set; }
 
         public static IMediator Mediator =>
             Services!.GetRequiredService<IMediator>();
+
+        public static ConversationApiClient ConversationApiClient =>
+            Services!.GetRequiredService<ConversationApiClient>();
+
+        public static ApiClientGPT ApiClientGPT =>
+            Services!.GetRequiredService<ApiClientGPT>();
+
+        public static MessagesApiClient MessagesApiClient =>
+            Services!.GetRequiredService<MessagesApiClient>();
+
+        public static ManageCacheData ManageCacheData =>
+            Services!.GetRequiredService<ManageCacheData>();
+        public static MoneyUsedApiClient MoneyUsedApiClient =>
+            Services!.GetRequiredService<MoneyUsedApiClient>();
+        public static MoneyUsersUsedApiClient MoneyUsersUsedApiClient =>
+            Services!.GetRequiredService<MoneyUsersUsedApiClient>();
+
+        public static VoiceApiClient VoiceApiClient =>
+            Services!.GetRequiredService<VoiceApiClient>();
     }
 
     public class TranscriptionResponse

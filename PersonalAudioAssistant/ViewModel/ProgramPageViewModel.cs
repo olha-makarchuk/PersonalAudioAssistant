@@ -103,7 +103,7 @@ namespace PersonalAudioAssistant.ViewModel
 
             isLoadingMessages = true;
 
-            conversationId = (await _manageCacheData.GetСonversationAsync()).ConversationId;
+            conversationId = (await _manageCacheData.GetСonversationAsync());
 
             if (string.IsNullOrWhiteSpace(conversationId))
             {
