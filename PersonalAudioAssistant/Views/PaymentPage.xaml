@@ -262,9 +262,9 @@
 
                         <!-- Приклади обрахунків -->
                         <VerticalStackLayout Margin="0,20,0,0">
-                            <Label Text="Виберіть приклад готових обрахунків:"
-           FontSize="16"
-           TextColor="#444" />
+                            <Label Text="⚫ Виберіть приклад готових обрахунків:"
+                                   FontSize="15"
+                                   TextColor="#444" />
                             <HorizontalStackLayout>
                                 <CheckBox IsChecked="{Binding IsExample1Selected}" Margin="0,0,-10,0"/>
                                 <Label Text="Приклад 1" VerticalOptions="Center" FontSize="12" />
@@ -286,17 +286,16 @@
                         
                         <!-- Поле для введення -->
                         <VerticalStackLayout Spacing="5">
-                            <Label Text="Введіть речення для аналізу:"
+                            <Label Text="⚫ Введіть речення для аналізу:"
                                    FontSize="16"
-                                   TextColor="#444"
-                                   Margin="10,0,0,0" />
+                                   TextColor="#444"/>
                             <Frame CornerRadius="12"
                                    Padding="12"
                                    BackgroundColor="White"
                                    BorderColor="#E0E0E0"
                                    HasShadow="True">
                                 <Editor Placeholder="Введіть ваше речення тут..."
-                                        FontSize="16"
+                                        FontSize="14"
                                         BackgroundColor="#FAFAFA"
                                         HeightRequest="200"
                                         TextColor="#333"
@@ -322,12 +321,12 @@
                                    Margin="10,0,0,-30"
                                    TextColor="#444" />
                             <Frame
-    Padding="10"
-    Margin="0,10,0,0"
-    BorderColor="#CCC"
-    CornerRadius="10"
-    HasShadow="True"
-    BackgroundColor="White">
+                                Padding="10"
+                                Margin="0,10,0,0"
+                                BorderColor="#CCC"
+                                CornerRadius="10"
+                                HasShadow="True"
+                                BackgroundColor="White">
 
                                 <VerticalStackLayout Spacing="15">
 
@@ -337,7 +336,7 @@
                                             Spacing="40">
 
                                         <!-- Запит -->
-                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center" IsVisible="{Binding IsAudioVisible}">
                                             <Label
                                                 Text="Запит:"
                                                 FontSize="16"
@@ -353,7 +352,7 @@
                                         </HorizontalStackLayout>
 
                                         <!-- Відповідь -->
-                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center" IsVisible="{Binding IsAudioVisible}">
                                             <Label
                                                 Text="Відповідь:"
                                                 FontSize="16"

@@ -12,7 +12,6 @@ using PersonalAudioAssistant.Views;
 using PersonalAudioAssistant.Views.History;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
-using static Com.Google.Android.Exoplayer2.Upstream.Experimental.SlidingWeightedAverageBandwidthStatistic;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -54,6 +53,8 @@ namespace PersonalAudioAssistant.ViewModel
             _manageCacheData = manageCacheData;
             _paymentApiClient = paymentApiClient;
             _autoPaymentApiClient = autoPaymentApiClient;
+
+            IsAudioVisible = false;
         }
 
         [ObservableProperty]
@@ -77,6 +78,9 @@ namespace PersonalAudioAssistant.ViewModel
 
         [ObservableProperty]
         private bool isUpdatingCard;
+
+        [ObservableProperty]
+        private bool isAudioVisible;
 
         private string paymentGatewayToken;
 
@@ -344,6 +348,7 @@ namespace PersonalAudioAssistant.ViewModel
                 """;
             
             IsResultExist = true;
+            IsAudioVisible = true;
             IsAnswerPathAvailable = true;
             TokenCalculationResult = summary;
             AudioRequestPath = example.audioRequestPath;
@@ -417,6 +422,7 @@ namespace PersonalAudioAssistant.ViewModel
             AudioRequestPath = null;
             AudioAnswerPath = null;
             IsAnswerPathAvailable = false;
+            IsAudioVisible = false;
             IsResultExist = true;
             TokenCalculationResult = summary;
         }
