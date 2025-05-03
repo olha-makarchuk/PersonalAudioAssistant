@@ -1,6 +1,7 @@
 using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.ViewModel;
 using PersonalAudioAssistant.ViewModel.History;
+using Syncfusion.Maui.Core;
 
 namespace PersonalAudioAssistant.Views;
 
@@ -23,6 +24,13 @@ public partial class ProgramPage : ContentPage
         if (BindingContext is ProgramPageViewModel viewModel)
         {
             await viewModel.LoadInitialChatAsync();
+
+            // Після завантаження початкової сторінки прокрутимо до кінця
+            if (ChatCollection.ItemsSource is IList<ChatMessage> list && list.Any())
+            {
+                var last = list.Count - 1;
+                ChatCollection.ScrollTo(list[last], position: ScrollToPosition.End, animate: false);
+            }
         }
     }
 

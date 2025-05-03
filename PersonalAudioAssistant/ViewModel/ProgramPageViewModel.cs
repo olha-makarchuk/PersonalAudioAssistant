@@ -143,6 +143,20 @@ namespace PersonalAudioAssistant.ViewModel
             _subUsers = await _manageCacheData.GetUsersAsync();
         }
 
+        [RelayCommand]
+        public async Task RestoreGeneralChatAsync()
+        {
+            // Очистимо нинішні повідомлення
+            ChatMessages.Clear();
+
+            // Скинемо пагінацію
+            currentPage = 1;
+            allMessagesLoaded = false;
+
+            // Завантажимо знову першу сторінку загальних повідомлень
+            await LoadInitialChatAsync();
+        }
+
         public async Task LoadMoreMessagesIfNeeded(double scrollY)
         {
             // Якщо скрол приблизився до верху
@@ -183,7 +197,8 @@ namespace PersonalAudioAssistant.ViewModel
                         chatProgress,
                         usersList,
                         _listenCts.Token,
-                        () => ChatMessages.Clear());
+                        () => ChatMessages.Clear(),
+                        async () => await RestoreGeneralChatAsync());
                 }
                 catch (OperationCanceledException)
                 {

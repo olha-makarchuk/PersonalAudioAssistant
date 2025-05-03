@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Android.Content;
 using Android.Speech;
+using Azure;
 using CommunityToolkit.Maui.Alerts;
 using MediatR;
 using Newtonsoft.Json;
@@ -31,7 +32,7 @@ namespace PersonalAudioAssistant.Platforms
         private readonly MoneyUsersUsedApiClient _moneyUsersUsedApiClient;
         private readonly VoiceApiClient _voiceApiClient;
         private readonly ManageCacheData _manageCacheData;
-
+        private bool _hasCleared = false;
         public bool IsPrivateConversation { get; set; }
 
         public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient)
@@ -49,7 +50,7 @@ namespace PersonalAudioAssistant.Platforms
         {
         }
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction)
         {
             var taskResult = new TaskCompletionSource<string>();
             _clearChatMessagesAction = clearChatMessagesAction;
@@ -86,6 +87,13 @@ namespace PersonalAudioAssistant.Platforms
 
                     bool isPrivateConversation = normalizedSentence.Contains("особиста розмова");
 
+                    if (isPrivateConversation && !_hasCleared)
+                    {
+                        // Одна-єдина очистка чату
+                        clearChatMessagesAction?.Invoke();
+                        _hasCleared = true;
+                        IsPrivateConversation = true;
+                    }
                     matchedUser = listUsers.FirstOrDefault(user =>
                         !string.IsNullOrWhiteSpace(user.startPhrase) &&
                         normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
@@ -109,7 +117,18 @@ namespace PersonalAudioAssistant.Platforms
                             IsContinueConversation = true;
                             IsFirstRequest = true;
 
-                            var conversationTask = _conversationApiClient.CreateConversationAsync("", matchedUser.id);
+                            string conversationId;
+
+                            if (isPrivateConversation)
+                            {
+                                conversationId = await _conversationApiClient.CreateConversationAsync("", matchedUser.id);
+                            }
+                            else
+                            {
+                                var conv = await _manageCacheData.GetСonversationAsync();
+                                conversationId = conv.ConversationId;
+                            }
+                            TranscriptionResponse response = new();
 
                             while (IsContinueConversation)
                             {
@@ -121,11 +140,22 @@ namespace PersonalAudioAssistant.Platforms
 
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
 
-                                    TranscriptionResponse response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
+                                    response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
-                                    if (response.Request == "none")
+                                    if (response.Request == "none" || !response.IsContinuous)
                                     {
-                                        IsContinueConversation = false;
+                                        // скидаємо стан
+                                        _prevResponseId = null;
+
+                                        // 2) відновлюємо загальний чат
+                                        await restoreChatMessagesAction();
+
+                                        // більше не приватна
+                                        IsPrivateConversation = false;
+                                        _hasCleared = false;
+
+                                        // повертаємо результат Listen
+                                        taskResult.TrySetResult(response.Request);
                                         return;
                                     }
 
@@ -136,7 +166,7 @@ namespace PersonalAudioAssistant.Platforms
 
                                     var createUserCmd = new CreateMessageCommand
                                     {
-                                        ConversationId = conversationTask.Result,
+                                        ConversationId = conversationId,
                                         Text = response.Request,
                                         UserRole = "user",
                                         Audio = transcription.Audio,
@@ -150,6 +180,8 @@ namespace PersonalAudioAssistant.Platforms
                                     {
                                         Text = createdUser.text,
                                         UserRole = "user",
+                                        LastRequestId = _prevResponseId,
+                                        SubUserPhoto = matchedUser.photoPath,
                                         DateTimeCreated = createdUser.dateTimeCreated,
                                         URL = createdUser.audioPath
                                     });
@@ -169,7 +201,7 @@ namespace PersonalAudioAssistant.Platforms
 
                                     var careteMessageAI = new CreateMessageCommand()
                                     {
-                                        ConversationId = conversationTask.Result,
+                                        ConversationId = conversationId,
                                         Text = answer.text,
                                         UserRole = "ai",
                                         Audio = audioBytes,
@@ -182,6 +214,8 @@ namespace PersonalAudioAssistant.Platforms
                                     {
                                         Text = createdAI.text,
                                         UserRole = "ai",
+                                        LastRequestId = _prevResponseId,
+                                        SubUserPhoto = matchedUser.photoPath,
                                         DateTimeCreated = createdAI.dateTimeCreated,
                                         URL = createdAI.audioPath
                                     });
@@ -196,9 +230,10 @@ namespace PersonalAudioAssistant.Platforms
                                     return;
                                 }
                             }
+
                             ApiClientGptResponse description = await apiGPT.ContinueChatAsync("На основі розмови напиши короткий заголовок, який підсумовує основну тему", _prevResponseId);
 
-                            var TaskDescription =  _conversationApiClient.UpdateConversationAsync(conversationTask.Result, description.text);
+                            var TaskDescription =  _conversationApiClient.UpdateConversationAsync(conversationId, description.text);
                         }
                         catch (Exception ex)
                         {

@@ -16,8 +16,8 @@
                 Source="menu.png"
                 BackgroundColor="Transparent"
                 Clicked="SignOut_Clicked"
-                HeightRequest="50"
-                WidthRequest="50"
+                HeightRequest="45"
+                WidthRequest="45"
                 VerticalOptions="Center"
                 HorizontalOptions="Start"/>
         </Grid>
