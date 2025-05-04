@@ -19,26 +19,27 @@ public partial class ProgramPage : ContentPage
         base.OnAppearing();
         Shell.Current.FlyoutBehavior = FlyoutBehavior.Disabled;
 
-        if (BindingContext is ProgramPageViewModel viewModel)
+        if (BindingContext is ProgramPageViewModel vm && !vm.InitialLoadDone)
         {
-            await viewModel.LoadInitialChatAsync();
-
-            // ѕ≥сл€ завантаженн€ початковоњ стор≥нки прокрутимо до к≥нц€
+            await vm.LoadInitialChatAsync();
+            // скролимо до к≥нц€ лише 1 раз
             if (ChatCollection.ItemsSource is IList<ChatMessage> list && list.Any())
-            {
-                var last = list.Count - 1;
-                ChatCollection.ScrollTo(list[last], position: ScrollToPosition.End, animate: false);
-            }
+                ChatCollection.ScrollTo(list.Last(), position: ScrollToPosition.End, animate: false);
         }
     }
 
-    private async void OnChatScrolled(object sender, ScrolledEventArgs e)
+    private async void OnChatScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
-        if (BindingContext is ProgramPageViewModel viewModel)
+        // завантажуЇмо лише коли перший елемент видимий
+        if (e.FirstVisibleItemIndex == 0
+            && BindingContext is ProgramPageViewModel vm
+            && !vm.IsLoadingMessages
+            && !vm.AllMessagesLoaded)
         {
-            await viewModel.LoadMoreMessagesIfNeeded(e.ScrollY);
+            await vm.LoadNextPageAsync();
         }
     }
+
 
     private async void OnMediaEnded(object sender, EventArgs e)
     {

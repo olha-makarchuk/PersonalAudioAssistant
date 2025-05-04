@@ -8,8 +8,10 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <local:ListenButtonTextConverter x:Key="ListenButtonTextConverter" />
             <local:BoolToColorConverter x:Key="BoolToColorConverterChat"/>
+            <local:NullOrEmptyToBoolConverter x:Key="NullOrEmptyToBoolConverter"/>
 
             <Style x:Key="PlayButtonStyle" TargetType="Button">
                 <Setter Property="BackgroundColor" Value="#8584df" />
@@ -37,23 +39,23 @@
 
     <!-- Grid adjusted to avoid overlapping -->
     <Grid RowDefinitions="*,Auto,Auto,Auto">
-        <CollectionView x:Name="ChatCollection"
-                ItemsSource="{Binding ChatMessages}"
-                SelectedItem="{Binding SelectedMessage}"
-                RemainingItemsThreshold="5"
-                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
-                RemainingItemsThresholdReachedCommandParameter="{Binding .}"
-                Margin="10,0,10,5"
-                ItemsUpdatingScrollMode="KeepLastItemInView"
-                ItemsLayout="VerticalList">
+        <CollectionView
+    x:Name="ChatCollection"
+    ItemsSource="{Binding ChatMessages}"
+    SelectedItem="{Binding SelectedMessage}"
+    Margin="10,0,10,0"
+    ItemsUpdatingScrollMode="KeepLastItemInView"
+    ItemsLayout="VerticalList"
+    Scrolled="OnChatScrolled">
             <CollectionView.Header>
-                <Grid HorizontalOptions="Center"
-              Padding="0,5">
-                    <ActivityIndicator IsVisible="{Binding IsLoadingMore}"
-                               IsRunning="{Binding IsLoadingMore}"
-                               WidthRequest="30"
-                               HeightRequest="30"
-                               Color="Black" />
+                <Grid HorizontalOptions="Center">
+                    <ActivityIndicator
+                IsVisible="{Binding AllMessagesLoaded, Converter={StaticResource InvertedBoolConverter}}"
+
+                IsRunning="{Binding IsLoadingMessages}"
+                WidthRequest="30"
+                HeightRequest="30"
+                Color="Black" />
                 </Grid>
             </CollectionView.Header>
             <CollectionView.ItemTemplate>
@@ -73,15 +75,17 @@
                        HasShadow="False"
                        VerticalOptions="Center"
                        HorizontalOptions="Center"
-                       BackgroundColor="Transparent">
+                       BackgroundColor="Transparent"
+                       IsVisible="{Binding Text, Converter={StaticResource NullOrEmptyToBoolConverter}}">
+
                             <Image
-                        x:Name="AvatarImage"
-                        Aspect="AspectFill"
-                        WidthRequest="40"
-                        HeightRequest="40"
-                        VerticalOptions="Center"
-                        HorizontalOptions="Center"
-                        Source="{Binding SubUserPhoto}">
+                           x:Name="AvatarImage"
+                           Aspect="AspectFill"
+                           WidthRequest="40"
+                           HeightRequest="40"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center"
+                           Source="{Binding SubUserPhoto}">
                                 <Image.Triggers>
                                     <DataTrigger TargetType="Image" Binding="{Binding UserRole}" Value="ai">
                                         <Setter Property="Source"
@@ -91,48 +95,57 @@
                             </Image>
                         </Frame>
 
+                        <StackLayout Grid.Column="1" Spacing="5">
+                            <Label
+                            IsVisible="{Binding ShowDate}"
+                            Text="{Binding DateTimeCreated,
+                                           StringFormat='{}{0:dd.MM.yyyy}'}"
+                            FontSize="Micro"
+                            HorizontalOptions="Center"
+                            TextColor="Gray"/>
 
-                        <Frame Grid.Column="1"
-                       Padding="10"
-                       CornerRadius="12"
-                       WidthRequest="270"
-                       HasShadow="True">
-                            <Frame.Triggers>
-                                <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="user">
-                                    <Setter Property="BackgroundColor" Value="#bfe0ff" />
-                                    <Setter Property="HorizontalOptions" Value="Start" />
-                                </DataTrigger>
-                                <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="ai">
-                                    <Setter Property="BackgroundColor" Value="#e5e3fe" />
-                                    <Setter Property="HorizontalOptions" Value="Start" />
-                                </DataTrigger>
-                            </Frame.Triggers>
+                            <Frame Padding="10"
+                           CornerRadius="12"
+                           WidthRequest="270"
+                           HasShadow="True"
+                           IsVisible="{Binding Text, Converter={StaticResource NullOrEmptyToBoolConverter}}">
 
-                            <VerticalStackLayout Spacing="5">
-                                <Label Text="{Binding Text}" FontSize="16" HorizontalOptions="Start" />
-                                <Button Style="{StaticResource PlayButtonStyle}"
-                                WidthRequest="25"
-                                HeightRequest="25"
-                                Text="▶"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
-                                CommandParameter="{Binding .}">
-                                    <Button.Triggers>
-                                        <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="ai">
-                                            <Setter Property="HorizontalOptions" Value="Start" />
-                                        </DataTrigger>
-                                        <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="user">
-                                            <Setter Property="HorizontalOptions" Value="Start" />
-                                        </DataTrigger>
-                                    </Button.Triggers>
-                                </Button>
-                            </VerticalStackLayout>
-                        </Frame>
+                                <Frame.Triggers>
+                                    <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="user">
+                                        <Setter Property="BackgroundColor" Value="#bfe0ff" />
+                                        <Setter Property="HorizontalOptions" Value="Start" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="ai">
+                                        <Setter Property="BackgroundColor" Value="#e5e3fe" />
+                                        <Setter Property="HorizontalOptions" Value="Start" />
+                                    </DataTrigger>
+                                </Frame.Triggers>
+
+                                <VerticalStackLayout Spacing="5">
+                                    <Label Text="{Binding Text}" FontSize="16" HorizontalOptions="Start" />
+                                    <HorizontalStackLayout Spacing="5" HorizontalOptions="Start">
+                                        <Button Style="{StaticResource PlayButtonStyle}"
+                                        WidthRequest="25"
+                                        HeightRequest="25"
+                                        Text="▶"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
+                                        CommandParameter="{Binding .}" />
+
+                                        <Label
+                                        Text="{Binding DateTimeCreated,
+                                                       StringFormat='{}{0:HH:mm}'}"
+                                        FontSize="Micro"
+                                        VerticalOptions="Center"
+                                        TextColor="Gray"/>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </StackLayout>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
 
         </CollectionView>
-
         <!-- 🔻 Переміщений блок керування аудіо -->
         <VerticalStackLayout Grid.Row="1" BackgroundColor="#f4f0f5">
             <Grid ColumnDefinitions="Auto,Auto,Auto,*"

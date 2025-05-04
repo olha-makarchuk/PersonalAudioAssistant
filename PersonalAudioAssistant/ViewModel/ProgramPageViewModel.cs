@@ -25,7 +25,6 @@ namespace PersonalAudioAssistant.ViewModel
         private const int PageSize = 10;
         private int currentPage = 1;
         private bool isLoadingMessages;
-        private bool allMessagesLoaded = false;
         private int _currentIndex = -1;
         private List<SubUserResponse> _subUsers;
         private string? conversationId;
@@ -61,6 +60,13 @@ namespace PersonalAudioAssistant.ViewModel
         [ObservableProperty]
         private bool isAutoPlay;
 
+        public bool IsLoadingMessages
+            => isLoadingMessages;
+
+        [ObservableProperty]
+        public bool allMessagesLoaded = false;
+
+
         public ChatMessage SelectedMessage
         {
             get => _selectedMessage;
@@ -82,8 +88,11 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         public async Task LoadMore()
         {
+            if (!InitialLoadDone)
+                return;             // блокуємо доки InitialLoadDone == false
             await LoadInitialChatAsync();
         }
+
 
         public ProgramPageViewModel(
             ITextToSpeech textToSpeech,
@@ -101,65 +110,78 @@ namespace PersonalAudioAssistant.ViewModel
             Locales = new();
             SetLocalesCommand.Execute(null);
         }
-
         public async Task LoadInitialChatAsync()
         {
-            if (isLoadingMessages || allMessagesLoaded)
+            if (isLoadingMessages || AllMessagesLoaded)
                 return;
 
             isLoadingMessages = true;
 
-            conversationId = await _manageCacheData.GetСonversationAsync();
-            if (string.IsNullOrWhiteSpace(conversationId))
+            try
+            {
+                conversationId = await _manageCacheData.GetСonversationAsync();
+                if (string.IsNullOrWhiteSpace(conversationId))
+                    return;
+
+                var messages = await _messagesApiClient.GetMessagesByConversationIdAsync(conversationId, currentPage, PageSize);
+                if (!messages.Any())
+                    return;
+
+                if (messages.Count < PageSize)
+                    AllMessagesLoaded = true;
+
+                var users = await _manageCacheData.GetUsersAsync();
+
+                // Combine existing and new messages
+                var combined = ChatMessages
+                    .Where(m => !m.ShowDate)
+                    .Cast<ChatMessage>()
+                    .Concat(messages.Select(msg => new ChatMessage
+                    {
+                        Text = msg.text,
+                        UserRole = msg.userRole,
+                        DateTimeCreated = msg.dateTimeCreated,
+                        URL = msg.audioPath,
+                        LastRequestId = msg.lastRequestId,
+                        SubUserPhoto = users.FirstOrDefault(u => u.id == msg.subUserId)?.photoPath,
+                        ShowDate = false
+                    }))
+                    .OrderBy(m => m.DateTimeCreated)
+                    .ToList();
+
+                // Clear existing messages and rebuild with date headers
+                ChatMessages.Clear();
+                DateTime? lastDate = null;
+
+                foreach (var msg in combined)
+                {
+                    if (!lastDate.HasValue || msg.DateTimeCreated.Date != lastDate.Value)
+                    {
+                        ChatMessages.Add(new ChatMessage
+                        {
+                            ShowDate = true,
+                            DateTimeCreated = msg.DateTimeCreated
+                        });
+                        lastDate = msg.DateTimeCreated.Date;
+                    }
+                    ChatMessages.Add(msg);
+                }
+
+                currentPage++;
+
+                if (!InitialLoadDone)
+                {
+                    InitialLoadDone = true;
+                }
+            }
+            finally
             {
                 isLoadingMessages = false;
-                return;
+                //LoadMoreCommand.NotifyCanExecuteChanged();
             }
-
-            var messages = await _messagesApiClient.GetMessagesByConversationIdAsync(conversationId, currentPage, PageSize);
-
-            // Якщо отримали менше за розмір сторінки – більше нічого немає
-            if (messages.Count < PageSize)
-                allMessagesLoaded = true;
-
-            if (messages.Count == 0)
-            {
-                isLoadingMessages = false;
-                return;
-            }
-
-            var users = await _manageCacheData.GetUsersAsync();
-            foreach (var msg in messages.Reverse<MessageResponse>())
-            {
-                var user = users.FirstOrDefault(u => u.id == msg.subUserId);
-                ChatMessages.Insert(0, new ChatMessage
-                {
-                    Text = msg.text,
-                    UserRole = msg.userRole,
-                    DateTimeCreated = msg.dateTimeCreated,
-                    URL = msg.audioPath,
-                    LastRequestId = msg.lastRequestId,
-                    SubUserPhoto = user?.photoPath
-                });
-            }
-            foreach (var msg in messages)
-            {
-                var user = users.FirstOrDefault(u => u.id == msg.subUserId);
-                ChatMessages.Insert(0, new ChatMessage
-                {
-                    Text = msg.text,
-                    UserRole = msg.userRole,
-                    DateTimeCreated = msg.dateTimeCreated,
-                    URL = msg.audioPath,
-                    LastRequestId = msg.lastRequestId,
-                    SubUserPhoto = user?.photoPath
-                });
-            }
-
-            currentPage++;
-            isLoadingMessages = false;
-            LoadMoreCommand.NotifyCanExecuteChanged();
         }
+
+        
 
         [RelayCommand]
         public async Task RestoreGeneralChatAsync()
@@ -169,21 +191,30 @@ namespace PersonalAudioAssistant.ViewModel
 
             // Скинемо пагінацію
             currentPage = 1;
-            allMessagesLoaded = false;
+            AllMessagesLoaded = false;
 
             // Завантажимо знову першу сторінку загальних повідомлень
             await LoadInitialChatAsync();
         }
 
+        [ObservableProperty]
+        private bool initialLoadDone;
+
         public async Task LoadMoreMessagesIfNeeded(double scrollY)
         {
-            // Якщо скрол приблизився до верху
-            if (scrollY < 50)
-            {
+            if (!InitialLoadDone)
+                return;              // блокуємо до першого LoadInitialChatAsync
+            if (scrollY < 50 && !isLoadingMessages && !AllMessagesLoaded) // Додано перевірку isLoadingMessages та allMessagesLoaded
                 await LoadInitialChatAsync();
-            }
         }
 
+        public async Task LoadNextPageAsync()
+        {
+            if (isLoadingMessages || AllMessagesLoaded)
+                return;
+
+            await LoadInitialChatAsync();  // тут можна перейменувати сам метод у LoadPageAsync
+        }
         [RelayCommand]
         async Task SetLocales()
         {
@@ -360,6 +391,7 @@ namespace PersonalAudioAssistant.ViewModel
         public string URL { get; set; }
         public string SubUserPhoto { get; set; }
         public string LastRequestId { get; set; }
+        public bool ShowDate { get; set; } // Нова властивість
     }
 
     public class BoolToColorConverterChat : IValueConverter
@@ -372,4 +404,18 @@ namespace PersonalAudioAssistant.ViewModel
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
             throw new NotImplementedException();
     }
+
+    public class NullOrEmptyToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var str = value as string;
+        return !string.IsNullOrWhiteSpace(str);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
 }
