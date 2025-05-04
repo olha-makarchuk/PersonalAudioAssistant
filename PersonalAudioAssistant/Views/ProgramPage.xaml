@@ -40,25 +40,26 @@
     <!-- Grid adjusted to avoid overlapping -->
     <Grid RowDefinitions="*,Auto,Auto,Auto">
         <CollectionView
-    x:Name="ChatCollection"
-    ItemsSource="{Binding ChatMessages}"
-    SelectedItem="{Binding SelectedMessage}"
-    Margin="10,0,10,0"
-    ItemsUpdatingScrollMode="KeepLastItemInView"
-    ItemsLayout="VerticalList"
-    Scrolled="OnChatScrolled">
+                x:Name="ChatCollection"
+                ItemsSource="{Binding ChatMessages}"
+                SelectedItem="{Binding SelectedMessage}"
+                Margin="10,0,10,0"
+                ItemsUpdatingScrollMode="KeepScrollOffset"
+                ItemsLayout="VerticalList"
+                Scrolled="OnChatScrolled">
             <CollectionView.Header>
                 <Grid HorizontalOptions="Center">
                     <ActivityIndicator
-                IsVisible="{Binding AllMessagesLoaded, Converter={StaticResource InvertedBoolConverter}}"
-
-                IsRunning="{Binding IsLoadingMessages}"
-                WidthRequest="30"
-                HeightRequest="30"
-                Color="Black" />
+                        IsVisible="{Binding AllMessagesLoaded, Converter={StaticResource InvertedBoolConverter}}"
+                        IsRunning="{Binding IsLoadingMessages}"
+                        WidthRequest="30"
+                        HeightRequest="30"
+                        Color="Black" />
                 </Grid>
             </CollectionView.Header>
-            <CollectionView.ItemTemplate>
+            <CollectionView.ItemTemplate
+            ItemsUpdatingScrollMode="KeepScrollOffset"
+                >
                 <DataTemplate>
                     <Grid Margin="0,2" ColumnDefinitions="Auto,*">
                         <Grid.Triggers>
@@ -229,6 +230,22 @@
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*" Padding="0,0,0,10"  BackgroundColor="#f4f0f5">
             <BoxView Grid.Column="0" BackgroundColor="Transparent" VerticalOptions="End"/>
 
+
+            <Button Grid.Column="1"
+        Text="Скасувати"
+        IsVisible="{Binding IsCancelContinueAvailable}"
+        Command="{Binding CancelContinueConversationCommand}"
+        WidthRequest="82"
+        HeightRequest="82"
+        CornerRadius="50"
+        TextColor="White"
+                    BackgroundColor="#B66E63"
+        FontAttributes="Bold"
+        Margin="0,0,250,0"
+        FontSize="11"
+        HorizontalOptions="Center"
+        VerticalOptions="Center">
+            </Button>
             <Button Grid.Column="1"
                     Text="{Binding IsListening, Converter={StaticResource ListenButtonTextConverter}}"
                     Command="{Binding ToggleListenCommand}"

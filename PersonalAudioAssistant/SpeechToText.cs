@@ -8,7 +8,7 @@ namespace PersonalAudioAssistant
     public interface ISpeechToText : IAsyncDisposable
     {
         Task<bool> RequestPermissions();
-        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId);
+        Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation);
     }
 
     public static class SpeechToText
@@ -20,9 +20,9 @@ namespace PersonalAudioAssistant
             return Default.RequestPermissions();
         }
 
-        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId)
+        public static Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
         {
-            return Default.Listen(culture, recognitionResult, chatMessageProgress, listUsers, cancellationToken, clearChatMessagesAction, restoreChatMessagesAction, prevResponseId);
+            return Default.Listen(culture, recognitionResult, chatMessageProgress, listUsers, cancellationToken, clearChatMessagesAction, restoreChatMessagesAction, prevResponseId, continueConversation);
         }
 
         public static ISpeechToText Default =>

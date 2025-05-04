@@ -52,7 +52,7 @@ namespace PersonalAudioAssistant.Platforms
         {
         }
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
         {
             var taskResult = new TaskCompletionSource<string>();
             _clearChatMessagesAction = clearChatMessagesAction;
@@ -81,23 +81,32 @@ namespace PersonalAudioAssistant.Platforms
                 PartialResults = async sentence =>
                 {
                     bool processingCommand = false;
+                    string conversationId = null;
                     recognitionResult?.Report(sentence);
-
                     SubUserResponse? matchedUser = null;
-                    string normalizedSentence = sentence.Trim().ToLowerInvariant();
-
-                    bool isPrivateConversation = normalizedSentence.Contains("особиста розмова");
-
-                    if (isPrivateConversation && !_hasCleared)
+                    bool isPrivateConversation = false;
+                    
+                    if (continueConversation == null)
                     {
-                        clearChatMessagesAction?.Invoke();
-                        _hasCleared = true;
-                        IsPrivateConversation = true;
+                        string normalizedSentence = sentence.Trim().ToLowerInvariant();
+                        isPrivateConversation = normalizedSentence.Contains("особиста розмова");
+
+                        if (isPrivateConversation && !_hasCleared)
+                        {
+                            clearChatMessagesAction?.Invoke();
+                            _hasCleared = true;
+                            IsPrivateConversation = true;
+                        }
+                        matchedUser = listUsers.FirstOrDefault(user =>
+                            !string.IsNullOrWhiteSpace(user.startPhrase) &&
+                            normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
+                        );
                     }
-                    matchedUser = listUsers.FirstOrDefault(user =>
-                        !string.IsNullOrWhiteSpace(user.startPhrase) &&
-                        normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
-                    );
+                    else
+                    {
+                        matchedUser = continueConversation.SubUser;
+                        conversationId = continueConversation.ConversationId;
+                    }
 
                     if (matchedUser != null && !processingCommand)
                     {
@@ -135,7 +144,7 @@ namespace PersonalAudioAssistant.Platforms
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
                                     response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
-                                    if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation) 
+                                    if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation)
                                     {
                                         _prevResponseId = null;
                                         await restoreChatMessagesAction();
@@ -152,7 +161,7 @@ namespace PersonalAudioAssistant.Platforms
                                     await Task.WhenAll(conversationIdTask);
                                     var createUserCmd = new CreateMessageCommand
                                     {
-                                        ConversationId = conversationIdTask.Result,
+                                        ConversationId = conversationId ?? conversationIdTask.Result,
                                         Text = response.Request,
                                         UserRole = "user",
                                         Audio = transcription.Audio,
@@ -181,7 +190,7 @@ namespace PersonalAudioAssistant.Platforms
 
                                     var careteMessageAI = new CreateMessageCommand()
                                     {
-                                        ConversationId = conversationIdTask.Result,
+                                        ConversationId = conversationId ?? conversationIdTask.Result,
                                         Text = answer.text,
                                         UserRole = "ai",
                                         Audio = audioBytes,
@@ -197,7 +206,7 @@ namespace PersonalAudioAssistant.Platforms
                                         LastRequestId = _prevResponseId,
                                         SubUserPhoto = matchedUser.photoPath,
                                         DateTimeCreated = createdAItask.Result.dateTimeCreated,
-                                        URL = createdAItask.Result.audioPath
+                                        URL = createdAItask.Result.audioPath,
                                     });
 
                                     await Task.WhenAll(playAnswerTask);
@@ -255,7 +264,6 @@ namespace PersonalAudioAssistant.Platforms
                     return string.Empty;
                 }
             }
-
         }
 
         public async Task CalculatePrice(double audioDurationRequest, ApiClientGptResponse gptResponse, string subUserId, string mainUserId)

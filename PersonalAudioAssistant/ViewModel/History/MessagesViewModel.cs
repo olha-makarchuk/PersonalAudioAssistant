@@ -1,15 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using MediatR;
 using System.Collections.ObjectModel;
-using PersonalAudioAssistant.Contracts.Message;
-using CommunityToolkit.Maui.Core.Extensions;
 using CommunityToolkit.Mvvm.Input;
-using PersonalAudioAssistant.Views.Users;
 using PersonalAudioAssistant.Views.History;
 using PersonalAudioAssistant.Services.Api;
 using CommunityToolkit.Maui.Core.Primitives;
-using Android.Content;
 using System.Globalization;
+using PersonalAudioAssistant.Services;
+using PersonalAudioAssistant.Model.Payment;
 
 namespace PersonalAudioAssistant.ViewModel.History
 {
@@ -19,14 +17,13 @@ namespace PersonalAudioAssistant.ViewModel.History
         private readonly MessagesApiClient _messagesApiClient;
         private string ConversationIdQueryAttribute;
         private string PreviewId;
-
-        [ObservableProperty]
-        private ObservableCollection<MessageResponse> messages;
+        private string SubUserId;
+        private readonly ManageCacheData _manageCacheData;
 
         [ObservableProperty]
         private bool isBusy;
 
-        private MessageResponse _selectedMessage;
+        private ChatMessage _selectedMessage;
 
         private int _currentPage = 1;
         private bool _isLoadingMore;
@@ -46,14 +43,28 @@ namespace PersonalAudioAssistant.ViewModel.History
         [ObservableProperty]
         private bool isAutoPlay;
 
-        public MessagesViewModel(IMediator mediator, MessagesApiClient messagesApiClient)
+        [ObservableProperty]
+        private ObservableCollection<ChatMessage> _chatMessages = new();
+
+        [ObservableProperty]
+        private bool _allMessagesLoaded = false;
+
+        [ObservableProperty]
+        private bool _initialLoadDone = false;
+
+        public bool IsLoadingMessages => _isLoadingMessages;
+
+        private bool _isLoadingMessages;
+
+
+        public MessagesViewModel(IMediator mediator, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData)
         {
             _mediator = mediator;
             _messagesApiClient = messagesApiClient;
-            messages = new ObservableCollection<MessageResponse>();
+            _manageCacheData = manageCacheData;
         }
 
-        public MessageResponse SelectedMessage
+        public ChatMessage? SelectedMessage
         {
             get => _selectedMessage;
             set
@@ -62,88 +73,103 @@ namespace PersonalAudioAssistant.ViewModel.History
                 {
                     _selectedMessage = value;
                     OnPropertyChanged();
-
-                    if (value != null)
-                    {
-                        //
-                    }
                 }
             }
         }
 
-        public Command LoadMoreCommand => new Command(async () =>
-        {
-            if (_hasMoreItems && !_isLoadingMore)
-            {
-                await LoadMessagesAsync(isLoadMore: true);
-            }
-        });
 
-        public async Task LoadMessagesAsync(bool isLoadMore = false)
+        [RelayCommand]
+        private async Task LoadMore()
         {
-            if (IsBusy || _isLoadingMore)
+            if (!InitialLoadDone)
+                return;
+            await LoadChatMessagesAsync();
+        }
+
+
+        public async Task LoadChatMessagesAsync()
+        {
+            if (_isLoadingMessages || AllMessagesLoaded)
                 return;
 
-            if (!isLoadMore)
-            {
-                IsBusy = true;
-                _currentPage = 1;
-                _hasMoreItems = true;
-            }
-            else
-            {
-                _isLoadingMore = true;
-            }
+            _isLoadingMessages = true;
 
             try
             {
-                var messagesList = await _messagesApiClient.GetMessagesByConversationIdAsync(ConversationIdQueryAttribute, _currentPage, PageSize);
-
-                if (isLoadMore)
-                    foreach (var message in messagesList)
-                        Messages.Add(message);
-                else
-                    Messages = messagesList.ToObservableCollection();
-
-                if (messagesList.Count < PageSize)
-                    _hasMoreItems = false;
-                else
-                    _currentPage++;
-
-                // only auto-play if the switch is on
-                if (!isLoadMore && Messages.Any() && IsAutoPlay)
+                var messages = await _messagesApiClient.GetMessagesByConversationIdAsync(ConversationIdQueryAttribute, _currentPage, PageSize);
+                
+                if (!messages.Any())
                 {
-                    _currentIndex = 0;
-                    await PlayByIndexAsync(_currentIndex);
-                    UpdateButtonStates();
+                    AllMessagesLoaded = true;
+                    return;
                 }
 
-                PreviewId = Messages.First().lastRequestId;
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Помилка", $"Не вдалося завантажити дані: {ex.Message}", "OK");
+                if (messages.Count < PageSize)
+                    AllMessagesLoaded = true;
+
+                SubUserId = messages.FirstOrDefault().subUserId;
+                var users = await _manageCacheData.GetUsersAsync();
+
+                var newSection = new List<ChatMessage>();
+                DateTime? lastDate = null;
+                foreach (var msg in messages
+                            .Select(msg => new ChatMessage
+                            {
+                                Text = msg.text,
+                                UserRole = msg.userRole,
+                                DateTimeCreated = msg.dateTimeCreated,
+                                URL = msg.audioPath,
+                                LastRequestId = msg.lastRequestId,
+                                SubUserPhoto = users.FirstOrDefault(u => u.id == msg.subUserId)?.photoPath,
+                                ShowDate = false
+                            })
+                        .OrderBy(m => m.DateTimeCreated))
+                {
+                    if (!lastDate.HasValue || msg.DateTimeCreated.Date != lastDate.Value.Date)
+                    {
+                        newSection.Add(new ChatMessage { ShowDate = true, DateTimeCreated = msg.DateTimeCreated });
+                        lastDate = msg.DateTimeCreated.Date;
+                    }
+                    newSection.Add(msg);
+                }
+                if (!InitialLoadDone)
+                {
+                    foreach (var msg in newSection)
+                        ChatMessages.Add(msg);
+                    InitialLoadDone = true;
+                }
+                else
+                {
+                    for (int i = newSection.Count - 1; i >= 0; i--)
+                        ChatMessages.Insert(0, newSection[i]);
+                }
+
+                _currentPage++;
+
+                if (!InitialLoadDone)
+                {
+                    InitialLoadDone = true;
+                }
             }
             finally
             {
-                if (isLoadMore) _isLoadingMore = false;
-                else IsBusy = false;
+                _isLoadingMessages = false;
             }
         }
 
         [RelayCommand]
-        public async Task PlaySelectedMessageAsync(MessageResponse message)
+        public async Task PlaySelectedMessageAsync(ChatMessage message)
         {
             try
             {
-                if (message == null || string.IsNullOrEmpty(message.audioPath))
+                if (message == null || string.IsNullOrEmpty(message.URL))
                     return;
 
                 // sync our internal pointer to whichever message was tapped
-                _currentIndex = Messages.IndexOf(message);
+                _currentIndex = ChatMessages.IndexOf(message);
 
                 var mediaElement = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
-                mediaElement.Source = message.audioPath;
+                mediaElement.Source = message.URL;
 
                 if (mediaElement.CurrentState == MediaElementState.Playing)
                     mediaElement.Pause();
@@ -159,7 +185,12 @@ namespace PersonalAudioAssistant.ViewModel.History
             }
         }
 
-
+        public async Task LoadNextPageAsync()
+        {
+            if (_isLoadingMessages || AllMessagesLoaded)
+                return;
+            await LoadChatMessagesAsync();
+        }
         public async void ApplyQueryAttributes(IDictionary<string, object> query)
         {
             if (query.ContainsKey("conversationId"))
@@ -180,17 +211,24 @@ namespace PersonalAudioAssistant.ViewModel.History
             }
 
             SelectedMessage = null;
-            Messages.Clear();
+            ChatMessages.Clear();
             PreviewId = null;
             IsAutoPlay = false;
+            AllMessagesLoaded = false;
+            InitialLoadDone = false;
+            _isLoadingMessages = false;
+            _currentPage = 1;
+            _isLoadingMore = false;
+            _hasMoreItems = true;
+            _currentIndex = -1;
         }
-
 
         [RelayCommand]
-        public void ContinueConversationCommand()
+        public async void ContinueConversation()
         {
-            //PreviewId
+            await Shell.Current.GoToAsync($"//ProgramPage?conversationId={ConversationIdQueryAttribute}&subUserId={SubUserId}");
         }
+
 
         [RelayCommand(CanExecute = nameof(CanExecutePlayPause))]
         private void PlayPause()
@@ -207,7 +245,7 @@ namespace PersonalAudioAssistant.ViewModel.History
         [RelayCommand(CanExecute = nameof(CanExecuteNext))]
         public async Task NextAsync()
         {
-            if (_currentIndex < Messages.Count - 1)
+            if (_currentIndex < ChatMessages.Count - 1)
             {
                 _currentIndex++;
                 await PlayByIndexAsync(_currentIndex);
@@ -215,7 +253,7 @@ namespace PersonalAudioAssistant.ViewModel.History
             }
         }
 
-        private bool CanExecuteNext() => _currentIndex < Messages?.Count - 1;
+        private bool CanExecuteNext() => _currentIndex < ChatMessages?.Count - 1;
 
         [RelayCommand(CanExecute = nameof(CanExecutePrevious))]
         private async Task PreviousAsync()
@@ -232,12 +270,12 @@ namespace PersonalAudioAssistant.ViewModel.History
 
         private async Task PlayByIndexAsync(int index)
         {
-            var msg = Messages[index];
-            if (msg == null || string.IsNullOrEmpty(msg.audioPath))
+            var msg = ChatMessages[index];
+            if (msg == null || string.IsNullOrEmpty(msg.URL))
                 return;
 
             var media = ((MessagesPage)Shell.Current.CurrentPage).MediaElement;
-            media.Source = msg.audioPath;
+            media.Source = msg.URL;
             media.Play();
 
             SelectedMessage = msg;
@@ -278,4 +316,16 @@ namespace PersonalAudioAssistant.ViewModel.History
             !(bool)value;
     }
 
+    public class NullOrEmptyToBoolConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !string.IsNullOrWhiteSpace(value as string);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
