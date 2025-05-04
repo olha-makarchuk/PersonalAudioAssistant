@@ -9,6 +9,8 @@ using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Views;
 using MediatR;
 using PersonalAudioAssistant.Contracts.SubUser;
+using System.Threading;
+using PersonalAudioAssistant.Model;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -70,7 +72,9 @@ namespace PersonalAudioAssistant.ViewModel
         private bool _initialLoadDone = false;
 
         public bool IsLoadingMessages => _isLoadingMessages;
-
+        private bool CanExecutePrevious() => _currentIndex > 0;
+        private bool CanExecuteNext() => _currentIndex < ChatMessages?.Count - 1;
+        private bool CanExecutePlayPause() => _currentIndex >= 0;
         public ChatMessage? SelectedMessage
         {
             get => _selectedMessage;
@@ -80,7 +84,6 @@ namespace PersonalAudioAssistant.ViewModel
                 {
                     _selectedMessage = value;
                     OnPropertyChanged();
-                    // Consider if any specific action is needed upon selection
                 }
             }
         }
@@ -113,35 +116,66 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task Listen(CancellationToken cancellationToken)
         {
+
             _listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var isAuthorized = await _speechToText.RequestPermissions();
             var usersList = await _manageCacheData.GetUsersAsync();
+            var chatProgress = new Progress<ChatMessage>(msg => ChatMessages.Add(msg));
 
             IsListening = true;
 
-            if (isAuthorized)
+            if (_conversationForContinue.ConversationId == null)
+            {
+                if (isAuthorized)
+                {
+                    try
+                    {
+                        RecognitionText = string.Empty;
+                        RecognitionText = await _speechToText.Listen(
+                            CultureInfo.GetCultureInfo(Locale?.Language ?? "en-us"),
+                            new Progress<string>(partialText =>
+                            {
+                                RecognitionText += partialText + " ";
+                            }),
+                            chatProgress,
+                            usersList,
+                            _listenCts.Token,
+                            () => ChatMessages.Clear(),
+                            async () => await RestoreGeneralChatAsync(),
+                            ChatMessages.LastOrDefault()?.LastRequestId);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception ex)
+                    {
+                        await Toast.Make(ex.Message).Show(cancellationToken);
+                    }
+                    finally
+                    {
+                        IsListening = false;
+                    }
+                }
+                else
+                {
+                    await Toast.Make("Permission denied").Show(cancellationToken);
+                    IsListening = false;
+                }
+            }
+            else
             {
                 try
                 {
-                    var chatProgress = new Progress<ChatMessage>(msg => ChatMessages.Add(msg));
-                    RecognitionText = string.Empty;
-                    RecognitionText = await _speechToText.Listen(
-                        CultureInfo.GetCultureInfo(Locale?.Language ?? "en-us"),
-                        new Progress<string>(partialText =>
-                        {
-                            RecognitionText += partialText + " ";
-                        }),
+                    await _speechToText.ContinueListen(
                         chatProgress,
-                        usersList,
                         _listenCts.Token,
-                        () => ChatMessages.Clear(),
+                        async () => await CleanAll(),
                         async () => await RestoreGeneralChatAsync(),
                         ChatMessages.LastOrDefault()?.LastRequestId,
                         _conversationForContinue);
                 }
                 catch (OperationCanceledException)
                 {
-                    // Operation was canceled.
                 }
                 catch (Exception ex)
                 {
@@ -152,38 +186,25 @@ namespace PersonalAudioAssistant.ViewModel
                     IsListening = false;
                 }
             }
-            else
-            {
-                await Toast.Make("Permission denied").Show(cancellationToken);
-                IsListening = false;
-            }
         }
 
         [RelayCommand]
         private void ToggleListen()
         {
-            if (IsListening)
-            {
-                ListenCancelCommand.Execute(null);
-            }
-            else
-            {
-                ListenCommand.Execute(null);
-            }
+            if (IsListening){ListenCancelCommand.Execute(null);}
+            else{ListenCommand.Execute(null);}
         }
 
         [RelayCommand]
         private async Task LoadMore()
         {
-            if (!InitialLoadDone)
-                return;
+            if (!InitialLoadDone)return;
             await LoadChatMessagesAsync();
         }
 
         public async Task LoadChatMessagesAsync()
         {
-            if (_isLoadingMessages || AllMessagesLoaded)
-                return;
+            if (_isLoadingMessages || AllMessagesLoaded)return;
 
             _isLoadingMessages = true;
 
@@ -219,36 +240,37 @@ namespace PersonalAudioAssistant.ViewModel
                 DateTime ? lastDate = null;
                 foreach (var msg in messages
                             .Select(msg => new ChatMessage
-                {
-                    Text = msg.text,
-                    UserRole = msg.userRole,
-                    DateTimeCreated = msg.dateTimeCreated,
-                    URL = msg.audioPath,
-                    LastRequestId = msg.lastRequestId,
-                    SubUserPhoto = users.FirstOrDefault(u => u.id == msg.subUserId)?.photoPath,
-                    ShowDate = false})
-                        .OrderBy(m => m.DateTimeCreated))
-                    {
-                        if (!lastDate.HasValue || msg.DateTimeCreated.Date != lastDate.Value.Date)
-                        {
-                            newSection.Add(new ChatMessage { ShowDate = true, DateTimeCreated = msg.DateTimeCreated });
-                            lastDate = msg.DateTimeCreated.Date;
-                        }
-                    newSection.Add(msg);
-                    }
-                    if (!InitialLoadDone)
-                    {
-                        foreach (var msg in newSection)
-                        ChatMessages.Add(msg);
-                        InitialLoadDone = true;
-                            }
-                        else
                             {
-                                for (int i = newSection.Count - 1; i >= 0; i--)
+                                Text = msg.text,
+                                UserRole = msg.userRole,
+                                DateTimeCreated = msg.dateTimeCreated,
+                                URL = msg.audioPath,
+                                LastRequestId = msg.lastRequestId,
+                                SubUserPhoto = users.FirstOrDefault(u => u.id == msg.subUserId)?.photoPath,
+                                ShowDate = false
+                            })
+                        .OrderBy(m => m.DateTimeCreated))
+                {
+                    if (!lastDate.HasValue || msg.DateTimeCreated.Date != lastDate.Value.Date)
+                    {
+                        newSection.Add(new ChatMessage { ShowDate = true, DateTimeCreated = msg.DateTimeCreated });
+                        lastDate = msg.DateTimeCreated.Date;
+                    }
+                    newSection.Add(msg);
+                }
+                if (!InitialLoadDone)
+                {
+                    foreach (var msg in newSection)
+                        ChatMessages.Add(msg);
+                    InitialLoadDone = true;
+                }
+                else
+                {
+                    for (int i = newSection.Count - 1; i >= 0; i--)
                         ChatMessages.Insert(0, newSection[i]);
-                            }
-                
-                                _currentPage++;
+                }
+
+                _currentPage++;
 
                 if (!InitialLoadDone)
                 {
@@ -261,65 +283,16 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-        [RelayCommand]
-        private async Task CancelContinueConversation()
-        {
-            // Скасування слухання
-            _listenCts?.Cancel();
-            _listenCts?.Dispose();
-            _listenCts = null;
-
-            // Очищення полів
-            _conversationId = null;
-            _subUserId = null;
-            _subUser = null;
-            _conversationForContinue = new ContinueConversation();
-            _currentIndex = -1;
-            _currentPage = 1;
-            _isLoadingMessages = false;
-
-            // Скидання властивостей
-            RecognitionText = null;
-            IsListening = false;
-            CanPlayPause = false;
-            CanNext = false;
-            CanPrevious = false;
-            IsAutoPlay = false;
-            AllMessagesLoaded = false;
-            InitialLoadDone = false;
-            IsCancelContinueAvailable = false;
-
-            // Очищення колекцій
-            ChatMessages.Clear();
-            Locales?.Clear();
-
-            SelectedMessage = null;
-
-            await LoadChatMessagesAsync();
-            RequestScrollToEnd?.Invoke();
-        }
-
-        [RelayCommand]
-        private async Task RestoreGeneralChatAsync()
-        {
-            ChatMessages.Clear();
-            _currentPage = 1;
-            AllMessagesLoaded = false;
-            await LoadChatMessagesAsync();
-        }
-
         public async Task LoadMoreMessagesIfNeeded(double scrollY)
         {
-            if (!InitialLoadDone)
-                return;
+            if (!InitialLoadDone)return;
             if (scrollY < 50 && !_isLoadingMessages && !AllMessagesLoaded)
                 await LoadChatMessagesAsync();
         }
 
         public async Task LoadNextPageAsync()
         {
-            if (_isLoadingMessages || AllMessagesLoaded)
-                return;
+            if (_isLoadingMessages || AllMessagesLoaded)return;
             await LoadChatMessagesAsync();
         }
 
@@ -371,7 +344,6 @@ namespace PersonalAudioAssistant.ViewModel
             await Task.CompletedTask;
         }
 
-        private bool CanExecutePlayPause() => _currentIndex >= 0;
 
         [RelayCommand(CanExecute = nameof(CanExecuteNext))]
         public async Task NextAsync()
@@ -384,8 +356,6 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-        private bool CanExecuteNext() => _currentIndex < ChatMessages?.Count - 1;
-
         [RelayCommand(CanExecute = nameof(CanExecutePrevious))]
         private async Task PreviousAsync()
         {
@@ -395,19 +365,6 @@ namespace PersonalAudioAssistant.ViewModel
                 await PlayByIndexAsync(_currentIndex);
                 UpdateButtonStates();
             }
-        }
-
-        private bool CanExecutePrevious() => _currentIndex > 0;
-
-        private void UpdateButtonStates()
-        {
-            CanPlayPause = _currentIndex >= 0;
-            CanNext = CanExecuteNext();
-            CanPrevious = CanExecutePrevious();
-
-            PlayPauseCommand.NotifyCanExecuteChanged();
-            NextCommand.NotifyCanExecuteChanged();
-            PreviousCommand.NotifyCanExecuteChanged();
         }
 
         public async void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -420,44 +377,81 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-        public void OnNavigatedFrom()
+        private void UpdateButtonStates()
+        {
+            CanPlayPause = _currentIndex >= 0;
+            CanNext = CanExecuteNext();
+            CanPrevious = CanExecutePrevious();
+
+            PlayPauseCommand.NotifyCanExecuteChanged();
+            NextCommand.NotifyCanExecuteChanged();
+            PreviousCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand]
+        private async Task CancelContinueConversation()
+        {
+            await CleanAll();
+        }
+
+        [RelayCommand]
+        private async Task RestoreGeneralChatAsync()
+        {
+            ChatMessages.Clear();
+            _currentPage = 1;
+            AllMessagesLoaded = false;
+            await LoadChatMessagesAsync();
+        }
+
+        public async Task CancelCleanContinueConversation()
+        {
+            await CleanAll();
+            await LoadChatMessagesAsync();
+            RequestScrollToEnd?.Invoke();
+        }
+
+        public async Task CleanAll()
+        {
+            // Скасування слухання
+            _listenCts?.Cancel();
+            _listenCts?.Dispose();
+            _listenCts = null;
+
+            // Очищення полів
+            _conversationId = null;
+            _subUserId = null;
+            _subUser = null;
+            _conversationForContinue = new ContinueConversation();
+            _currentIndex = -1;
+            _currentPage = 1;
+            _isLoadingMessages = false;
+
+            // Скидання властивостей
+            RecognitionText = null;
+            IsListening = false;
+            CanPlayPause = false;
+            CanNext = false;
+            CanPrevious = false;
+            IsAutoPlay = false;
+            AllMessagesLoaded = false;
+            InitialLoadDone = false;
+            IsCancelContinueAvailable = false;
+
+            // Очищення колекцій
+            ChatMessages.Clear();
+            Locales?.Clear();
+
+            SelectedMessage = null;
+        }
+
+        public async void OnNavigatedFrom()
         {
             try
             {
-                // Скасування слухання
-                _listenCts?.Cancel();
-                _listenCts?.Dispose();
-                _listenCts = null;
-
-                // Очищення полів
-                _conversationId = null;
-                _subUserId = null;
-                _subUser = null;
-                _conversationForContinue = new ContinueConversation();
-                _currentIndex = -1;
-                _currentPage = 1;
-                _isLoadingMessages = false;
-
-                // Скидання властивостей
-                RecognitionText = null;
-                IsListening = false;
-                CanPlayPause = false;
-                CanNext = false;
-                CanPrevious = false;
-                IsAutoPlay = false;
-                AllMessagesLoaded = false;
-                InitialLoadDone = false;
-                IsCancelContinueAvailable = false;
-
-                // Очищення колекцій
-                ChatMessages.Clear();
-                Locales?.Clear();
-
-                SelectedMessage = null;
+                await CleanAll();
             }
             catch (Exception ex)
             {
-                // Логування або інформування користувача при необхідності
                 System.Diagnostics.Debug.WriteLine($"Error during cleanup: {ex.Message}");
             }
         }
@@ -473,23 +467,6 @@ namespace PersonalAudioAssistant.ViewModel
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
             throw new NotImplementedException();
-    }
-
-    public class ChatMessage
-    {
-        public string Text { get; set; } = string.Empty;
-        public string UserRole { get; set; } = string.Empty;
-        public DateTime DateTimeCreated { get; set; }
-        public string? URL { get; set; }
-        public string? SubUserPhoto { get; set; }
-        public string? LastRequestId { get; set; }
-        public bool ShowDate { get; set; }
-    }
-
-    public class ContinueConversation
-    {
-        public string ConversationId { get; set; }
-        public SubUserResponse SubUser {get; set; }
     }
 
     public class BoolToColorConverterChat : IValueConverter

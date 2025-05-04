@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui.Views;
+using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.ViewModel;
 using System.ComponentModel;
 

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Contracts.SubUser;
+using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.ViewModel;
@@ -52,7 +53,7 @@ namespace PersonalAudioAssistant.Platforms
         {
         }
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId)
         {
             var taskResult = new TaskCompletionSource<string>();
             _clearChatMessagesAction = clearChatMessagesAction;
@@ -85,28 +86,20 @@ namespace PersonalAudioAssistant.Platforms
                     recognitionResult?.Report(sentence);
                     SubUserResponse? matchedUser = null;
                     bool isPrivateConversation = false;
-                    
-                    if (continueConversation == null)
-                    {
-                        string normalizedSentence = sentence.Trim().ToLowerInvariant();
-                        isPrivateConversation = normalizedSentence.Contains("особиста розмова");
 
-                        if (isPrivateConversation && !_hasCleared)
-                        {
-                            clearChatMessagesAction?.Invoke();
-                            _hasCleared = true;
-                            IsPrivateConversation = true;
-                        }
-                        matchedUser = listUsers.FirstOrDefault(user =>
-                            !string.IsNullOrWhiteSpace(user.startPhrase) &&
-                            normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
-                        );
-                    }
-                    else
+                    string normalizedSentence = sentence.Trim().ToLowerInvariant();
+                    isPrivateConversation = normalizedSentence.Contains("особиста розмова");
+
+                    if (isPrivateConversation && !_hasCleared)
                     {
-                        matchedUser = continueConversation.SubUser;
-                        conversationId = continueConversation.ConversationId;
+                        clearChatMessagesAction?.Invoke();
+                        _hasCleared = true;
+                        IsPrivateConversation = true;
                     }
+                    matchedUser = listUsers.FirstOrDefault(user =>
+                        !string.IsNullOrWhiteSpace(user.startPhrase) &&
+                        normalizedSentence.Contains(user.startPhrase.Trim().ToLowerInvariant())
+                    );
 
                     if (matchedUser != null && !processingCommand)
                     {
@@ -265,6 +258,136 @@ namespace PersonalAudioAssistant.Platforms
                 }
             }
         }
+
+
+        public async Task ContinueListen(IProgress<ChatMessage> chatMessageProgress, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
+        {
+            _clearChatMessagesAction = clearChatMessagesAction;
+
+            bool processingCommand = false;
+            string conversationId = null;
+            SubUserResponse? matchedUser = null;
+            bool isPrivateConversation = false;
+
+            matchedUser = continueConversation.SubUser;
+            conversationId = continueConversation.ConversationId;
+
+            if (matchedUser != null && !processingCommand)
+            {
+                processingCommand = true;
+
+                try
+                {
+                    var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
+                    await audioPlayerHelper.PlayAudio(cancellationToken);
+
+                    IsContinueConversation = true;
+                    IsFirstRequest = true;
+                    TranscriptionResponse response = new();
+
+                    Task<string> conversationIdTask;
+                    if (isPrivateConversation)
+                    {
+                        conversationIdTask = _conversationApiClient.CreateConversationAsync("", matchedUser.id);
+                        _prevResponseId = null;
+                    }
+                    else
+                    {
+                        conversationIdTask = _manageCacheData.GetСonversationAsync();
+                        _prevResponseId = prevResponseId;
+                    }
+
+                    while (IsContinueConversation)
+                    {
+                        try
+                        {
+                            IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
+                            var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
+                            var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
+                            response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
+
+                            if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation)
+                            {
+                                _prevResponseId = null;
+                                await restoreChatMessagesAction();
+                                IsPrivateConversation = false;
+                                _hasCleared = false;
+                                return;
+                            }
+
+                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                            _prevResponseId = answer.responseId;
+                            var voiceTask = _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
+
+                            await Task.WhenAll(conversationIdTask);
+                            var createUserCmd = new CreateMessageCommand
+                            {
+                                ConversationId = conversationId ?? conversationIdTask.Result,
+                                Text = response.Request,
+                                UserRole = "user",
+                                Audio = transcription.Audio,
+                                LastRequestId = _prevResponseId,
+                                SubUserId = matchedUser.id
+                            };
+                            var createdUser = await _messagesApiClient.CreateMessageAsync(createUserCmd);
+                            chatMessageProgress.Report(new ChatMessage
+                            {
+                                Text = createdUser.text,
+                                UserRole = "user",
+                                LastRequestId = _prevResponseId,
+                                SubUserPhoto = matchedUser.photoPath,
+                                DateTimeCreated = createdUser.dateTimeCreated,
+                                URL = createdUser.audioPath
+                            });
+
+                            var task = CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
+                            IsContinueConversation = response.IsContinuous;
+                            IsFirstRequest = false;
+
+                            var textToSpeech = new ElevenlabsApi();
+                            var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
+
+                            var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+
+                            var careteMessageAI = new CreateMessageCommand()
+                            {
+                                ConversationId = conversationId ?? conversationIdTask.Result,
+                                Text = answer.text,
+                                UserRole = "ai",
+                                Audio = audioBytes,
+                                LastRequestId = _prevResponseId,
+                                SubUserId = matchedUser.id
+                            };
+                            var createdAItask = _messagesApiClient.CreateMessageAsync(careteMessageAI);
+                            await Task.WhenAll(createdAItask);
+                            chatMessageProgress.Report(new ChatMessage
+                            {
+                                Text = createdAItask.Result.text,
+                                UserRole = "ai",
+                                LastRequestId = _prevResponseId,
+                                SubUserPhoto = matchedUser.photoPath,
+                                DateTimeCreated = createdAItask.Result.dateTimeCreated,
+                                URL = createdAItask.Result.audioPath,
+                            });
+
+                            await Task.WhenAll(playAnswerTask);
+                            await Task.Delay(100);
+                        }
+                        catch (Exception ex)
+                        {
+                            StopRecording();
+                            return;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await Toast.Make("Помилка з listener: " + ex.Message).Show(cancellationToken);
+                    return;
+                }
+            }
+        }
+
 
         public async Task CalculatePrice(double audioDurationRequest, ApiClientGptResponse gptResponse, string subUserId, string mainUserId)
         {

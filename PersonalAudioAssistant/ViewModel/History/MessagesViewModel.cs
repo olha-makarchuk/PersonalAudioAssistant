@@ -8,6 +8,7 @@ using CommunityToolkit.Maui.Core.Primitives;
 using System.Globalization;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Model.Payment;
+using PersonalAudioAssistant.Model;
 
 namespace PersonalAudioAssistant.ViewModel.History
 {
