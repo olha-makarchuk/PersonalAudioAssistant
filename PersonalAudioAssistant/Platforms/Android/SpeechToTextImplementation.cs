@@ -52,7 +52,7 @@ namespace PersonalAudioAssistant.Platforms
         {
         }
 
-        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction)
+        public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId)
         {
             var taskResult = new TaskCompletionSource<string>();
             _clearChatMessagesAction = clearChatMessagesAction;
@@ -118,10 +118,12 @@ namespace PersonalAudioAssistant.Platforms
                             if (isPrivateConversation)
                             {
                                 conversationIdTask = _conversationApiClient.CreateConversationAsync("", matchedUser.id);
+                                _prevResponseId = null;
                             }
                             else
                             {
                                 conversationIdTask = _manageCacheData.GetСonversationAsync();
+                                _prevResponseId = prevResponseId;
                             }
 
                             while (IsContinueConversation)

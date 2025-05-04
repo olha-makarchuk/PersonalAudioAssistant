@@ -1,7 +1,5 @@
 using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.ViewModel;
-using PersonalAudioAssistant.ViewModel.History;
-using Syncfusion.Maui.Core;
 
 namespace PersonalAudioAssistant.Views;
 

@@ -2,13 +2,13 @@
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Google.Apis.Drive.v3.Data;
 using MediatR;
 using PersonalAudioAssistant.Contracts.Message;
 using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Views;
-using PersonalAudioAssistant.Views.History;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
@@ -79,6 +79,12 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
+        [RelayCommand]
+        public async Task LoadMore()
+        {
+            await LoadInitialChatAsync();
+        }
+
         public ProgramPageViewModel(
             ITextToSpeech textToSpeech,
             ISpeechToText speechToText,
@@ -103,8 +109,7 @@ namespace PersonalAudioAssistant.ViewModel
 
             isLoadingMessages = true;
 
-            conversationId = (await _manageCacheData.GetСonversationAsync());
-
+            conversationId = await _manageCacheData.GetСonversationAsync();
             if (string.IsNullOrWhiteSpace(conversationId))
             {
                 isLoadingMessages = false;
@@ -113,19 +118,20 @@ namespace PersonalAudioAssistant.ViewModel
 
             var messages = await _messagesApiClient.GetMessagesByConversationIdAsync(conversationId, currentPage, PageSize);
 
+            // Якщо отримали менше за розмір сторінки – більше нічого немає
+            if (messages.Count < PageSize)
+                allMessagesLoaded = true;
+
             if (messages.Count == 0)
             {
-                allMessagesLoaded = true;
                 isLoadingMessages = false;
                 return;
             }
 
-            // Додаємо в початок колекції, оскільки це старіші повідомлення
-            _subUsers = await _manageCacheData.GetUsersAsync();
-
+            var users = await _manageCacheData.GetUsersAsync();
             foreach (var msg in messages.Reverse<MessageResponse>())
             {
-                var matchingUser = _subUsers.FirstOrDefault(u => u.id == msg.subUserId);
+                var user = users.FirstOrDefault(u => u.id == msg.subUserId);
                 ChatMessages.Insert(0, new ChatMessage
                 {
                     Text = msg.text,
@@ -133,14 +139,26 @@ namespace PersonalAudioAssistant.ViewModel
                     DateTimeCreated = msg.dateTimeCreated,
                     URL = msg.audioPath,
                     LastRequestId = msg.lastRequestId,
-                    SubUserPhoto = matchingUser?.photoPath 
+                    SubUserPhoto = user?.photoPath
+                });
+            }
+            foreach (var msg in messages)
+            {
+                var user = users.FirstOrDefault(u => u.id == msg.subUserId);
+                ChatMessages.Insert(0, new ChatMessage
+                {
+                    Text = msg.text,
+                    UserRole = msg.userRole,
+                    DateTimeCreated = msg.dateTimeCreated,
+                    URL = msg.audioPath,
+                    LastRequestId = msg.lastRequestId,
+                    SubUserPhoto = user?.photoPath
                 });
             }
 
             currentPage++;
             isLoadingMessages = false;
-
-            _subUsers = await _manageCacheData.GetUsersAsync();
+            LoadMoreCommand.NotifyCanExecuteChanged();
         }
 
         [RelayCommand]
@@ -198,7 +216,8 @@ namespace PersonalAudioAssistant.ViewModel
                         usersList,
                         _listenCts.Token,
                         () => ChatMessages.Clear(),
-                        async () => await RestoreGeneralChatAsync());
+                        async () => await RestoreGeneralChatAsync(),
+                        ChatMessages.LastOrDefault().LastRequestId);
                 }
                 catch (OperationCanceledException)
                 {

@@ -38,102 +38,100 @@
     <!-- Grid adjusted to avoid overlapping -->
     <Grid RowDefinitions="*,Auto,Auto,Auto">
         <CollectionView x:Name="ChatCollection"
-                        ItemsSource="{Binding ChatMessages}"
-                        SelectedItem="{Binding SelectedMessage}"
-                        RemainingItemsThreshold="5"
-                        RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
-                        Margin="10,0,10,0"
-                        ItemsUpdatingScrollMode="KeepLastItemInView"
-                        ItemsLayout="VerticalList">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="0,2" ColumnDefinitions="Auto,*">
-                                <Grid.Triggers>
-                                    <DataTrigger TargetType="Grid" Binding="{Binding UserRole}" Value="user">
-                                        <Setter Property="FlowDirection" Value="RightToLeft" />
+                ItemsSource="{Binding ChatMessages}"
+                SelectedItem="{Binding SelectedMessage}"
+                RemainingItemsThreshold="5"
+                RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
+                RemainingItemsThresholdReachedCommandParameter="{Binding .}"
+                Margin="10,0,10,5"
+                ItemsUpdatingScrollMode="KeepLastItemInView"
+                ItemsLayout="VerticalList">
+            <CollectionView.Header>
+                <Grid HorizontalOptions="Center"
+              Padding="0,5">
+                    <ActivityIndicator IsVisible="{Binding IsLoadingMore}"
+                               IsRunning="{Binding IsLoadingMore}"
+                               WidthRequest="30"
+                               HeightRequest="30"
+                               Color="Black" />
+                </Grid>
+            </CollectionView.Header>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,2" ColumnDefinitions="Auto,*">
+                        <Grid.Triggers>
+                            <DataTrigger TargetType="Grid" Binding="{Binding UserRole}" Value="user">
+                                <Setter Property="FlowDirection" Value="RightToLeft" />
+                            </DataTrigger>
+                        </Grid.Triggers>
+
+                        <Frame Grid.Column="0"
+                       WidthRequest="40"
+                       HeightRequest="40"
+                       CornerRadius="40"
+                       Margin="0,0,1,0"
+                       HasShadow="False"
+                       VerticalOptions="Center"
+                       HorizontalOptions="Center"
+                       BackgroundColor="Transparent">
+                            <Image
+                        x:Name="AvatarImage"
+                        Aspect="AspectFill"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        Source="{Binding SubUserPhoto}">
+                                <Image.Triggers>
+                                    <DataTrigger TargetType="Image" Binding="{Binding UserRole}" Value="ai">
+                                        <Setter Property="Source"
+                                        Value="https://audioassistantblob.blob.core.windows.net/audio-message/Examples/ai-photo-avatar.png" />
                                     </DataTrigger>
-                                </Grid.Triggers>
-
-                                <!-- Аватарка -->
-                                <Frame Grid.Column="0"
-                                       WidthRequest="40"
-                                       HeightRequest="40"
-                                       CornerRadius="40"
-                                       Margin="0,0,1,0"
-                                       HasShadow="False"
-                                       VerticalOptions="Center"
-                                       HorizontalOptions="Center"
-                                       BackgroundColor="Transparent">
-                                    <Image
-                                        x:Name="AvatarImage"
-                                        Aspect="AspectFill"
-                                        WidthRequest="40"
-                                        HeightRequest="40"
-                                        VerticalOptions="Center"
-                                        HorizontalOptions="Center"
-                                        Source="{Binding SubUserPhoto}">
-                                        <Image.Triggers>
-                                            <!-- Якщо це AI, замінити Source на ai_photo.png -->
-                                            <DataTrigger TargetType="Image" Binding="{Binding UserRole}" Value="ai">
-                                                <Setter Property="Source" 
-                                                        Value="https://audioassistantblob.blob.core.windows.net/audio-message/Examples/ai-photo-avatar.png" />
-                                            </DataTrigger>
-                                        </Image.Triggers>
-                                    </Image>
-                                </Frame>
+                                </Image.Triggers>
+                            </Image>
+                        </Frame>
 
 
-                                <!-- Повідомлення -->
-                                <Frame Grid.Column="1"
-                                       Padding="10"
-                                       CornerRadius="12"
-                                       WidthRequest="270"
-                                       HasShadow="True">
-                                    <Frame.Triggers>
-                                        <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="user">
-                                            <Setter Property="BackgroundColor" Value="#bfe0ff" />
+                        <Frame Grid.Column="1"
+                       Padding="10"
+                       CornerRadius="12"
+                       WidthRequest="270"
+                       HasShadow="True">
+                            <Frame.Triggers>
+                                <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="user">
+                                    <Setter Property="BackgroundColor" Value="#bfe0ff" />
+                                    <Setter Property="HorizontalOptions" Value="Start" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="ai">
+                                    <Setter Property="BackgroundColor" Value="#e5e3fe" />
+                                    <Setter Property="HorizontalOptions" Value="Start" />
+                                </DataTrigger>
+                            </Frame.Triggers>
+
+                            <VerticalStackLayout Spacing="5">
+                                <Label Text="{Binding Text}" FontSize="16" HorizontalOptions="Start" />
+                                <Button Style="{StaticResource PlayButtonStyle}"
+                                WidthRequest="25"
+                                HeightRequest="25"
+                                Text="▶"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
+                                CommandParameter="{Binding .}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="ai">
                                             <Setter Property="HorizontalOptions" Value="Start" />
                                         </DataTrigger>
-                                        <DataTrigger TargetType="Frame" Binding="{Binding UserRole}" Value="ai">
-                                            <Setter Property="BackgroundColor" Value="#e5e3fe" />
+                                        <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="user">
                                             <Setter Property="HorizontalOptions" Value="Start" />
                                         </DataTrigger>
-                                    </Frame.Triggers>
+                                    </Button.Triggers>
+                                </Button>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
 
-                                    <VerticalStackLayout Spacing="5">
-                                        <Label Text="{Binding Text}" FontSize="16" HorizontalOptions="Start" />
-                                        <Button Style="{StaticResource PlayButtonStyle}"
-                                                WidthRequest="25"
-                                                HeightRequest="25"
-                                                Text="▶"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:ProgramPageViewModel}}, Path=PlaySelectedMessageCommand}"
-                                                CommandParameter="{Binding .}">
-                                            <Button.Triggers>
-                                                <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="ai">
-                                                    <Setter Property="HorizontalOptions" Value="Start" />
-                                                </DataTrigger>
-                                                <DataTrigger TargetType="Button" Binding="{Binding UserRole}" Value="user">
-                                                    <Setter Property="HorizontalOptions" Value="Start" />
-                                                </DataTrigger>
-                                            </Button.Triggers>
-                                        </Button>
-                                    </VerticalStackLayout>
-                                </Frame>
-                            </Grid>
-                        </DataTemplate>
-
-                    </CollectionView.ItemTemplate>
-
-                    <CollectionView.Footer>
-                        <Grid HorizontalOptions="Center">
-                            <ActivityIndicator IsVisible="{Binding IsLoadingMore}"
-                                               IsRunning="{Binding IsLoadingMore}"
-                                               WidthRequest="30"
-                                               HeightRequest="30"
-                                               Color="Black" />
-                        </Grid>
-                    </CollectionView.Footer>
-                </CollectionView>
+        </CollectionView>
 
         <!-- 🔻 Переміщений блок керування аудіо -->
         <VerticalStackLayout Grid.Row="1" BackgroundColor="#f4f0f5">
