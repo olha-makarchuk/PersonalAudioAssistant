@@ -78,7 +78,7 @@ namespace PersonalAudioAssistant
                 });
             });
 
-            var conversation = await _manageCacheData.GetСonversationAsync();
+            var conversation = await _manageCacheData.GetConversationAsync();
         }
     }
 }

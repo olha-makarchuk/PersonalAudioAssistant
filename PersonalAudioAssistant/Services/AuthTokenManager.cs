@@ -39,9 +39,27 @@ namespace PersonalAudioAssistant.Services
             }
         }
 
-        public async Task Sign_In_Up_AsyncGoogle()
+        public async Task Sign_In_AsyncGoogle()
         {
             var response = await _googleAuthService.SignInAsync();
+            DateTime expiryTime = DateTime.UtcNow.AddHours(1);
+
+            var userId = await _authApiClient.LoginWithGoogleAsync(response.Email, response.RefreshToken);
+
+            await SecureStorage.SetAsync("is_google", "true");
+
+            await SignIn(response, userId, expiryTime);
+        }
+
+        public async Task<TokenResponse> Sign_Up_AsyncGoogle()
+        {
+            var response = await _googleAuthService.SignInAsync();
+
+            return response;
+        }
+
+        public async Task Complete_Sign_Up_AsyncGoogle(TokenResponse response)
+        {
             DateTime expiryTime = DateTime.UtcNow.AddHours(1);
 
             var userId = await _authApiClient.LoginWithGoogleAsync(response.Email, response.RefreshToken);

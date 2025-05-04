@@ -63,14 +63,32 @@ namespace PersonalAudioAssistant.ViewModel
         }
 
         [RelayCommand]
-        private async Task SignUnGoogleAsync()
+        private async Task SignUpGoogleAsync()
         {
             try
             {
                 IsBusy = true;
-                await _authTokenManager.Sign_In_Up_AsyncGoogle();
+                await _authTokenManager.Sign_Up_AsyncGoogle();
+            }
+            catch (Exception ex)
+            {
+                await App.Current.MainPage.DisplayAlert("Помилка", $"Не вдалося увійти через Google: {ex.Message}", "ОК");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+
+        [RelayCommand]
+        private async Task CompleteSignUpGoogleAsync()
+        {
+            try
+            {
                 await CreateDbData();
-                await Shell.Current.GoToAsync("//MainPage");
+                //await Shell.Current.GoToAsync("//MainPage");
+                //isNeededComplete
             }
             catch (Exception ex)
             {

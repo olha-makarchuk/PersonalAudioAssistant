@@ -124,7 +124,7 @@ namespace PersonalAudioAssistant.Platforms
                             }
                             else
                             {
-                                conversationIdTask = _manageCacheData.GetСonversationAsync();
+                                conversationIdTask = _manageCacheData.GetConversationAsync();
                                 _prevResponseId = prevResponseId;
                             }
 
@@ -293,7 +293,7 @@ namespace PersonalAudioAssistant.Platforms
                     }
                     else
                     {
-                        conversationIdTask = _manageCacheData.GetСonversationAsync();
+                        conversationIdTask = _manageCacheData.GetConversationAsync();
                         _prevResponseId = prevResponseId;
                     }
 

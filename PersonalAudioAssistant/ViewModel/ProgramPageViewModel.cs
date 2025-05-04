@@ -216,7 +216,7 @@ namespace PersonalAudioAssistant.ViewModel
                 }
                 else
                 {
-                    _conversationId = await _manageCacheData.GetСonversationAsync();
+                    _conversationId = await _manageCacheData.GetConversationAsync();
                 }
                 if (string.IsNullOrWhiteSpace(_conversationId))
                     return;

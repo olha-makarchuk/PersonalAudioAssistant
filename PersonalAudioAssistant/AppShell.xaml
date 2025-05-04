@@ -87,4 +87,10 @@
         Title="MessagesPage"
         ContentTemplate="{DataTemplate view_history:MessagesPage}"
         Route="MessagesPage"/>
+
+    <ShellContent
+        Title="CompleteRegistrationPage"
+        ContentTemplate="{DataTemplate view:CompleteRegistrationPage}"
+        Route="CompleteRegistrationPage"/>
+    
 </Shell>

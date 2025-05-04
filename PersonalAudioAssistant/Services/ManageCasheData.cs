@@ -51,26 +51,48 @@ namespace PersonalAudioAssistant.Services
             await GetUsersAsync();
         }
 
-        public async Task<string> GetСonversationAsync(Action<double> progress = null)
+        public async Task<string?> GetConversationAsync(Action<double>? progress = null)
         {
-            if (!_cache.TryGetValue(ConversationCacheKey, out ConversationIdResponse conversation))
+            // 1. Спроба взяти з кешу
+            if (_cache.TryGetValue(ConversationCacheKey, out ConversationIdResponse cached))
             {
-                await Task.Delay(800);
-                var userId = await SecureStorage.GetAsync("user_id");
-                var conversations = await _conversationApiClient.GetConversationsBySubUserIdAsync(userId, 1, 1);
+                progress?.Invoke(1.0);
+                return cached.ConversationId;
+            }
 
-                conversation = new ConversationIdResponse
+            // 2. Якщо в кеші немає — починаємо «довгу» операцію
+            progress?.Invoke(0.0);
+
+            // а) невелика затримка, щоб показати прогрес-бар/анімоване очікування
+            await Task.Delay(800);
+            progress?.Invoke(0.2);
+
+            // b) отримуємо ідентифікатор користувача
+            var userId = await SecureStorage.GetAsync("user_id");
+            progress?.Invoke(0.4);
+
+            // c) запитуємо список бесід (першу сторінку, 1 елемент)
+            var conversations = await _conversationApiClient
+                .GetConversationsBySubUserIdAsync(userId, pageNumber: 1, pageSize: 1);
+            progress?.Invoke(0.7);
+
+            // 3. Якщо бесіди знайдено — кешуємо і повертаємо
+            if (conversations != null && conversations.Any())
+            {
+                var response = new ConversationIdResponse
                 {
                     ConversationId = conversations[0].IdConversation
                 };
-
-                progress?.Invoke(0.7);
-                await Task.Delay(700);
-                _cache.Set(SettingsCacheKey, conversation);
+                _cache.Set(ConversationCacheKey, response);
                 progress?.Invoke(1.0);
+                return response.ConversationId;
             }
-            return conversation.ConversationId;
+
+            // 4. Бесіди не знайдено — повертаємо null (або можна кидати виняток)
+            progress?.Invoke(1.0);
+            return null;
         }
+
 
         public async Task<AppSettingsResponse> GetAppSettingsAsync(Action<double> progress = null)
         {
