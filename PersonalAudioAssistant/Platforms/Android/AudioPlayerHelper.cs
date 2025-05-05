@@ -13,6 +13,20 @@ namespace PersonalAudioAssistant.Platforms
             this.audioManager = audioManager;
         }
 
+        public async Task PlayAudioFromUrlAsync(string url, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var audioBytes = await httpClient.GetByteArrayAsync(url, cancellationToken);
+                await PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error playing audio from URL: {ex.Message}");
+            }
+        }
+
         // Метод для відтворення аудіо з вбудованого ресурсу (залишаємо)
         public async Task PlayAudio(CancellationToken cancellationToken)
         {

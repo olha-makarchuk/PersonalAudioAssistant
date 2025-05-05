@@ -108,9 +108,10 @@ namespace PersonalAudioAssistant.Platforms
                         try
                         {
                             PauseListening();
-                            //await Toast.Make(matchedUser.startPhrase).Show(cancellationToken);
+                            var textToSpeech = new ElevenlabsApi();
+
                             var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
-                            await audioPlayerHelper.PlayAudio(cancellationToken);
+                            await audioPlayerHelper.PlayAudioFromUrlAsync($"https://audioassistantblob.blob.core.windows.net/first-message/{matchedUser.id}.wav", cancellationToken);
 
                             IsContinueConversation = true;
                             IsFirstRequest = true;
@@ -139,24 +140,23 @@ namespace PersonalAudioAssistant.Platforms
 
                                     if (response.Request == "none" || !response.IsContinuous)
                                     {
-                                        StopRecording();
                                         _prevResponseId = null;
 
                                         if (isPrivateConversation)
                                         {
+                                            StopRecording();
                                             await restoreChatMessagesAction();
                                         }
+                                        else
+                                        {
+                                            RestartListening(culture);
+                                        }
 
-                                        IsPrivateConversation = false;
+                                         IsPrivateConversation = false;
                                         _hasCleared = false;
                                         taskResult.TrySetResult(response.Request);
                                         return;
                                     }
-
-
-                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
-                                    _prevResponseId = answer.responseId;
-                                    var voiceTask = _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
 
                                     await Task.WhenAll(conversationIdTask);
                                     var createUserCmd = new CreateMessageCommand
@@ -179,13 +179,16 @@ namespace PersonalAudioAssistant.Platforms
                                         URL = createdUser.audioPath
                                     });
 
+                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                                    _prevResponseId = answer.responseId;
+
+                                    var voice = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
+
                                     var task = CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
                                     IsContinueConversation = response.IsContinuous;
                                     IsFirstRequest = false;
 
-                                    var textToSpeech = new ElevenlabsApi();
-
-                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
+                                    var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voice.voiceId, answer.text);
 
                                     var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
 
@@ -219,10 +222,6 @@ namespace PersonalAudioAssistant.Platforms
                                     return;
                                 }
                             }
-
-                            //ApiClientGptResponse description = await _apiClientGPT.ContinueChatAsync("На основі розмови напиши короткий заголовок, який підсумовує основну тему", _prevResponseId);
-
-                            //var TaskDescription = _conversationApiClient.UpdateConversationAsync(conversationId, description.text);
                         }
                         catch (Exception ex)
                         {
@@ -288,11 +287,12 @@ namespace PersonalAudioAssistant.Platforms
                 try
                 {
                     var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
-                    await audioPlayerHelper.PlayAudio(cancellationToken);
+                    await audioPlayerHelper.PlayAudioFromUrlAsync($"https://audioassistantblob.blob.core.windows.net/first-message/{matchedUser.id}.wav", cancellationToken);
 
                     IsContinueConversation = true;
                     IsFirstRequest = true;
                     TranscriptionResponse response = new();
+                    var textToSpeech = new ElevenlabsApi();
 
                     Task<string> conversationIdTask;
                     if (isPrivateConversation)
@@ -325,10 +325,6 @@ namespace PersonalAudioAssistant.Platforms
                                 return lastTranscription;
                             }
 
-                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
-                            _prevResponseId = answer.responseId;
-                            var voiceTask = _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
-
                             await Task.WhenAll(conversationIdTask);
                             var createUserCmd = new CreateMessageCommand
                             {
@@ -350,15 +346,17 @@ namespace PersonalAudioAssistant.Platforms
                                 URL = createdUser.audioPath
                             });
 
+                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                            _prevResponseId = answer.responseId;
+                            var voiceTask =  _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
+
                             var task = CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
                             IsContinueConversation = response.IsContinuous;
                             IsFirstRequest = false;
 
                             await Task.WhenAll(voiceTask);
-                            var textToSpeech = new ElevenlabsApi();
 
                             var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
-
                             var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
 
                             var careteMessageAI = new CreateMessageCommand()
