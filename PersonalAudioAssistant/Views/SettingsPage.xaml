@@ -27,10 +27,10 @@
 
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="30,0">
-            <Label Text="Налаштування" 
-                   FontSize="30" 
-                   FontAttributes="Bold" 
-                   Margin="0,20,0,10" 
+            <Label Text="Налаштування"
+                   FontSize="30"
+                   FontAttributes="Bold"
+                   Margin="0,20,0,10"
                    HorizontalOptions="Center" />
 
             <Frame Style="{StaticResource SettingsFrame}">
@@ -101,6 +101,10 @@
                                Placeholder="Введіть новий пароль"
                                IsPassword="True"
                                BackgroundColor="#F2F2F2"/>
+                        <Label Text="{Binding NewPasswordValidationMessage}"
+                               IsVisible="{Binding IsNewPasswordNotValid}"
+                               TextColor="Red"
+                               FontSize="12" />
                     </VerticalStackLayout>
 
                     <Button Text="Підтвердити"

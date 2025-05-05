@@ -2,8 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="PersonalAudioAssistant.Views.RegistrationPage"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              BackgroundColor="{AppThemeBinding Light={StaticResource LightBackgroundColor}, Dark={StaticResource DarkBackgroundColor}}"
              Shell.TitleView="{x:Null}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid Padding="30">
         <Grid.RowDefinitions>
@@ -12,7 +19,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackLayout Grid.Row="0" HorizontalOptions="Center" Spacing="10" Margin="0, 70, 0, 0">
+        <StackLayout Grid.Row="0" HorizontalOptions="Center" Spacing="10" Margin="0, 70, 0, 0" IsVisible="{Binding IfCompleteRegistrationVisible, Converter={StaticResource InvertedBoolConverter}}">
             <Label Text="Реєстрація"
                    FontSize="32"
                    FontAttributes="Bold"
@@ -22,95 +29,145 @@
                    FontSize="18"
                    HorizontalOptions="Center"
                    TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
-            
+
             <Frame Padding="20"
-                CornerRadius="15"
-                 WidthRequest="350"
-                
-                BackgroundColor="{AppThemeBinding Light={StaticResource LightEntryBackgroundColor}, Dark={StaticResource DarkEntryBackgroundColor}}">
+                   CornerRadius="15"
+                    WidthRequest="350"
+
+                   BackgroundColor="{AppThemeBinding Light={StaticResource LightEntryBackgroundColor}, Dark={StaticResource DarkEntryBackgroundColor}}">
                 <VerticalStackLayout Spacing="20">
                     <VerticalStackLayout Spacing="5">
                         <Label Text="Електронна пошта"
-                            TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
                         <Entry Placeholder="Введіть електронну пошту"
-                            Keyboard="Email"
-                            WidthRequest="300"
-                            Text="{Binding Email}"
-                            TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                               Keyboard="Email"
+                               WidthRequest="300"
+                               Text="{Binding Email}"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Label Text="{Binding EmailValidationMessage}"
+                               IsVisible="{Binding IsEmailNotValid}"
+                               TextColor="Red"
+                               FontSize="12" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="5">
                         <Label Text="Пароль"
-                            TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
                         <Entry Placeholder="Введіть пароль"
-                            IsPassword="True"
-                            WidthRequest="300"
-                            Text="{Binding Password}"
-                            TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                               IsPassword="True"
+                               WidthRequest="300"
+                               Text="{Binding Password}"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Label Text="{Binding PasswordValidationMessage}"
+                               IsVisible="{Binding IsPasswordNotValid}"
+                               TextColor="Red"
+                               FontSize="12" />
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
             <Button Text="Зареєструватися"
-                 Command="{Binding SignUpCommand}"
-                 BackgroundColor="{StaticResource Primary}"
-                 TextColor="White"
-                 WidthRequest="300"
-                 HeightRequest="50"
-                 FontSize="18" />
+                    Command="{Binding SignUpCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    WidthRequest="300"
+                    HeightRequest="50"
+                    FontSize="18" />
 
             <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
                 <BoxView WidthRequest="50"
-                      HeightRequest="1"
-                      BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}"
-                      VerticalOptions="Center" />
+                         HeightRequest="1"
+                         BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}"
+                         VerticalOptions="Center" />
                 <Label Text="Або"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
                 <BoxView WidthRequest="50"
-                      HeightRequest="1"
-                      BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}"
-                      VerticalOptions="Center" />
+                         HeightRequest="1"
+                         BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}"
+                         VerticalOptions="Center" />
             </StackLayout>
 
             <Button Text="Зареєструватися через Google"
-                 Command="{Binding SignUpGoogleCommand}"
-                 BackgroundColor="#FFFFFF"
-                 TextColor="Black"
-                 HeightRequest="50"
-                 FontSize="16"
-                 ImageSource="google_logo.png"
-                 ContentLayout="Left,15"
-                 BorderColor="#333333"
-                 WidthRequest="300"
-                 BorderWidth="0.5" />
+                    Command="{Binding SignUpGoogleCommand}"
+                    BackgroundColor="#FFFFFF"
+                    TextColor="Black"
+                    HeightRequest="50"
+                    FontSize="16"
+                    ImageSource="google_logo.png"
+                    ContentLayout="Left,15"
+                    BorderColor="#333333"
+                    WidthRequest="300"
+                    BorderWidth="0.5" />
 
             <ActivityIndicator IsRunning="{Binding IsBusy}"
-                            IsVisible="{Binding IsBusy}"
-                            HorizontalOptions="Center"
-                            VerticalOptions="Center"
-                            Color="{StaticResource Primary}" />
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Color="{StaticResource Primary}" />
         </StackLayout>
 
 
-        <Grid Grid.Row="2" HorizontalOptions="Center" ColumnSpacing="5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Label Text="Вже маєте обліковий запис?"
-                   FontSize="14"
-                   TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}"
-                   Grid.Column="0" />
-            <Label Text="Увійти"
-                   FontSize="14"
-                   TextColor="{StaticResource Primary}"
+        <StackLayout Grid.Row="0" HorizontalOptions="Center" Spacing="10" Margin="0, 120, 0, 0" IsVisible="{Binding IfCompleteRegistrationVisible}">
+            <Label Text="Завершіть реєстрацію"
+                   FontSize="28"
                    FontAttributes="Bold"
-                   Grid.Column="1">
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding SignInCommand}" />
-                </Label.GestureRecognizers>
-            </Label>
-        </Grid>
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+            <Label Text="Створіть пароль до особистого акаунту"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+
+
+            <Frame Padding="20"
+                   CornerRadius="15"
+                   WidthRequest="350"
+                   BackgroundColor="{AppThemeBinding Light={StaticResource LightEntryBackgroundColor}, Dark={StaticResource DarkEntryBackgroundColor}}">
+                <VerticalStackLayout Spacing="20">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Введіть пароль:"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Entry Placeholder="Введіть пароль:"
+                               IsPassword="True"
+                               WidthRequest="300"
+                               Text="{Binding Password}" />
+                        <Label Text="{Binding PasswordValidationMessage}"
+                               IsVisible="{Binding IsPasswordNotValid}"
+                               TextColor="Red"
+                               FontSize="12" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Повторіть пароль:"
+                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Entry Placeholder="Повторіть пароль:"
+                               IsPassword="True"
+                               WidthRequest="300"
+                               Text="{Binding RepeatPassword}" />
+
+                        <Label Text="Паролі не співпадають"
+                               IsVisible="{Binding IsPasswordMismatch}"
+                               TextColor="Red"
+                               FontAttributes="Italic"
+                               FontSize="14" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Підтвердити"
+                    Command="{Binding CompleteSignUpGoogleCommand}"
+                    IsEnabled="{Binding IsPasswordMismatch, Converter={StaticResource InvertedBoolConverter}}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    WidthRequest="300"
+                    HeightRequest="50"
+                    FontSize="18" />
+        </StackLayout>
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           IsVisible="{Binding IsBusy}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

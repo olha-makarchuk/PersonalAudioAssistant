@@ -4,6 +4,7 @@ using MediatR;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 
 namespace PersonalAudioAssistant.ViewModel
 {
@@ -36,6 +37,12 @@ namespace PersonalAudioAssistant.ViewModel
         [ObservableProperty]
         private string newPassword;
 
+        [ObservableProperty]
+        private bool isNewPasswordNotValid;
+
+        [ObservableProperty]
+        private string newPasswordValidationMessage;
+
         public SettingsViewModel(
             IMediator mediator,
             AuthTokenManager authTokenManager,
@@ -63,9 +70,48 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
+        partial void OnNewPasswordChanged(string value)
+        {
+            ValidateNewPassword(value);
+        }
+
+        private void ValidateNewPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                IsNewPasswordNotValid = true;
+                NewPasswordValidationMessage = "Новий пароль обов'язковий.";
+                return;
+            }
+
+            if (password.Length < 6)
+            {
+                IsNewPasswordNotValid = true;
+                NewPasswordValidationMessage = "Пароль повинен містити щонайменше 6 символів.";
+                return;
+            }
+
+            if (!Regex.IsMatch(password, @"^(?=.*[A-Za-z])(?=.*\d).+$"))
+            {
+                IsNewPasswordNotValid = true;
+                NewPasswordValidationMessage = "Пароль повинен містити літери та цифри.";
+                return;
+            }
+
+            IsNewPasswordNotValid = false;
+            NewPasswordValidationMessage = string.Empty;
+        }
+
         [RelayCommand]
         public async Task ChangePassword()
         {
+            ValidateNewPassword(NewPassword);
+
+            if (IsNewPasswordNotValid)
+            {
+                return;
+            }
+
             try
             {
                 var email = await SecureStorage.GetAsync("user_email");
@@ -79,6 +125,7 @@ namespace PersonalAudioAssistant.ViewModel
 
                 OldPassword = string.Empty;
                 NewPassword = string.Empty;
+                await Shell.Current.DisplayAlert("Успіх", "Пароль успішно змінено.", "ОК");
             }
             catch (Exception ex)
             {
@@ -107,10 +154,10 @@ namespace PersonalAudioAssistant.ViewModel
             }
         }
 
-        [RelayCommand] 
+        [RelayCommand]
         public async Task SaveTheme()
         {
-            
+            // Логіка збереження теми
         }
     }
 }

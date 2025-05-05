@@ -58,11 +58,11 @@ namespace PersonalAudioAssistant.Services
             return response;
         }
 
-        public async Task Complete_Sign_Up_AsyncGoogle(TokenResponse response)
+        public async Task Complete_Sign_Up_AsyncGoogle(TokenResponse response, string Password)
         {
             DateTime expiryTime = DateTime.UtcNow.AddHours(1);
 
-            var userId = await _authApiClient.LoginWithGoogleAsync(response.Email, response.RefreshToken);
+            var userId = await _authApiClient.LoginWithGoogleAsync(response.Email, response.RefreshToken, Password);
 
             await SecureStorage.SetAsync("is_google", "true");
 

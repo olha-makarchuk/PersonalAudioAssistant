@@ -63,7 +63,7 @@ namespace PersonalAudioAssistant.Services.Api
             };
         }
 
-        public async Task<string> LoginWithGoogleAsync(string email, string refreshToken)
+        public async Task<string> LoginWithGoogleAsync(string email, string refreshToken, string password = null)
         {
             var RefreshTokenExpiryDays = double.Parse(_configuration["JWTKey:ExpiryDays"]!);
 
@@ -76,6 +76,13 @@ namespace PersonalAudioAssistant.Services.Api
 
             if (user is null)
             {
+                if (String.IsNullOrEmpty(password))
+                {
+                    _passwordManager.CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
+                    mainUser.PasswordHash = passwordHash;
+                    mainUser.PasswordSalt = passwordSalt;
+                }
+
                 mainUser.Email = email;
                 mainUser.RefreshToken = refreshToken;
                 mainUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays);
