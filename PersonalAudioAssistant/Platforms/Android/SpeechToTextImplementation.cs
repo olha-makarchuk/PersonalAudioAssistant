@@ -10,7 +10,6 @@ using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
-using PersonalAudioAssistant.ViewModel;
 using Plugin.Maui.Audio;
 
 namespace PersonalAudioAssistant.Platforms
@@ -27,6 +26,8 @@ namespace PersonalAudioAssistant.Platforms
         private IMediator _mediatr;
         private Action? _clearChatMessagesAction;
         private readonly ConversationApiClient _conversationApiClient;
+        private readonly PaymentHistoryApiClient _paymentHistoryApiClient;
+        private readonly AppSettingsApiClient _appSettingsApiClient;
         private readonly MessagesApiClient _messagesApiClient;
         private readonly MoneyUsedApiClient _moneyUsedApiClient;
         private readonly MoneyUsersUsedApiClient _moneyUsersUsedApiClient;
@@ -37,7 +38,7 @@ namespace PersonalAudioAssistant.Platforms
         private bool _hasCleared = false;
         public bool IsPrivateConversation { get; set; }
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient, ApiClientGPT apiClientGPT)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient, ApiClientGPT apiClientGPT, PaymentHistoryApiClient paymentHistoryApiClient, AppSettingsApiClient appSettingsApiClient)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
@@ -47,9 +48,11 @@ namespace PersonalAudioAssistant.Platforms
             _moneyUsersUsedApiClient = moneyUsersUsedApiClient;
             _voiceApiClient = voiceApiClient;
             _apiClientGPT = apiClientGPT;
+            _paymentHistoryApiClient = paymentHistoryApiClient;
+            _appSettingsApiClient = appSettingsApiClient;
         }
         public SpeechToTextImplementation() : this(DataProvider.Mediator, DataProvider.ConversationApiClient
-                , DataProvider.MessagesApiClient, DataProvider.ManageCacheData, DataProvider.MoneyUsedApiClient, DataProvider.MoneyUsersUsedApiClient, DataProvider.VoiceApiClient, DataProvider.ApiClientGPT)
+                , DataProvider.MessagesApiClient, DataProvider.ManageCacheData, DataProvider.MoneyUsedApiClient, DataProvider.MoneyUsersUsedApiClient, DataProvider.VoiceApiClient, DataProvider.ApiClientGPT, DataProvider.PaymentHistoryApiClient, DataProvider.AppSettingsApiClient)
         {
         }
 
@@ -434,6 +437,14 @@ namespace PersonalAudioAssistant.Platforms
                 {
                 }
             });
+
+            var appSettings = await _manageCacheData.GetAppSettingsAsync();
+            var payment = await _manageCacheData.GetPaymentAsync();
+            var userId = await SecureStorage.GetAsync("user_id");
+
+            decimal totalCostDecimal = (decimal)(-totalCost);
+            await _appSettingsApiClient.UpdateBalanceAsync(userId, totalCostDecimal, payment.maskedCardNumber, "");
+            await _manageCacheData.UpdateAppSetttingsList();
         }
 
 
@@ -531,6 +542,12 @@ namespace PersonalAudioAssistant.Platforms
 
         public static VoiceApiClient VoiceApiClient =>
             Services!.GetRequiredService<VoiceApiClient>();
+
+        public static PaymentHistoryApiClient PaymentHistoryApiClient =>
+            Services!.GetRequiredService<PaymentHistoryApiClient>();
+
+        public static AppSettingsApiClient AppSettingsApiClient =>
+            Services!.GetRequiredService<AppSettingsApiClient>();
     }
 
     public class TranscriptionResponse

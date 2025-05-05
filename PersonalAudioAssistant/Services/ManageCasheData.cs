@@ -4,6 +4,8 @@ using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Contracts.AppSettings;
 using PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
+using PersonalAudioAssistant.Contracts.AutoPayment;
+using PersonalAudioAssistant.Contracts.Payment;
 
 namespace PersonalAudioAssistant.Services
 {
@@ -12,15 +14,18 @@ namespace PersonalAudioAssistant.Services
         private const string UsersCacheKey = "UsersList";
         private const string SettingsCacheKey = "AppSettings";
         private const string ConversationCacheKey = "Conversation";
+        private const string PaymentCacheKey = "Payment";
 
         private readonly IMemoryCache _cache;
         private readonly IMediator _mediator;
         private readonly AppSettingsApiClient _appSettingsApiClient;
         private readonly SubUserApiClient _subUserApiClient;
         private readonly ConversationApiClient _conversationApiClient;
+        private readonly PaymentApiClient _paymentApiClient;
+        private readonly AutoPaymentApiClient _autoPaymentApiClient;
         private readonly VoiceApiClient _voiceApiClient;
 
-        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient, ConversationApiClient conversationApiClient, VoiceApiClient voiceApiClient)
+        public ManageCacheData(IMemoryCache cache, IMediator mediator, AppSettingsApiClient appSettingsApiClient, SubUserApiClient subUserApiClient, ConversationApiClient conversationApiClient, VoiceApiClient voiceApiClient, AutoPaymentApiClient autoPaymentApiClient, PaymentApiClient paymentApiClient)
         {
             _cache = cache;
             _mediator = mediator;
@@ -28,6 +33,8 @@ namespace PersonalAudioAssistant.Services
             _subUserApiClient = subUserApiClient;
             _conversationApiClient = conversationApiClient;
             _voiceApiClient = voiceApiClient;
+            _autoPaymentApiClient = autoPaymentApiClient;
+            _paymentApiClient = paymentApiClient;
         }
 
         public async Task<List<SubUserResponse>> GetUsersAsync(Action<double> progress = null)
@@ -98,11 +105,9 @@ namespace PersonalAudioAssistant.Services
         {
             if (!_cache.TryGetValue(SettingsCacheKey, out AppSettingsResponse settings))
             {
-                await Task.Delay(800); 
                 var userId = await SecureStorage.GetAsync("user_id");
                 settings = await _appSettingsApiClient.GetSettingsByUserIdAsync(userId);
                 progress?.Invoke(0.7);
-                await Task.Delay(700);
                 _cache.Set(SettingsCacheKey, settings);
                 progress?.Invoke(1.0);
             }
@@ -116,11 +121,33 @@ namespace PersonalAudioAssistant.Services
             await GetAppSettingsAsync();
         }
 
+
+        public async Task<PaymentResponse> GetPaymentAsync(Action<double> progress = null)
+        {
+            if (!_cache.TryGetValue(PaymentCacheKey, out PaymentResponse payment))
+            {
+                var userId = await SecureStorage.GetAsync("user_id");
+                payment = await _paymentApiClient.GetPaymentByUserIdAsync(userId);
+                progress?.Invoke(0.7);
+                _cache.Set(SettingsCacheKey, payment);
+                progress?.Invoke(1.0);
+            }
+
+            return payment;
+        }
+
+        public async Task UpdatePayment()
+        {
+            _cache.Remove(PaymentCacheKey);
+            await GetPaymentAsync();
+        }
+
         public void ClearCache()
         {
             _cache.Remove(UsersCacheKey);
             _cache.Remove(SettingsCacheKey);
             _cache.Remove(ConversationCacheKey);
+            _cache.Remove(PaymentCacheKey);
         }
     }
 }
