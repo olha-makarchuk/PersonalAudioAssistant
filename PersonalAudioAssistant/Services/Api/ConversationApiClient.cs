@@ -47,14 +47,13 @@ namespace PersonalAudioAssistant.Services.Api
             await DeleteAsync(url, request);
         }
 
-        public async Task GetConversationByIdAsync(string idConversation, string description)
+        public async Task GetConversationByIdAsync(string idConversation)
         {
             var url = $"{BaseUrl}Conversation/byid";
 
             var request = new
             {
-                IdConversation = idConversation,
-                Description = description
+                ConversationId = idConversation,
             };
 
             await PostAsync<object, string>(url, request);

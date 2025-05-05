@@ -1,11 +1,13 @@
 ﻿using CommunityToolkit.Maui.Views;
+using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.ViewModel;
 using PersonalAudioAssistant.ViewModel.History;
+using System.ComponentModel;
 
 namespace PersonalAudioAssistant.Views.History;
 public partial class MessagesPage : ContentPage
 {
-    private bool _initialScrollDone = false;
+    private bool _hasScrolledToBottomOnce = false;
 
     public MessagesPage(MessagesViewModel viewModel)
     {
@@ -13,47 +15,47 @@ public partial class MessagesPage : ContentPage
         BindingContext = viewModel;
 
         mediaElement.MediaEnded += OnMediaEnded;
-        viewModel.PropertyChanged += ViewModel_PropertyChanged;
-    }
+        ChatCollection.Scrolled += OnChatScrolled;
 
-    private async void ViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(MessagesViewModel.ChatMessages) && (BindingContext as MessagesViewModel)?.InitialLoadDone == true && !_initialScrollDone)
+        if (viewModel is INotifyPropertyChanged vmNotify)
         {
-            _initialScrollDone = true;
-            await Task.Delay(200); // Даємо трохи часу на рендеринг
-            try
-            {
-                ChatCollection?.ScrollTo((BindingContext as MessagesViewModel)?.ChatMessages.LastOrDefault(), animate: false);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Помилка початкової прокрутки (PropertyChanged): {ex.Message}");
-            }
-        }
-        else if (e.PropertyName == nameof(MessagesViewModel.ChatMessages) && (BindingContext as MessagesViewModel)?.InitialLoadDone == true && _initialScrollDone)
-        {
-            try
-            {
-                ChatCollection?.ScrollTo((BindingContext as MessagesViewModel)?.ChatMessages.LastOrDefault(), animate: true);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Помилка прокрутки (оновлення): {ex.Message}");
-            }
-        }
-    }
 
+            vmNotify.PropertyChanged += async (s, e) =>
+            {
+                if (e.PropertyName == nameof(ProgramPageViewModel.InitialLoadDone)
+                    && viewModel.InitialLoadDone
+                    && !_hasScrolledToBottomOnce
+                    && viewModel.ChatMessages.Any())
+                {
+                    await Task.Delay(50);
+                    ChatCollection.ScrollTo(
+                        viewModel.ChatMessages.Last(),
+                        position: ScrollToPosition.End,
+                        animate: false);
+                    _hasScrolledToBottomOnce = true;
+                }
+            };
+        }
+
+        viewModel.RequestScrollToEnd += () =>
+        {
+            if (ChatCollection.ItemsSource is IList<ChatMessage> list && list.Any())
+                ChatCollection.ScrollTo(list.Last(), position: ScrollToPosition.End, animate: false);
+        };
+    }
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        Shell.Current.FlyoutBehavior = FlyoutBehavior.Disabled;
+
         if (BindingContext is MessagesViewModel vm && !vm.InitialLoadDone)
         {
             await vm.LoadChatMessagesAsync();
-            vm.InitialLoadDone = true; // Встановлюємо прапорець після першого завантаження
+
+            if (ChatCollection.ItemsSource is IList<ChatMessage> list && list.Any())
+                ChatCollection.ScrollTo(list.Last(), position: ScrollToPosition.End, animate: false);
         }
     }
-
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);
@@ -63,17 +65,47 @@ public partial class MessagesPage : ContentPage
         }
     }
 
-    private async void OnChatScrolled(object sender, ItemsViewScrolledEventArgs e)
+    private int _firstVisibleIndex;
+    private void OnChatScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
-        if (e.FirstVisibleItemIndex == 0
-            && BindingContext is MessagesViewModel vm
+        _firstVisibleIndex = e.FirstVisibleItemIndex;
+        // якщо це догрузка (коли дійшли до нуля), запускаємо завантаження
+        if (_firstVisibleIndex == 0
+            && BindingContext is ProgramPageViewModel vm
             && !vm.IsLoadingMessages
             && !vm.AllMessagesLoaded)
         {
-            await vm.LoadNextPageAsync();
+            _ = LoadMoreKeepingOffsetAsync(vm);
         }
     }
 
+    // Завантажуємо нові сторінки і потім “перекочуємо” назад
+    private async Task LoadMoreKeepingOffsetAsync(ProgramPageViewModel vm)
+    {
+        // Скільки було до завантаження
+        var oldCount = vm.ChatMessages.Count;
+
+        // Дочікуємося додавання нових
+        await vm.LoadNextPageAsync();
+
+        var newCount = vm.ChatMessages.Count;
+        var added = newCount - oldCount;
+        if (added <= 0)
+            return;
+
+        // Після того, як дані вставились, прокручуємо до того ж елемента,
+        // зміщеного на кількість нових
+        var targetIndex = _firstVisibleIndex + added;
+        if (targetIndex < vm.ChatMessages.Count)
+        {
+            // Невелика затримка, щоб CollectionView встиг оновитись
+            await Task.Delay(50);
+            ChatCollection.ScrollTo(
+                vm.ChatMessages[targetIndex],
+                position: ScrollToPosition.Start,
+                animate: false);
+        }
+    }
     private async void OnMediaEnded(object sender, EventArgs e)
     {
         if (BindingContext is MessagesViewModel vm && vm.IsAutoPlay)

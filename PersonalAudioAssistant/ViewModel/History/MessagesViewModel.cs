@@ -17,9 +17,10 @@ namespace PersonalAudioAssistant.ViewModel.History
         private readonly IMediator _mediator;
         private readonly MessagesApiClient _messagesApiClient;
         private string ConversationIdQueryAttribute;
+        private string SubUserIdQueryAttribute;
         private string PreviewId;
-        private string SubUserId;
         private readonly ManageCacheData _manageCacheData;
+        public Action? RequestScrollToEnd { get; set; }
 
         [ObservableProperty]
         private bool isBusy;
@@ -108,7 +109,6 @@ namespace PersonalAudioAssistant.ViewModel.History
                 if (messages.Count < PageSize)
                     AllMessagesLoaded = true;
 
-                SubUserId = messages.FirstOrDefault().subUserId;
                 var users = await _manageCacheData.GetUsersAsync();
 
                 var newSection = new List<ChatMessage>();
@@ -194,9 +194,10 @@ namespace PersonalAudioAssistant.ViewModel.History
         }
         public async void ApplyQueryAttributes(IDictionary<string, object> query)
         {
-            if (query.ContainsKey("conversationId"))
+            if (query.ContainsKey("conversationId") && query.ContainsKey("subUserId"))
             {
                 ConversationIdQueryAttribute = query["conversationId"]?.ToString();
+                SubUserIdQueryAttribute = query["subUserId"]?.ToString();
             }
         }
 
@@ -227,7 +228,7 @@ namespace PersonalAudioAssistant.ViewModel.History
         [RelayCommand]
         public async void ContinueConversation()
         {
-            await Shell.Current.GoToAsync($"//ProgramPage?conversationId={ConversationIdQueryAttribute}&subUserId={SubUserId}");
+            await Shell.Current.GoToAsync($"//ProgramPage?conversationId={ConversationIdQueryAttribute}&subUserId={SubUserIdQueryAttribute}");
         }
 
 

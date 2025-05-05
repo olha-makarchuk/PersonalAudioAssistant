@@ -137,15 +137,22 @@ namespace PersonalAudioAssistant.Platforms
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
                                     response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
-                                    if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation)
+                                    if (response.Request == "none" || !response.IsContinuous)
                                     {
+                                        StopRecording();
                                         _prevResponseId = null;
-                                        await restoreChatMessagesAction();
+
+                                        if (isPrivateConversation)
+                                        {
+                                            await restoreChatMessagesAction();
+                                        }
+
                                         IsPrivateConversation = false;
                                         _hasCleared = false;
                                         taskResult.TrySetResult(response.Request);
                                         return;
                                     }
+
 
                                     ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
                                     _prevResponseId = answer.responseId;
@@ -177,6 +184,7 @@ namespace PersonalAudioAssistant.Platforms
                                     IsFirstRequest = false;
 
                                     var textToSpeech = new ElevenlabsApi();
+
                                     var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
 
                                     var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
@@ -309,6 +317,7 @@ namespace PersonalAudioAssistant.Platforms
 
                             if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation)
                             {
+                                StopRecording();
                                 _prevResponseId = null;
                                 await restoreChatMessagesAction();
                                 IsPrivateConversation = false;
@@ -345,7 +354,9 @@ namespace PersonalAudioAssistant.Platforms
                             IsContinueConversation = response.IsContinuous;
                             IsFirstRequest = false;
 
+                            await Task.WhenAll(voiceTask);
                             var textToSpeech = new ElevenlabsApi();
+
                             var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
 
                             var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
@@ -386,8 +397,8 @@ namespace PersonalAudioAssistant.Platforms
                     await Toast.Make("Помилка з listener: " + ex.Message).Show(cancellationToken);
                     return lastTranscription; ;
                 }
-                return lastTranscription;
             }
+            StopRecording();
             return lastTranscription;
         }
 
@@ -527,6 +538,7 @@ namespace PersonalAudioAssistant.Platforms
     public class TranscriptionResponse
     {
         public string Request { get; set; }
+
         public double AudioDuration { get; set; }
         public bool IsContinuous { get; set; }
     }

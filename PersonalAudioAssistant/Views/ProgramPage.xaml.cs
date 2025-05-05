@@ -15,9 +15,11 @@ public partial class ProgramPage : ContentPage
         BindingContext = viewModel;
 
         mediaElement.MediaEnded += OnMediaEnded;
+        ChatCollection.Scrolled += OnChatScrolled;
 
         if (viewModel is INotifyPropertyChanged vmNotify)
         {
+
             vmNotify.PropertyChanged += async (s, e) =>
             {
                 if (e.PropertyName == nameof(ProgramPageViewModel.InitialLoadDone)
@@ -49,23 +51,56 @@ public partial class ProgramPage : ContentPage
 
         if (BindingContext is ProgramPageViewModel vm && !vm.InitialLoadDone)
         {
-            await vm.LoadChatMessagesAsync();
+            //await vm.LoadChatMessagesAsync();
 
             if (ChatCollection.ItemsSource is IList<ChatMessage> list && list.Any())
                 ChatCollection.ScrollTo(list.Last(), position: ScrollToPosition.End, animate: false);
         }
     }
-
-    private async void OnChatScrolled(object sender, ItemsViewScrolledEventArgs e)
+    private int _firstVisibleIndex;
+    private void OnChatScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
-        if (e.FirstVisibleItemIndex == 0
+        _firstVisibleIndex = e.FirstVisibleItemIndex;
+        // якщо це догрузка (коли дійшли до нуля), запускаємо завантаження
+        if (_firstVisibleIndex == 0
             && BindingContext is ProgramPageViewModel vm
             && !vm.IsLoadingMessages
-            && !vm.AllMessagesLoaded)
+            && !vm.AllMessagesLoaded
+            && !vm.IsPrivateConversation) // Додана умова для перевірки приватної розмови
         {
-            await vm.LoadNextPageAsync();
+            _ = LoadMoreKeepingOffsetAsync(vm);
         }
     }
+
+    private EventHandler<ItemsViewScrolledEventArgs> _scrollHandler;
+    // Завантажуємо нові сторінки і потім “перекочуємо” назад
+    private async Task LoadMoreKeepingOffsetAsync(ProgramPageViewModel vm)
+    {
+        // Скільки було до завантаження
+        var oldCount = vm.ChatMessages.Count;
+
+        // Дочікуємося додавання нових
+        await vm.LoadNextPageAsync();
+
+        var newCount = vm.ChatMessages.Count;
+        var added = newCount - oldCount;
+        if (added <= 0)
+            return;
+
+        // Після того, як дані вставились, прокручуємо до того ж елемента,
+        // зміщеного на кількість нових
+        var targetIndex = _firstVisibleIndex + added;
+        if (targetIndex < vm.ChatMessages.Count)
+        {
+            // Невелика затримка, щоб CollectionView встиг оновитись
+            await Task.Delay(50);
+            ChatCollection.ScrollTo(
+                vm.ChatMessages[targetIndex],
+                position: ScrollToPosition.Start,
+                animate: false);
+        }
+    }
+
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);

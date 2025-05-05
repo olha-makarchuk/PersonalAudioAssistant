@@ -18,7 +18,7 @@ namespace PersonalAudioAssistant.ViewModel.History
         private readonly ConversationApiClient _conversationApiClient;
 
         [ObservableProperty]
-        private SubUserResponse user;
+        private string subUserId;
 
         [ObservableProperty]
         private ObservableCollection<AllConversationsResponse> conversations;
@@ -62,7 +62,8 @@ namespace PersonalAudioAssistant.ViewModel.History
 
         private async void OpenConversationDetails(AllConversationsResponse conversation)
         {
-            await Shell.Current.GoToAsync($"/MessagesPage?conversationId={conversation.IdConversation}");
+
+            await Shell.Current.GoToAsync($"/MessagesPage?conversationId={conversation.IdConversation}&subUserId={SubUserId}");
         }
 
 
@@ -84,13 +85,12 @@ namespace PersonalAudioAssistant.ViewModel.History
 
             try
             {
-                if (User == null)
-                {
-                    var cached = await _manageCacheData.GetUsersAsync();
-                    User = cached.FirstOrDefault(x => x.id == _userIdQueryAttribute);
-                }
-
                 var conversationsList = await _conversationApiClient.GetConversationsBySubUserIdAsync(_userIdQueryAttribute, _currentPage, PageSize);
+
+                if(conversationsList.Count !=0)
+                {
+                    SubUserId = conversationsList.FirstOrDefault().SubUserId;
+                }
 
                 if (isLoadMore)
                 {

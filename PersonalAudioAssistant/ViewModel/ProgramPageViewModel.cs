@@ -17,7 +17,8 @@ namespace PersonalAudioAssistant.ViewModel
     public partial class ProgramPageViewModel : ObservableObject, IQueryAttributable
     {
         public Action? RequestScrollToEnd { get; set; }
-
+        [ObservableProperty]
+        private bool _isPrivateConversation = false;
         private readonly IMediator _mediator;
         private readonly ITextToSpeech _textToSpeech;
         private readonly ISpeechToText _speechToText;
@@ -130,6 +131,11 @@ namespace PersonalAudioAssistant.ViewModel
                 {
                     try
                     {
+                        var lastRequestId = ChatMessages
+                        .AsEnumerable()
+                        .Reverse()
+                        .FirstOrDefault(x => !string.IsNullOrEmpty(x.LastRequestId))
+                        ?.LastRequestId;
                         RecognitionText = string.Empty;
                         RecognitionText = await _speechToText.Listen(
                             CultureInfo.GetCultureInfo(Locale?.Language ?? "en-us"),
@@ -140,9 +146,9 @@ namespace PersonalAudioAssistant.ViewModel
                             chatProgress,
                             usersList,
                             _listenCts.Token,
-                            () => ChatMessages.Clear(),
+                            () => ClearOnly(),
                             async () => await RestoreGeneralChatAsync(),
-                            ChatMessages.LastOrDefault()?.LastRequestId);
+                            lastRequestId);
                     }
                     catch (OperationCanceledException)
                     {
@@ -166,6 +172,12 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 try
                 {
+                    var lastRequestId = ChatMessages
+                    .AsEnumerable() 
+                    .Reverse() 
+                    .FirstOrDefault(x => !string.IsNullOrEmpty(x.LastRequestId))
+                    ?.LastRequestId;
+
                     RecognitionText = string.Empty;
                     RecognitionText = await _speechToText.ContinueListen(
                         new Progress<string>(partialText =>
@@ -176,7 +188,7 @@ namespace PersonalAudioAssistant.ViewModel
                         _listenCts.Token,
                         async () => await CleanAll(),
                         async () => await RestoreGeneralChatAsync(),
-                        ChatMessages.LastOrDefault()?.LastRequestId,
+                        lastRequestId,
                         _conversationForContinue);
                 }
                 catch (OperationCanceledException)
@@ -191,6 +203,15 @@ namespace PersonalAudioAssistant.ViewModel
                     IsListening = false;
                 }
             }
+        }
+
+        private void ClearOnly()
+        {
+            ChatMessages.Clear();
+            IsPrivateConversation = true;
+            _currentPage = 1;
+            AllMessagesLoaded = false;
+            InitialLoadDone = false;
         }
 
         [RelayCommand]
@@ -238,8 +259,15 @@ namespace PersonalAudioAssistant.ViewModel
 
                 var users = await _manageCacheData.GetUsersAsync();
 
-                _subUser = users.Where(u => u.id == messages.FirstOrDefault().subUserId).FirstOrDefault();
-                _conversationForContinue.SubUser = _subUser;
+                if (_subUserId != null)
+                {
+                    _subUser = users.Where(u => u.id == _subUserId).FirstOrDefault();
+                    _conversationForContinue.SubUser = _subUser;
+                }
+                else
+                {
+                    _subUser = users.Where(u => u.id == messages.FirstOrDefault().subUserId).FirstOrDefault();
+                }
 
                 var newSection = new List<ChatMessage>();
                 DateTime ? lastDate = null;
@@ -403,9 +431,20 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task RestoreGeneralChatAsync()
         {
             ChatMessages.Clear();
+            IsPrivateConversation = false;
             _currentPage = 1;
+            InitialLoadDone = false;
             AllMessagesLoaded = false;
+
+            // Скидаємо весь локальний стан
+            await CleanAll();
+
+            // Завантажуємо першу сторінку загальних повідомлень
             await LoadChatMessagesAsync();
+
+            // Прокрутка до кінця
+            RequestScrollToEnd?.Invoke();
+
         }
 
         public async Task CancelCleanContinueConversation()
@@ -419,8 +458,7 @@ namespace PersonalAudioAssistant.ViewModel
         {
             // Скасування слухання
             _listenCts?.Cancel();
-            _listenCts?.Dispose();
-            _listenCts = null;
+
 
             // Очищення полів
             _conversationId = null;
@@ -454,6 +492,8 @@ namespace PersonalAudioAssistant.ViewModel
             try
             {
                 await CleanAll();
+                _listenCts?.Dispose();
+                _listenCts = null;
             }
             catch (Exception ex)
             {
