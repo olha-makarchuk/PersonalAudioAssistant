@@ -166,7 +166,12 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 try
                 {
-                    await _speechToText.ContinueListen(
+                    RecognitionText = string.Empty;
+                    RecognitionText = await _speechToText.ContinueListen(
+                        new Progress<string>(partialText =>
+                        {
+                            RecognitionText += partialText + " ";
+                        }),
                         chatProgress,
                         _listenCts.Token,
                         async () => await CleanAll(),

@@ -26,7 +26,7 @@
                     <Frame BackgroundColor="White"
                            CornerRadius="10"
                            Padding="15"
-                           Background="#f5f1f9"
+                           Background="#f5f1ff"
                            HasShadow="True"
                            Margin="0,0"
                            InputTransparent="True">

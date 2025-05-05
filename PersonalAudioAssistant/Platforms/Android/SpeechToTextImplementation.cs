@@ -260,9 +260,10 @@ namespace PersonalAudioAssistant.Platforms
         }
 
 
-        public async Task ContinueListen(IProgress<ChatMessage> chatMessageProgress, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
+        public async Task<string> ContinueListen(IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
         {
             _clearChatMessagesAction = clearChatMessagesAction;
+            string lastTranscription = string.Empty;
 
             bool processingCommand = false;
             string conversationId = null;
@@ -312,7 +313,7 @@ namespace PersonalAudioAssistant.Platforms
                                 await restoreChatMessagesAction();
                                 IsPrivateConversation = false;
                                 _hasCleared = false;
-                                return;
+                                return lastTranscription;
                             }
 
                             ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
@@ -376,16 +377,18 @@ namespace PersonalAudioAssistant.Platforms
                         catch (Exception ex)
                         {
                             StopRecording();
-                            return;
+                            return lastTranscription; ;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     await Toast.Make("Помилка з listener: " + ex.Message).Show(cancellationToken);
-                    return;
+                    return lastTranscription; ;
                 }
+                return lastTranscription;
             }
+            return lastTranscription;
         }
 
 

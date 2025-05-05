@@ -36,10 +36,10 @@
             <Frame Style="{StaticResource SettingsFrame}">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="👤 Інформація про профіль" Style="{StaticResource SectionTitleLabel}"/>
-                    <HorizontalStackLayout>
+                    <VerticalStackLayout Spacing="10">
                         <Label Text="Електронна пошта:" Style="{StaticResource InfoLabel}"/>
-                        <Label Text="{Binding Email}" Style="{StaticResource InfoLabel}" Margin="10, 0, 0, 0"/>
-                    </HorizontalStackLayout>
+                        <Label FontAttributes="Bold" Text="{Binding Email}" Style="{StaticResource InfoLabel}"/>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
             </Frame>
 
