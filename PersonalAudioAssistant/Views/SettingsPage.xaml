@@ -70,7 +70,7 @@
                     <Label Text="Ваш поточний баланс:" Style="{StaticResource InfoLabel}"/>
                     <HorizontalStackLayout HorizontalOptions="Center">
                         <Label Text=" $" Style="{StaticResource BalanceLabel}" />
-                        <Label Text="{Binding Balance}" Style="{StaticResource BalanceLabel}" />
+                        <Label Text="{Binding Balance, StringFormat='{0:F2}'}" Style="{StaticResource BalanceLabel}" />
                     </HorizontalStackLayout>
                     <Button Text="💳 Платіжна інформація"
                             Command="{Binding PaymentDetailsCommand}"

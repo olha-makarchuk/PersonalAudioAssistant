@@ -217,8 +217,15 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         private void ToggleListen()
         {
-            if (IsListening){ListenCancelCommand.Execute(null);}
-            else{ListenCommand.Execute(null);}
+            if (IsListening)
+            {
+                ListenCancelCommand.Execute(null);
+            }
+            else
+            {
+                ListenCommand.Execute(null);
+                IsListening = true; 
+            }
         }
 
         [RelayCommand]

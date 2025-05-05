@@ -166,7 +166,7 @@
                                    FontSize="16"
                                    VerticalOptions="Center"
                                    TextColor="#666" />
-                            <Switch IsToggled="{Binding IsAutoPaymentEnabled}"
+                            <Switch IsToggled="{Binding AutoPaymentModel.IsAutoPaymentEnabled}"
                                     Grid.Column="1"
                                     HorizontalOptions="End"
                                     OnColor="#A5D6A7" />
@@ -182,7 +182,7 @@
                                    BackgroundColor="#FAFAFA"
                                    HeightRequest="45"
                                    TextColor="#333"
-                                   Text="{Binding MinimumTokenBalance}" />
+                                   Text="{Binding AutoPaymentModel.MinimumTokenBalance}" />
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Spacing="8">
@@ -195,7 +195,7 @@
                                    BackgroundColor="#FAFAFA"
                                    HeightRequest="45"
                                    TextColor="#333"
-                                   Text="{Binding AutoRechargeAmount}" />
+                                   Text="{Binding AutoPaymentModel.AutoRechargeAmount}" />
                         </VerticalStackLayout>
 
                         <Button Text="Зберегти налаштування"

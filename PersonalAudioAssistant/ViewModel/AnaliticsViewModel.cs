@@ -136,6 +136,10 @@ namespace PersonalAudioAssistant.ViewModel
             {
                 HistoryList.Add(item);
             }
+
+            // Перевертаємо список, щоб останні платежі були зверху
+            HistoryList = new ObservableCollection<PaymentHistoryResponse>(HistoryList.Reverse());
+            OnPropertyChanged(nameof(HistoryList)); // Повідомляємо UI про зміни
         }
 
         public async Task LoadUserMoneyUsedAsync()
@@ -189,7 +193,6 @@ namespace PersonalAudioAssistant.ViewModel
 
         private string RandomColor()
             => new Random().Next(0x1000000).ToString("X6");
-
         public async Task LoadMonthlyMoneyUsedAnalyticsAsync()
         {
             MonthlyUsageChart = null;
@@ -203,8 +206,8 @@ namespace PersonalAudioAssistant.ViewModel
                 return;
             }
 
-            DateTime startDate;
             DateTime endDate = DateTime.Now;
+            DateTime startDate;
 
             if (ShowYearlyAnalytics)
             {
@@ -218,8 +221,8 @@ namespace PersonalAudioAssistant.ViewModel
             }
             else if (ShowWeeklyAnalytics)
             {
-                startDate = endDate.AddDays(-(int)endDate.DayOfWeek + (int)DayOfWeek.Monday);
-                MonthlyUsageChartTitle = "Витрати за тиждень (" + startDate.ToString("dd.MM") + " - " + endDate.ToString("dd.MM") + ")";
+                startDate = endDate.AddDays(-7); // Отримуємо дату, яка була 7 днів тому
+                MonthlyUsageChartTitle = $"Витрати за останні 7 днів ({startDate:dd.MM} - {endDate:dd.MM})";
             }
             else
             {
@@ -239,7 +242,7 @@ namespace PersonalAudioAssistant.ViewModel
                     .Select(month =>
                     {
                         var totalAmount = filteredData
-                            .Where(d => d.dateTimeUsed.Month == month)
+                            .Where(d => d.dateTimeUsed.Month == month && d.dateTimeUsed.Year == endDate.Year)
                             .Sum(x => x.amountMoney);
                         return new ChartEntry((float)totalAmount)
                         {
@@ -256,7 +259,7 @@ namespace PersonalAudioAssistant.ViewModel
                     .Select(day =>
                     {
                         var totalAmount = filteredData
-                            .Where(d => d.dateTimeUsed.Day == day)
+                            .Where(d => d.dateTimeUsed.Day == day && d.dateTimeUsed.Month == endDate.Month && d.dateTimeUsed.Year == endDate.Year)
                             .Sum(x => x.amountMoney);
                         return new ChartEntry((float)totalAmount)
                         {
@@ -266,18 +269,12 @@ namespace PersonalAudioAssistant.ViewModel
                         };
                     }).ToList();
             }
-            // всередині LoadMonthlyMoneyUsedAnalyticsAsync()
             else if (ShowWeeklyAnalytics)
             {
-                // різниця між сьогоднішнім днем і понеділком
-                int diff = (7 + ((int)endDate.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
-                startDate = endDate.AddDays(-diff);
-                MonthlyUsageChartTitle = $"Витрати за тиждень ({startDate:dd.MM} - {endDate:dd.MM})";
-
                 entries = Enumerable.Range(0, 7)
                     .Select(offset =>
                     {
-                        var date = startDate.AddDays(offset);
+                        var date = endDate.AddDays(-offset);
                         var sum = filteredData
                             .Where(d => d.dateTimeUsed.Date == date.Date)
                             .Sum(x => x.amountMoney);
@@ -287,7 +284,7 @@ namespace PersonalAudioAssistant.ViewModel
                             ValueLabel = sum.ToString("F2"),
                             Color = SKColor.Parse("#2c3e50")
                         };
-                    }).ToList();
+                    }).Reverse().ToList(); // Реверсуємо, щоб дні йшли по порядку
             }
 
             MonthlyUsageChart = new LineChart
@@ -300,7 +297,6 @@ namespace PersonalAudioAssistant.ViewModel
                 BackgroundColor = SKColors.Transparent
             };
         }
-
 
         [RelayCommand]
         private async Task SelectMoneyUsersUsedTab()

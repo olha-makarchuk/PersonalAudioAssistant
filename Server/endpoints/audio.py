@@ -28,7 +28,7 @@ async def websocket_audio(websocket: WebSocket):
         await websocket.send_json({
             "request": "none",
             "audioDuration": 0,
-            "isContinuous": isContinuous
+            "isContinuous": False
         })
         await websocket.close()
         return

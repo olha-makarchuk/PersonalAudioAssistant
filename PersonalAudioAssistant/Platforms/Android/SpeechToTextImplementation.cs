@@ -141,6 +141,13 @@ namespace PersonalAudioAssistant.Platforms
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
                                     response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
 
+                                    if (response.Request == "none" && IsFirstRequest)
+                                    {
+                                        var voiceNone = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
+                                        var audioBytesNone = await textToSpeech.ConvertTextToSpeechAsync(voiceNone.voiceId, $"Вас не було розпізнано як користувача {matchedUser.userName}");
+                                        await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytesNone, cancellationToken);
+                                    }
+
                                     if (response.Request == "none" || !response.IsContinuous)
                                     {
                                         _prevResponseId = null;
@@ -272,6 +279,11 @@ namespace PersonalAudioAssistant.Platforms
 
         public async Task<string> ContinueListen(IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
         {
+            using var cancelReg = cancellationToken.Register(() =>
+            {
+                StopRecording();
+            });
+
             _clearChatMessagesAction = clearChatMessagesAction;
             string lastTranscription = string.Empty;
 
@@ -311,6 +323,7 @@ namespace PersonalAudioAssistant.Platforms
 
                     while (IsContinueConversation)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         try
                         {
                             IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
@@ -386,10 +399,14 @@ namespace PersonalAudioAssistant.Platforms
                             await Task.WhenAll(playAnswerTask);
                             await Task.Delay(100);
                         }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
                         catch (Exception ex)
                         {
                             StopRecording();
-                            return lastTranscription; ;
+                            return lastTranscription;
                         }
                     }
                 }

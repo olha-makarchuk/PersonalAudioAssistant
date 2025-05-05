@@ -87,7 +87,7 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Style="{StaticResource ConversationCardFrame}" InputTransparent="True" BackgroundColor="#f2f2f2">
+                        <Frame Style="{StaticResource ConversationCardFrame}" InputTransparent="True" BackgroundColor="#f1f4ff">
                             <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" ColumnSpacing="0">
                                 <Label
                                     Grid.Row="0"
