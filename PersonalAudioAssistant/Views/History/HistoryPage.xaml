@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="PersonalAudioAssistant.Views.History.HistoryPage"
+    xmlns:vm="clr-namespace:PersonalAudioAssistant.ViewModel.History"
     BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}">
 
     <ContentPage.Resources>
@@ -87,22 +88,6 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <!-- Єдиний кореневий елемент DataTemplate -->
-                        <SwipeView>
-
-                            <!-- Контекстне меню змахування вправо -->
-                            <SwipeView.RightItems>
-                                <SwipeItems Mode="Execute">
-                                    <SwipeItem
-            Text="Видалити"
-            IconImageSource="trash.png"
-            BackgroundColor="Red"
-            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HistoryViewModel}}, Path=DeleteConversationCommand}"
-            CommandParameter="{Binding .}" />
-                                </SwipeItems>
-                            </SwipeView.RightItems>
-
-                            <!-- Вміст карточки розмови -->
                             <Frame
         Style="{StaticResource ConversationCardFrame}"
         InputTransparent="True"
@@ -126,8 +111,6 @@
             Style="{StaticResource ChevronImage}" />
                                 </Grid>
                             </Frame>
-
-                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 

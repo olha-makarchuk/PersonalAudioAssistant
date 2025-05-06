@@ -144,46 +144,6 @@ namespace PersonalAudioAssistant.ViewModel.History
             }
         }
 
-
-        [RelayCommand(CanExecute = nameof(CanDeleteConversation))]
-        private async Task DeleteConversationAsync(AllConversationsResponse conversation)
-        {
-            if (conversation == null)
-                return;
-
-            bool confirm = await Shell.Current.DisplayAlert(
-                "Видалити?",
-                $"Ви дійсно хочете видалити розмову \"{conversation.Description}\"?",
-                "Так", "Ні");
-
-            if (!confirm)
-                return;
-
-            try
-            {
-                IsBusy = true;
-                await _conversationApiClient.DeleteConversationAsync(conversation.IdConversation);
-                Conversations.Remove(conversation);
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Помилка", $"Не вдалося видалити: {ex.Message}", "OK");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-
-            // Після видалення знімаємо виділення
-            if (SelectedConversation == conversation)
-                SelectedConversation = null;
-        }
-
-        private bool CanDeleteConversation(AllConversationsResponse conversation)
-        {
-            return conversation != null && !IsBusy;
-        }
-
         [RelayCommand]
         public void OnNavigatedFrom()
         {

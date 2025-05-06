@@ -9,6 +9,8 @@ using System.Globalization;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Model.Payment;
 using PersonalAudioAssistant.Model;
+using PersonalAudioAssistant.Contracts.Conversation;
+using static Android.Provider.Telephony.Sms;
 
 namespace PersonalAudioAssistant.ViewModel.History
 {
@@ -16,6 +18,7 @@ namespace PersonalAudioAssistant.ViewModel.History
     {
         private readonly IMediator _mediator;
         private readonly MessagesApiClient _messagesApiClient;
+        private readonly ConversationApiClient _conversationApiClient;
         private string ConversationIdQueryAttribute;
         private string SubUserIdQueryAttribute;
         private string PreviewId;
@@ -59,11 +62,12 @@ namespace PersonalAudioAssistant.ViewModel.History
         private bool _isLoadingMessages;
 
 
-        public MessagesViewModel(IMediator mediator, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData)
+        public MessagesViewModel(IMediator mediator, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, ConversationApiClient conversationApiClient)
         {
             _mediator = mediator;
             _messagesApiClient = messagesApiClient;
             _manageCacheData = manageCacheData;
+            _conversationApiClient = conversationApiClient;
         }
 
         public ChatMessage? SelectedMessage
@@ -183,6 +187,33 @@ namespace PersonalAudioAssistant.ViewModel.History
             catch (Exception ex)
             {
                 await Shell.Current.DisplayAlert("Помилка", $"Не вдалося відтворити голос: {ex.Message}", "OK");
+            }
+        }
+
+
+        [RelayCommand]
+        private async Task DeleteConversationAsync()
+        {
+            bool confirm = await Shell.Current.DisplayAlert(
+                "Видалити?",
+                $"Ви дійсно хочете видалити розмову?",
+                "Так", "Ні");
+
+            if (!confirm)
+                return;
+
+            try
+            {
+                IsBusy = true;
+                await _conversationApiClient.DeleteConversationAsync(ConversationIdQueryAttribute);
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Помилка", $"Не вдалося видалити: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

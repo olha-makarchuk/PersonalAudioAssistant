@@ -9,11 +9,10 @@
     <ContentPage.Resources>
         <vm:SKColorToMauiColorConverter x:Key="SK2Maui"/>
     </ContentPage.Resources>
-    
+
     <Grid>
         <ScrollView>
-
-            <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
+            <Grid RowDefinitions="Auto,Auto,Auto,*">
                 <Grid ColumnDefinitions="*,*,*"
                       Padding="20,10"
                       ColumnSpacing="0"
@@ -167,22 +166,22 @@
                 <ContentView Grid.Row="3" Padding="20" IsVisible="{Binding IsMoneyUsersUsedTabSelected}">
                     <StackLayout Spacing="20">
                         <Frame
-                        Padding="0"
-                        CornerRadius="12"
-                        BorderColor="{StaticResource Primary}"
-                        HasShadow="True"
-                        VerticalOptions="Center"
-                        HorizontalOptions="Center">
+                            Padding="0"
+                            CornerRadius="12"
+                            BorderColor="{StaticResource Primary}"
+                            HasShadow="True"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center">
                             <charts:ChartView
-                            Chart="{Binding UserMoneyPieChart}"
-                            HeightRequest="350"
-                            WidthRequest="350"/>
+                                Chart="{Binding UserMoneyPieChart}"
+                                HeightRequest="350"
+                                WidthRequest="350"/>
                         </Frame>
 
                         <Label Text="Користувачі"
-                           FontSize="18"
-                           FontAttributes="Bold"
-                           HorizontalOptions="Center"/>
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"/>
 
                         <ScrollView Orientation="Horizontal">
                             <StackLayout Orientation="Horizontal" Spacing="20">
@@ -197,9 +196,9 @@
                                                          VerticalOptions="Center"
                                                          HorizontalOptions="Center"
                                                          Spacing="4">
-                                                <!-- Горизонтальний рядок: квадратик + сума -->
                                                 <StackLayout Orientation="Horizontal"
-                                                             HorizontalOptions="Center"
+                                                             HorizontalOptions="Center"d:\diploma\personalaudioassistant\personalaudioassistant\viewmodel\
+
                                                              Spacing="4">
                                                     <Frame WidthRequest="15"
                                                            HeightRequest="15"
@@ -207,14 +206,13 @@
                                                            Padding="0"
                                                            IsClippedToBounds="True"
                                                            BackgroundColor="{Binding BackgroundColor}"/>
-                                                    <Label Text="{Binding ValueLabel}"
+                                                    <Label Text="{Binding ValueLabel, StringFormat='${0}'}"
                                                            FontSize="12"
                                                            FontAttributes="Bold"
                                                            VerticalOptions="Center"
                                                            TextColor="#4CAF50"/>
                                                 </StackLayout>
 
-                                                <!-- Аватар -->
                                                 <Frame WidthRequest="60"
                                                        HeightRequest="60"
                                                        CornerRadius="30"
@@ -223,20 +221,17 @@
                                                        BackgroundColor="#E0E0E0"
                                                        HorizontalOptions="Center">
                                                     <Image Source="{Binding AvatarUrl}"
-                                                            Aspect="AspectFill"/>
+                                                           Aspect="AspectFill"/>
                                                 </Frame>
 
-                                                <!-- Ім'я -->
                                                 <Label Text="{Binding UserName}"
                                                        FontSize="12"
                                                        HorizontalTextAlignment="Center"
                                                        LineBreakMode="TailTruncation"/>
                                             </StackLayout>
                                         </DataTemplate>
-
                                     </CollectionView.ItemTemplate>
                                 </CollectionView>
-
                             </StackLayout>
                         </ScrollView>
                     </StackLayout>
@@ -254,10 +249,8 @@
                                           VerticalOptions="Center"/>
                     </StackLayout>
                 </ContentView>
-
             </Grid>
         </ScrollView>
-
         <ActivityIndicator
             IsVisible="{Binding IsBusy}"
             IsRunning="{Binding IsBusy}"

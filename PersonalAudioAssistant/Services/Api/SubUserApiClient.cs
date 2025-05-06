@@ -195,7 +195,6 @@ namespace PersonalAudioAssistant.Services.Api
                 {
                     UserId = userId,
                 };
-
                 return await PostAsync<object, List<SubUserResponse>>(url, payload);
             }
 
