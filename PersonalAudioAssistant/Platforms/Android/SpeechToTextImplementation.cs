@@ -189,7 +189,7 @@ namespace PersonalAudioAssistant.Platforms
                                         URL = createdUser.audioPath
                                     });
 
-                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync($"(user){matchedUser.userName}: {transcription.Response}", _prevResponseId);
                                     _prevResponseId = answer.responseId;
 
                                     var voice = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
@@ -362,7 +362,7 @@ namespace PersonalAudioAssistant.Platforms
                                 URL = createdUser.audioPath
                             });
 
-                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync(transcription.Response, _prevResponseId);
+                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync($"(user){matchedUser.userName}: {transcription.Response}", _prevResponseId);
                             _prevResponseId = answer.responseId;
                             var voiceTask =  _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
 

@@ -87,28 +87,50 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Style="{StaticResource ConversationCardFrame}" InputTransparent="True" BackgroundColor="#f1f4ff">
-                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" ColumnSpacing="0">
-                                <Label
-                                    Grid.Row="0"
-                                    Grid.Column="0"
-                                    Text="{Binding Description}"
-                                    Style="{StaticResource ConversationTitleLabel}" />
+                        <!-- Єдиний кореневий елемент DataTemplate -->
+                        <SwipeView>
 
-                                <Label
-                                    Grid.Row="1"
-                                    Grid.Column="0"
-                                    Text="{Binding DateTimeCreated, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
-                                    Style="{StaticResource ConversationDateLabel}" />
+                            <!-- Контекстне меню змахування вправо -->
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Execute">
+                                    <SwipeItem
+            Text="Видалити"
+            IconImageSource="trash.png"
+            BackgroundColor="Red"
+            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HistoryViewModel}}, Path=DeleteConversationCommand}"
+            CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
 
-                                <Image
-                                    Grid.RowSpan="2"
-                                    Grid.Column="1"
-                                    Style="{StaticResource ChevronImage}" />
-                            </Grid>
-                        </Frame>
+                            <!-- Вміст карточки розмови -->
+                            <Frame
+        Style="{StaticResource ConversationCardFrame}"
+        InputTransparent="True"
+        BackgroundColor="#f1f4ff">
+                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" ColumnSpacing="0">
+                                    <Label
+            Grid.Row="0"
+            Grid.Column="0"
+            Text="{Binding Description}"
+            Style="{StaticResource ConversationTitleLabel}" />
+
+                                    <Label
+            Grid.Row="1"
+            Grid.Column="0"
+            Text="{Binding DateTimeCreated, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+            Style="{StaticResource ConversationDateLabel}" />
+
+                                    <Image
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            Style="{StaticResource ChevronImage}" />
+                                </Grid>
+                            </Frame>
+
+                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
+
 
                 <CollectionView.Footer>
                     <StackLayout Padding="10">
