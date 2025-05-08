@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
 using PersonalAudioAssistant.Contracts.Conversation;
-using PersonalAudioAssistant.Contracts.SubUser;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
 using System.Collections.ObjectModel;
@@ -16,6 +15,9 @@ namespace PersonalAudioAssistant.ViewModel.History
         private string _userIdQueryAttribute;
         private readonly ManageCacheData _manageCacheData;
         private readonly ConversationApiClient _conversationApiClient;
+
+        [ObservableProperty]
+        private ObservableCollection<ConversationGroup> conversationsGrouped;
 
         [ObservableProperty]
         private string subUserId;
@@ -62,10 +64,9 @@ namespace PersonalAudioAssistant.ViewModel.History
 
         private async void OpenConversationDetails(AllConversationsResponse conversation)
         {
-
+            // Перехід до сторінки деталей розмови
             await Shell.Current.GoToAsync($"/MessagesPage?conversationId={conversation.IdConversation}&subUserId={SubUserId}");
         }
-
 
         public async Task LoadHistoryAsync(bool isLoadMore = false)
         {
@@ -87,7 +88,7 @@ namespace PersonalAudioAssistant.ViewModel.History
             {
                 var conversationsList = await _conversationApiClient.GetConversationsBySubUserIdAsync(_userIdQueryAttribute, _currentPage, PageSize);
 
-                if(conversationsList.Count !=0)
+                if (conversationsList.Count != 0)
                 {
                     SubUserId = conversationsList.FirstOrDefault().SubUserId;
                 }
@@ -112,6 +113,19 @@ namespace PersonalAudioAssistant.ViewModel.History
                 {
                     _currentPage++;
                 }
+
+                // Після того, як у вас є повний список (Conversations або новий список із сервера)
+                var all = Conversations.Cast<AllConversationsResponse>()
+                            .Union(conversationsList) // якщо це load more
+                            .ToList();
+
+                var grouped = all
+                    .OrderByDescending(c => c.DateTimeCreated)
+                    .GroupBy(c => c.DateTimeCreated.Date)
+                    .Select(g => new ConversationGroup(g.Key, g))
+                    .ToObservableCollection();
+
+                ConversationsGrouped = grouped;
             }
             catch (Exception ex)
             {
@@ -149,6 +163,18 @@ namespace PersonalAudioAssistant.ViewModel.History
         {
             SelectedConversation = null;
             Conversations.Clear();
+        }
+    }
+
+    public class ConversationGroup : ObservableCollection<AllConversationsResponse>
+    {
+        public DateTime Date { get; }
+        public string DateDisplay => Date.ToString("dd.MM.yyyy");
+
+        public ConversationGroup(DateTime date, IEnumerable<AllConversationsResponse> items)
+            : base(items)
+        {
+            Date = date;
         }
     }
 }

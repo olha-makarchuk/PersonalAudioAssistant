@@ -105,6 +105,8 @@ namespace PersonalAudioAssistant.ViewModel
 
             Locales = new();
             SetLocalesCommand.Execute(null);
+
+
         }
 
         [RelayCommand]

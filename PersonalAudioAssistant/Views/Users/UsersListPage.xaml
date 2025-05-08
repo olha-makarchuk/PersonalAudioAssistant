@@ -9,14 +9,13 @@
                FontSize="22"
                FontAttributes="Bold"
                HorizontalOptions="Center"
-               TextColor="Black"
-               Margin="0,20,0,0"/>
+               TextColor="Black"/>
 
         <!-- CollectionView з вбудованим прокручуванням -->
         <CollectionView ItemsSource="{Binding Users}"
                         SelectionMode="Single"
                         SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
-                        Margin="10,70,10,0">
+                        Margin="20,60,0,20">
             <CollectionView.ItemsLayout>
                 <LinearItemsLayout Orientation="Vertical"
                                    ItemSpacing="10"/>

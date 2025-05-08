@@ -139,7 +139,7 @@ namespace PersonalAudioAssistant.Platforms
                                     IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                                     var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
                                     var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
-                                    response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
+                                    response = transcription.Response;
 
                                     if (response.Request == "none" && IsFirstRequest)
                                     {
@@ -188,8 +188,8 @@ namespace PersonalAudioAssistant.Platforms
                                         DateTimeCreated = createdUser.dateTimeCreated,
                                         URL = createdUser.audioPath
                                     });
-
-                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync($"(user){matchedUser.userName}: {transcription.Response}", _prevResponseId);
+                                    var UserName = $"(ім'я користувача - {matchedUser.userName})";
+                                    ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync($"{UserName}: {response.Request}", _prevResponseId);
                                     _prevResponseId = answer.responseId;
 
                                     var voice = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
@@ -329,7 +329,7 @@ namespace PersonalAudioAssistant.Platforms
                             IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                             var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
                             var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
-                            response = JsonConvert.DeserializeObject<TranscriptionResponse>(transcription.Response);
+                            response = transcription.Response;
 
                             if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation)
                             {
@@ -362,7 +362,7 @@ namespace PersonalAudioAssistant.Platforms
                                 URL = createdUser.audioPath
                             });
 
-                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync($"(user){matchedUser.userName}: {transcription.Response}", _prevResponseId);
+                            ApiClientGptResponse answer = await _apiClientGPT.ContinueChatAsync($"(user name){matchedUser.userName}: {response.Request}", _prevResponseId);
                             _prevResponseId = answer.responseId;
                             var voiceTask =  _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
 
@@ -565,13 +565,5 @@ namespace PersonalAudioAssistant.Platforms
 
         public static AppSettingsApiClient AppSettingsApiClient =>
             Services!.GetRequiredService<AppSettingsApiClient>();
-    }
-
-    public class TranscriptionResponse
-    {
-        public string Request { get; set; }
-
-        public double AudioDuration { get; set; }
-        public bool IsContinuous { get; set; }
     }
 }

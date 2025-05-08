@@ -22,13 +22,14 @@ async def websocket_audio(websocket: WebSocket):
 
     end_time, user_voice, end_phrase, isFirstRequest, previousResponseId = await receive_id(websocket)
 
-    full_audio, isContinuous  = await receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequest)
+    full_audio, isContinuous, first_detected_time  = await receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequest)
 
     if isContinuous == False:
         await websocket.send_json({
             "request": "none",
             "audioDuration": 0,
-            "isContinuous": False
+            "isContinuous": False,
+            "first_detected_time": 0.0
         })
         await websocket.close()
         return
@@ -44,7 +45,8 @@ async def websocket_audio(websocket: WebSocket):
         await websocket.send_json({
             "request": transcription_text,
             "audioDuration": duration_seconds,
-            "isContinuous": True
+            "isContinuous": True,
+            "first_detected_time": first_detected_time
         })
         
         await websocket.close()

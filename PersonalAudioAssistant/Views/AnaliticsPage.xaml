@@ -7,7 +7,7 @@
              BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
 
     <ContentPage.Resources>
-        <vm:SKColorToMauiColorConverter x:Key="SK2Maui"/>
+                    <vm:SKColorToMauiColorConverter x:Key="SK2Maui"/>
     </ContentPage.Resources>
 
     <Grid>
@@ -17,13 +17,12 @@
                       Padding="20,10"
                       ColumnSpacing="0"
                       Grid.Row="0">
-
                     <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center">
+                        
                         <Label Text="Статистика &#x0a;за користувачами"
                                FontSize="14"
                                FontAttributes="Bold"
                                HorizontalOptions="Center"
-                               TextColor="{Binding IsMoneyUsersUsedTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
                                Margin="0,0,0,5"
                                HorizontalTextAlignment="Center">
                             <Label.GestureRecognizers>
@@ -35,13 +34,11 @@
                                  HorizontalOptions="Fill"
                                  IsVisible="{Binding IsMoneyUsersUsedTabSelected}" />
                     </StackLayout>
-
                     <StackLayout Orientation="Vertical" HorizontalOptions="Center" VerticalOptions="Center" Grid.Column="1">
                         <Label Text="Використання &#x0a;коштів"
                                FontSize="14"
                                FontAttributes="Bold"
                                HorizontalOptions="Center"
-                               TextColor="{Binding IsMoneyUsedTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
                                Margin="0,0,0,5"
                                HorizontalTextAlignment="Center">
                             <Label.GestureRecognizers>
@@ -59,7 +56,6 @@
                                FontSize="14"
                                FontAttributes="Bold"
                                HorizontalOptions="Center"
-                               TextColor="{Binding IsPaymentTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Primary}"
                                Margin="0,0,0,5"
                                HorizontalTextAlignment="Center">
                             <Label.GestureRecognizers>
@@ -72,7 +68,6 @@
                                  IsVisible="{Binding IsPaymentTabSelected}" />
                     </StackLayout>
                 </Grid>
-
                 <BoxView Grid.Row="1"
                          HeightRequest="1"
                          Color="#cccccc"
@@ -197,8 +192,7 @@
                                                          HorizontalOptions="Center"
                                                          Spacing="4">
                                                 <StackLayout Orientation="Horizontal"
-                                                             HorizontalOptions="Center"d:\diploma\personalaudioassistant\personalaudioassistant\viewmodel\
-
+                                                             HorizontalOptions="Center"
                                                              Spacing="4">
                                                     <Frame WidthRequest="15"
                                                            HeightRequest="15"

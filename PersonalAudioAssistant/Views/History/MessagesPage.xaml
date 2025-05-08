@@ -13,11 +13,10 @@
                                     VerticalOptions="End"
                                     WidthRequest="45"
                                     HeightRequest="45"
-                                    BackgroundColor="#9C3D3D"
+                                    BackgroundColor="#d49191"
                                     CornerRadius="30"
                                     Padding="10"       
                                     Aspect="AspectFit"/>
-
         </Grid>
     </Shell.TitleView>
     
@@ -67,11 +66,11 @@
             </Style>
 
             <Style x:Key="ContinueButtonStyle" TargetType="Button" BasedOn="{StaticResource DeleteButtonStyle}">
-                <Setter Property="BackgroundColor" Value="#a59de1" />
+                <Setter Property="BackgroundColor" Value="#8377bb" />
                 <Setter Property="TextColor" Value="White" />
                 <Style.Triggers>
                     <Trigger TargetType="Button" Property="IsPressed" Value="True">
-                        <Setter Property="BackgroundColor" Value="#7e73b8" />
+                        <Setter Property="BackgroundColor" Value="#5a4d99" />
                     </Trigger>
                 </Style.Triggers>
             </Style>

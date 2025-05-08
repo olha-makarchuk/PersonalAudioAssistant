@@ -1,4 +1,6 @@
-﻿using PersonalAudioAssistant.Application.Interfaces;
+﻿using Azure.Core;
+using Newtonsoft.Json;
+using PersonalAudioAssistant.Application.Interfaces;
 using PersonalAudioAssistant.Contracts.SubUser;
 using System.Text;
 using System.Text.Json;
@@ -15,14 +17,14 @@ namespace PersonalAudioAssistant.Application.Services
             this.audioDataProvider = audioDataProvider;
         }
 
-        public async Task<(string Response, byte[] Audio)> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
+        public async Task<(TranscriptionResponse Response, byte[] Audio)> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
         {
             using var audioBuffer = new MemoryStream();
             try
             {
                 await webSocketService.ConnectAsync(cancellationToken);
 
-                var dataPayload = JsonSerializer.Serialize(new
+                var dataPayload = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     subUser.endTime,
                     subUser.userVoice,
@@ -81,13 +83,50 @@ namespace PersonalAudioAssistant.Application.Services
                 // Отримуємо фінальний JSON-відповідь після STOP
                 string finalResponseJson = await webSocketService.ReceiveMessagesAsync(cancellationToken);
                 await webSocketService.CloseConnectionAsync();
+                var finalResponse = JsonConvert.DeserializeObject<TranscriptionResponse>(finalResponseJson);
+                byte[] originalAudio = audioBuffer.ToArray();
 
-                return (finalResponseJson, audioBuffer.ToArray());
+                int sampleRate = 44100;
+                short bitsPerSample = 16;
+                short channels = 1;
+                int bytesPerSample = bitsPerSample / 8;             // 2
+                int blockAlign = bytesPerSample * channels;     // 2
+                int bytesPerSecond = sampleRate * blockAlign;       // 88200
+
+                // 2. Розрахунок вирівняних обрізок з початку
+                double rawStartSec = Math.Max(0.0, finalResponse.First_detected_time - 1.0);
+                int trimStartBytes = (int)(rawStartSec * bytesPerSecond);
+                trimStartBytes = (trimStartBytes / blockAlign) * blockAlign;
+
+                int trimEndBytes = 0;
+                if (subUser.endTime != null)
+                {
+                    int trimEndDurationSec = Convert.ToInt32(subUser.endTime);
+                    trimEndBytes = trimEndDurationSec * bytesPerSecond;
+                    trimEndBytes = (trimEndBytes / blockAlign) * blockAlign;
+                }
+                else
+                {
+                    int trimEndDurationSec = 2;
+                    trimEndBytes = trimEndDurationSec * bytesPerSecond;
+                    trimEndBytes = (trimEndBytes / blockAlign) * blockAlign;
+                }
+                // 3. Обрізка
+                int availableBytes = originalAudio.Length - trimStartBytes - trimEndBytes;
+                if (availableBytes <= 0)
+                    return (finalResponse, Array.Empty<byte>());
+
+                byte[] trimmedAudio = new byte[availableBytes];
+                Array.Copy(originalAudio, trimStartBytes, trimmedAudio, 0, availableBytes);
+
+                return (finalResponse, trimmedAudio);
             }
             catch (Exception ex)
             {
                 await webSocketService.CloseConnectionAsync();
-                return ("Помилка при стрімінгу: " + ex.Message, audioBuffer.ToArray());
+                return (new TranscriptionResponse
+                {
+                }, Array.Empty<byte>());
             }
             finally
             {
@@ -97,5 +136,14 @@ namespace PersonalAudioAssistant.Application.Services
                 }
             }
         }
+    }
+
+    public class TranscriptionResponse
+    {
+        public string Request { get; set; }
+
+        public double AudioDuration { get; set; }
+        public bool IsContinuous { get; set; }
+        public double First_detected_time { get; set; }
     }
 }

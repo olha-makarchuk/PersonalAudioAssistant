@@ -212,17 +212,18 @@
             <HorizontalStackLayout HorizontalOptions="End"
                                    VerticalOptions="Center"
                                    Padding="0,-10,20,0">
-                <HorizontalStackLayout>
+                <VerticalStackLayout>
                     <!-- Мітка для автозапуску -->
                     <Label Text="Автовідтворення:"
                            VerticalOptions="Center"
-                           FontSize="14"
+                           FontSize="12"
+                           Margin="0,-30,0,-10"
                            HorizontalOptions="End" />
                     <!-- Перемикач для автозапуску -->
                     <Switch IsToggled="{Binding IsAutoPlay}"
                             VerticalOptions="Center"
                             HorizontalOptions="End" />
-                </HorizontalStackLayout>
+                </VerticalStackLayout>
             </HorizontalStackLayout>
         </VerticalStackLayout>
 

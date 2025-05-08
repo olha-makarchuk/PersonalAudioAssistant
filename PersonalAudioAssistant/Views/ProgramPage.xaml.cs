@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Views;
 using PersonalAudioAssistant.Model;
 using PersonalAudioAssistant.ViewModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace PersonalAudioAssistant.Views;
@@ -37,11 +38,37 @@ public partial class ProgramPage : ContentPage
             };
         }
 
+        viewModel.ChatMessages.CollectionChanged += ChatMessages_CollectionChanged;
+
         viewModel.RequestScrollToEnd += () =>
         {
             if (ChatCollection.ItemsSource is IList<ChatMessage> list && list.Any())
                 ChatCollection.ScrollTo(list.Last(), position: ScrollToPosition.End, animate: false);
         };
+    }
+
+    private void ChatMessages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // Якщо добавили хоча б один новий елемент
+        if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems?.Count > 0)
+        {
+            // Прокрутимо на UI-потоке
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                // Дрібна затримка, щоб CollectionView встиг оновитися
+                await Task.Delay(50);
+
+                // Беремо останнє повідомлення з BindingContext
+                if (BindingContext is ProgramPageViewModel vm && vm.ChatMessages.Any())
+                {
+                    var last = vm.ChatMessages.Last();
+                    ChatCollection.ScrollTo(
+                        last,
+                        position: ScrollToPosition.End,
+                        animate: true);
+                }
+            });
+        }
     }
 
     protected override async void OnAppearing()

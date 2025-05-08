@@ -51,7 +51,7 @@ namespace PersonalAudioAssistant.ViewModel
         private bool showYearlyAnalytics = false;
 
         [ObservableProperty]
-        private bool showMonthlyAnalytics = true; // За замовчуванням показувати за місяць
+        private bool showMonthlyAnalytics = true; 
 
         [ObservableProperty]
         private bool showWeeklyAnalytics = false;
@@ -66,12 +66,17 @@ namespace PersonalAudioAssistant.ViewModel
             _moneyUsersUsedApiClient = moneyUsersUsedApiClient;
             _manageCacheData = manageCasheData;
 
+            UpdateChartTitle();
             // Підписуємося на зміни властивостей чекбоксів
             PropertyChanged += AnaliticsViewModel_PropertyChanged;
             UpdateChartTitle();
             LoadUserMoneyUsedAsync();
         }
-
+        public async Task InitializeAsync()
+        {
+            // Коли сторінка з’явилася — підгружаємо початкові дані
+            await LoadUserMoneyUsedAsync();
+        }
         private void UpdateChartTitle()
         {
             if (ShowYearlyAnalytics)
@@ -394,16 +399,31 @@ namespace PersonalAudioAssistant.ViewModel
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             bool isActive = (bool)value;
-            string param = parameter?.ToString();
+            string resourceKey = parameter?.ToString() ?? "Primary";
 
-            return (param == "Active" && isActive) || (param == "Inactive" && !isActive)
-                ? Colors.DarkBlue
-                : Colors.Gray;
+            // Якщо Active — беремо ресурс resourceKey, інакше — «сірий»
+            if (isActive)
+            {
+                if (Microsoft.Maui.Controls.Application.Current.Resources.TryGetValue(resourceKey, out var colorObj)
+                    && colorObj is Color c)
+                {
+                    return c;
+                }
+                // Якщо не знайшли в ресурсах — можна повернути дефолт
+                return Colors.Black;
+            }
+            else
+            {
+                return Colors.Gray;
+            }
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotImplementedException();
     }
+
+
+
 
     // Розширений клас для прив'язки кольору в UI і для графіка
     public class UserChartItem

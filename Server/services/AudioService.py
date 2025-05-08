@@ -111,7 +111,7 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
     window_duration = 1.0
     last_me_detected_time = 0.0
     total_duration = 0.0
-
+    first_detected_time = 0.0
     # Якщо перший запит — вважати, що ми вже “вловили” голос
     speech_detected = isFirstRequest
 
@@ -155,6 +155,7 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
                 if dist < THRESHOLD:
                     speech_detected = True
                     last_me_detected_time = total_duration
+                    first_detected_time = total_duration
                     break
 
         if not speech_detected:
@@ -207,6 +208,8 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
                         )
                         if distances.min() < THRESHOLD:
                             last_me_detected_time = total_duration
+                            if first_detected_time == 0.0:
+                                first_detected_time = total_duration
 
                     if total_duration - last_me_detected_time >= int(end_time):
                         break
@@ -233,7 +236,7 @@ async def receive_audio(websocket, end_time, user_voice, end_phrase, isFirstRequ
     await websocket.send_text("STOP")
 
     full_audio = np.concatenate(audio_buffer)
-    return full_audio, True
+    return full_audio, True, first_detected_time
 
 def process_audio_segments(full_audio, user_voice):
     final_audio_segments = []

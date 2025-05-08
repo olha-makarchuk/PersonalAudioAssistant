@@ -19,6 +19,7 @@ using PersonalAudioAssistant.Services.Api.PersonalAudioAssistant.Services.Api;
 using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Application.Interfaces;
 using Microcharts.Maui;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -37,9 +38,10 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
+            .UseSkiaSharp()
             .UseMauiCommunityToolkitMediaElement()
             .ConfigureMopups()
-            .UseMicrocharts() 
+            .UseMicrocharts()
             .UseMauiCommunityToolkit()
             .ConfigureFonts(fonts =>
             {

@@ -22,7 +22,7 @@
 
     <Grid>
         <ScrollView IsEnabled="{Binding IsNotBusy}">
-            <VerticalStackLayout Padding="24" Spacing="24">
+            <VerticalStackLayout Padding="24" Spacing="10">
 
                 <Label Text="Введіть ваші дані:"
                                    FontSize="16"
@@ -117,39 +117,45 @@
                 </Frame>
 
                 <!-- Card actions -->
-                <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
+                <HorizontalStackLayout Spacing="50" HorizontalOptions="Center">
                     <Button Text="Зберегти картку"
                             Command="{Binding AddCardCommand}"
                             IsVisible="{Binding IsCardPreset, Converter={StaticResource InvertedBoolConverter}}"
                             BackgroundColor="#43A047"
                             TextColor="White"
                             CornerRadius="25"
-                            WidthRequest="160"
-                            HeightRequest="45" />
+                            WidthRequest="120"
+                            FontAttributes="Bold"
+                            HeightRequest="60" />
                     <Button Text="Скасувати"
                             Command="{Binding CancelUpdateCardCommand}"
                             IsVisible="{Binding IsUpdatingCard}"
                             BackgroundColor="#E53935"
                             TextColor="White"
                             CornerRadius="25"
-                            WidthRequest="160"
-                            HeightRequest="45" />
+                            WidthRequest="120"
+                            FontAttributes="Bold"
+                            HeightRequest="60" />
                     <Button Text="Змінити картку"
                             Command="{Binding UpdateCardCommand}"
                             IsVisible="{Binding IsCardPreset}"
                             BackgroundColor="#43A047"
                             TextColor="White"
+                            FontAttributes="Bold"
+                            LineBreakMode="WordWrap"
                             CornerRadius="25"
-                            WidthRequest="180"
-                            HeightRequest="45" />
+                            WidthRequest="120"
+                            HeightRequest="60" />
                     <Button Text="Видалити картку"
                             Command="{Binding DeleteCardCommand}"
                             IsVisible="{Binding IsUpdatingCard, Converter={StaticResource InvertedBoolConverter}}"
                             BackgroundColor="#FF5252"
                             TextColor="White"
+                            LineBreakMode="WordWrap"
                             CornerRadius="25"
-                            WidthRequest="180"
-                            HeightRequest="45" />
+                            FontAttributes="Bold"
+                            WidthRequest="120"
+                            HeightRequest="60" />
                 </HorizontalStackLayout>
                 <BoxView HeightRequest="1" BackgroundColor="#D3D3D3" Margin="0,10" />
 

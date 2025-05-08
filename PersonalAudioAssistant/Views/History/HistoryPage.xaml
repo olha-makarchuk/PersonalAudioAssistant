@@ -70,51 +70,67 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
+
     <ScrollView>
         <VerticalStackLayout>
-            <Label Text="Історія розмов" Style="{StaticResource PageTitleLabel}" />
+            <Label Text="Історія розмов" FontSize="22" Style="{StaticResource PageTitleLabel}" Margin="0,0,0,20" />
 
             <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" Margin="10,0" />
 
             <CollectionView
-                ItemsSource="{Binding Conversations}"
+                ItemsSource="{Binding ConversationsGrouped}"
                 SelectionMode="Single"
                 SelectedItem="{Binding SelectedConversation, Mode=TwoWay}"
                 RemainingItemsThreshold="5"
+                IsGrouped="True"
                 RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}"
                 Margin="10">
+
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
                 </CollectionView.ItemsLayout>
+
+                <!-- Заголовок групи: дата -->
+                <CollectionView.GroupHeaderTemplate>
+                    <DataTemplate>
+                        <Label
+                            Text="{Binding DateDisplay}"
+                            FontSize="14"
+                            HorizontalOptions="Center"
+                            Margin="10,10,0,5" />
+                    </DataTemplate>
+                </CollectionView.GroupHeaderTemplate>
+
+                <!-- Окремий елемент розмови -->
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                            <Frame
-        Style="{StaticResource ConversationCardFrame}"
-        InputTransparent="True"
-        BackgroundColor="#f1f4ff">
-                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" ColumnSpacing="0">
-                                    <Label
-            Grid.Row="0"
-            Grid.Column="0"
-            Text="{Binding Description}"
-            Style="{StaticResource ConversationTitleLabel}" />
+                        <Frame
+                            Style="{StaticResource ConversationCardFrame}"
+                            InputTransparent="True"
+                            BackgroundColor="#f1f4ff">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" ColumnSpacing="0">
+                                <Label
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Text="{Binding Description}"
+                                    Style="{StaticResource ConversationTitleLabel}" />
 
-                                    <Label
-            Grid.Row="1"
-            Grid.Column="0"
-            Text="{Binding DateTimeCreated, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
-            Style="{StaticResource ConversationDateLabel}" />
+                                <Label
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Text="{Binding DateTimeCreated, StringFormat='{0:dd.MM.yyyy HH:mm}'}"
+                                    Style="{StaticResource ConversationDateLabel}" />
 
-                                    <Image
-            Grid.RowSpan="2"
-            Grid.Column="1"
-            Style="{StaticResource ChevronImage}" />
-                                </Grid>
-                            </Frame>
+                                <Image
+                                    Grid.RowSpan="2"
+                                    Grid.Column="1"
+                                    Style="{StaticResource ChevronImage}" />
+                            </Grid>
+                        </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
 
-
+                <!-- Footer для індикатора завантаження -->
                 <CollectionView.Footer>
                     <StackLayout Padding="10">
                         <ActivityIndicator
@@ -125,6 +141,7 @@
                 </CollectionView.Footer>
             </CollectionView>
 
+            <!-- Loading indicator на сторінці -->
             <ActivityIndicator
                 Style="{StaticResource LoadingIndicator}"
                 IsVisible="{Binding IsBusy}"
