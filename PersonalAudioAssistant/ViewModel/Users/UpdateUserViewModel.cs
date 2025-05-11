@@ -113,18 +113,34 @@ namespace PersonalAudioAssistant.ViewModel.Users
         {
             if (e.PropertyName == nameof(SubUser.UserName))
                 IsNotValid.IsUserNameNotValid = string.IsNullOrWhiteSpace(SubUser.UserName);
+
             if (e.PropertyName == nameof(SubUser.StartPhrase))
-                IsNotValid.IsStartPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.StartPhrase);
+            {
+                var phrase = (SubUser.StartPhrase ?? string.Empty).Trim();
+                var words = phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                bool hasInvalidChars = phrase.Any(c => !(char.IsLetter(c) || char.IsWhiteSpace(c)));
+
+                IsNotValid.IsStartPhraseNotValid = words.Length == 0
+                                                   || words.Length > 3
+                                                   || hasInvalidChars;
+            }
+
             if (e.PropertyName == nameof(SubUser.EndPhrase) && EndOptionsModel.IsEndPhraseSelected)
-                IsNotValid.IsEndPhraseNotValid = string.IsNullOrWhiteSpace(SubUser.EndPhrase);
+            {
+                var phrase = (SubUser.EndPhrase ?? string.Empty).Trim();
+                var words = phrase.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                bool hasInvalidChars = phrase.Any(c => !(char.IsLetter(c) || char.IsWhiteSpace(c)));
+
+                IsNotValid.IsEndPhraseNotValid = words.Length == 0
+                                                 || words.Length > 3
+                                                 || hasInvalidChars;
+            }
+
             if (e.PropertyName == nameof(SubUser.NewPassword))
                 IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.NewPassword);
 
-            if (HasPassword == true)
-            {
-                if (e.PropertyName == nameof(SubUser.OldPassword))
-                    IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.OldPassword);
-            }
+            if (HasPassword == true && e.PropertyName == nameof(SubUser.OldPassword))
+                IsNotValid.IsPasswordNotValid = SubUser.IsPasswordEnabled && string.IsNullOrWhiteSpace(SubUser.OldPassword);
         }
 
         private void ValidateCloneModel(object s, PropertyChangedEventArgs e)

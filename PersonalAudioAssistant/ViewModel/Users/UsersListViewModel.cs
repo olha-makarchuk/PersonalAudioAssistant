@@ -78,6 +78,15 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         private async Task AddUserAsync()
         {
+            if (Users.Count >= 10)
+            {
+                await Shell.Current.DisplayAlert(
+                    "Ліміт користувачів",
+                    "Неможливо додати більше ніж 10 користувачів.",
+                    "ОК");
+                return;
+            }
+
             await Shell.Current.GoToAsync("/AddUserPage");
         }
 

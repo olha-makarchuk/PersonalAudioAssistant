@@ -58,7 +58,7 @@
                             <Entry Text="{Binding SubUser.StartPhrase}"
                                    Placeholder="Початкова фраза" 
                                    BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
-                            <Label Text="Введіть початкову фразу" TextColor="Red" IsVisible="{Binding IsNotValid.IsStartPhraseNotValid}"/>
+                            <Label Text="Початкова фраза повинна мати 1–3 слова, містити тільки літери та пробіли" TextColor="Red" IsVisible="{Binding IsNotValid.IsStartPhraseNotValid}"/>
                         </StackLayout>
                         
                         <Label Text="Оберіть спосіб завершення:" FontSize="16" FontAttributes="Bold" TextColor="#333333"/>
@@ -74,7 +74,7 @@
                             <Entry Text="{Binding SubUser.EndPhrase}"
                                Placeholder="Кінцева фраза" 
                                BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
-                            <Label Text="Введіть кінцеву фразу" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid}"/>
+                            <Label Text="Кінцева фраза повинна мати 1–3 слова, містити тільки літери та пробіли" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid}"/>
 
                         </StackLayout>
 
