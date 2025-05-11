@@ -120,12 +120,12 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task Listen(CancellationToken cancellationToken)
         {
 
-            _listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var isAuthorized = await _speechToText.RequestPermissions();
-            var usersList = await _manageCacheData.GetUsersAsync();
-            var chatProgress = new Progress<ChatMessage>(msg => ChatMessages.Add(msg));
+                _listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                var isAuthorized = await _speechToText.RequestPermissions();
+                var usersList = await _manageCacheData.GetUsersAsync();
+                var chatProgress = new Progress<ChatMessage>(msg => ChatMessages.Add(msg));
 
-            IsListening = true;
+                IsListening = true;
 
             if (_conversationForContinue.ConversationId == null)
             {
@@ -175,8 +175,8 @@ namespace PersonalAudioAssistant.ViewModel
                 try
                 {
                     var lastRequestId = ChatMessages
-                    .AsEnumerable() 
-                    .Reverse() 
+                    .AsEnumerable()
+                    .Reverse()
                     .FirstOrDefault(x => !string.IsNullOrEmpty(x.LastRequestId))
                     ?.LastRequestId;
 
@@ -221,14 +221,16 @@ namespace PersonalAudioAssistant.ViewModel
         {
             if (IsListening)
             {
-                ListenCancelCommand.Execute(null);
+                _speechToText.CancelListening();
+                IsListening = false;
             }
             else
             {
                 ListenCommand.Execute(null);
-                IsListening = true; 
+                IsListening = true;
             }
         }
+
 
         [RelayCommand]
         private async Task LoadMore()
