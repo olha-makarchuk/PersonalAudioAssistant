@@ -140,6 +140,7 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand]
         public async Task SignOut()
         {
+            
             var answer = await Shell.Current.DisplayAlert(
                 "Вихід",
                 "Ви дійсно хочете вийти з вашого акаунту?",
@@ -149,7 +150,7 @@ namespace PersonalAudioAssistant.ViewModel
             if (answer)
             {
                 await _authTokenManager.SignOutAsync();
-                _manageCacheData.ClearCache();
+                await _manageCacheData.ClearCache();
                 await Shell.Current.GoToAsync("//AuthorizationPage");
             }
         }

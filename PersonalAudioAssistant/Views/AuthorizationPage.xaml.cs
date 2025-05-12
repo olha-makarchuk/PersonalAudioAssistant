@@ -1,24 +1,23 @@
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.ViewModel;
 
-namespace PersonalAudioAssistant.Views
+namespace PersonalAudioAssistant.Views;
+
+public partial class AuthorizationPage : ContentPage
 {
-    public partial class AuthorizationPage : ContentPage
+    AuthTokenManager _authTokenManager;
+
+    public AuthorizationPage(AuthorizationViewModel viewModel, AuthTokenManager authTokenManager)
     {
-        AuthTokenManager _authTokenManager;
-        
-        public AuthorizationPage(AuthorizationViewModel viewModel, AuthTokenManager authTokenManager)
-        {
-            InitializeComponent();
-            BindingContext = viewModel;
-            _authTokenManager = authTokenManager;
-        }
+        InitializeComponent();
+        BindingContext = viewModel;
+        _authTokenManager = authTokenManager;
+    }
 
-        protected override async void OnAppearing()
-        {
-            base.OnAppearing();
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
 
-            await _authTokenManager.InitializeAsync();
-        }
+        await _authTokenManager.InitializeAsync();
     }
 }

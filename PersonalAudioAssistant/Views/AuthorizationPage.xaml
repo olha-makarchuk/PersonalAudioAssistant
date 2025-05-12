@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="PersonalAudioAssistant.Views.AuthorizationPage"
-             BackgroundColor="{AppThemeBinding Light={StaticResource LightBackgroundColor}, Dark={StaticResource DarkBackgroundColor}}">
-
+             x:Class="PersonalAudioAssistant.Views.AuthorizationPage">
+ 
     <Grid Padding="30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,40 +14,32 @@
             <Label Text="Вітаємо!"
                    FontSize="32"
                    FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+                   HorizontalOptions="Center"/>
             <Label Text="Увійдіть у свій обліковий запис"
                    FontSize="18"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                   HorizontalOptions="Center"/>
 
             <Frame Padding="20"
                    CornerRadius="15"
-                    WidthRequest="350"
-
-                   BackgroundColor="{AppThemeBinding Light={StaticResource LightEntryBackgroundColor}, Dark={StaticResource DarkEntryBackgroundColor}}">
+                    WidthRequest="350">
                 <VerticalStackLayout Spacing="20">
                     <VerticalStackLayout Spacing="5">
-                        <Label Text="Електронна пошта"
-                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Label Text="Електронна пошта" />
                         <Entry Placeholder="Введіть електронну пошту"
                                Keyboard="Email"
                                WidthRequest="300"
-                               Text="{Binding Email}"
-                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                               Text="{Binding Email}"/>
                         <Label Text="{Binding EmailValidationMessage}"
                                IsVisible="{Binding IsEmailNotValid}"
                                TextColor="Red"
                                FontSize="12" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="5">
-                        <Label Text="Пароль"
-                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                        <Label Text="Пароль" />
                         <Entry Placeholder="Введіть пароль"
                                IsPassword="True"
                                WidthRequest="300"
-                               Text="{Binding Password}"
-                               TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                               Text="{Binding Password}"/>
                         <Label Text="{Binding PasswordValidationMessage}"
                                IsVisible="{Binding IsPasswordNotValid}"
                                TextColor="Red"
@@ -68,15 +59,12 @@
             <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
                 <BoxView WidthRequest="50"
                          HeightRequest="1"
-                         BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}"
                          VerticalOptions="Center" />
                 <Label Text="Або"
                        FontSize="16"
-                       FontAttributes="Bold"
-                       TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}" />
+                       FontAttributes="Bold"/>
                 <BoxView WidthRequest="50"
                          HeightRequest="1"
-                         BackgroundColor="{AppThemeBinding Light={StaticResource LightSeparatorColor}, Dark={StaticResource DarkSeparatorColor}}"
                          VerticalOptions="Center" />
             </StackLayout>
 
@@ -106,7 +94,6 @@
             </Grid.ColumnDefinitions>
             <Label Text="Не маєте облікового запису?"
                    FontSize="14"
-                   TextColor="{AppThemeBinding Light={StaticResource LightTextColor}, Dark={StaticResource DarkTextColor}}"
                    Grid.Column="0" />
             <Label Text="Зареєструватися"
                    FontSize="14"

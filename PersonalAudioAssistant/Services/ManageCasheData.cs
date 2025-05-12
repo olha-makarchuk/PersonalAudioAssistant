@@ -142,7 +142,7 @@ namespace PersonalAudioAssistant.Services
             await GetPaymentAsync();
         }
 
-        public void ClearCache()
+        public async Task ClearCache()
         {
             _cache.Remove(UsersCacheKey);
             _cache.Remove(SettingsCacheKey);

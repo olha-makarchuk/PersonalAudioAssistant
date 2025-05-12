@@ -85,7 +85,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<MainPage>();
         builder.Services.AddSingleton<CompleteRegistrationPage>();
         builder.Services.AddSingleton<AppShell>();
-        builder.Services.AddScoped<AuthorizationPage, AuthorizationViewModel>();
+        builder.Services.AddTransient<AuthorizationPage>();
+        builder.Services.AddTransient<AuthorizationViewModel>();
         builder.Services.AddScoped<RegistrationPage, RegistrationPageViewModel>();
         builder.Services.AddScoped<ProgramPage, ProgramPageViewModel>();
         builder.Services.AddScoped<SettingsPage, SettingsViewModel>();

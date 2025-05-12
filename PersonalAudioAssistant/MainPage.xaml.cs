@@ -25,11 +25,20 @@ namespace PersonalAudioAssistant
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await InitializeApp();
+            try
+            {
+                await InitializeApp();
+            }
+            catch (Exception ex)
+            {
+                // У Release можна вивести у консоль або краще — логнути до App Center / Sentry
+                Console.WriteLine($"InitializeApp failed: {ex}");
+                LoadingLabel.Text = "Сталася помилка. Спробуйте ще раз.";
+            }
         }
+
         private async Task InitializeApp()
         {
-
             LoadingProgressBar.IsVisible = true;
             LoadingProgressBar.Progress = 0;
 
@@ -49,11 +58,11 @@ namespace PersonalAudioAssistant
                 await LoadDataInCache();
                 LoadingProgressBar.Progress = 1.0;
 
-                Shell.Current?.GoToAsync("//ProgramPage");
+                await Shell.Current.GoToAsync("//ProgramPage");
             }
             else
             {
-                Shell.Current?.GoToAsync($"//AuthorizationPage");
+                await Shell.Current.GoToAsync("//AuthorizationPage");
             }
 
             LoadingProgressBar.IsVisible = false;
