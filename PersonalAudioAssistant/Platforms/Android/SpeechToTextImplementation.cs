@@ -34,9 +34,12 @@ namespace PersonalAudioAssistant.Platforms
         private readonly VoiceApiClient _voiceApiClient;
         private readonly ManageCacheData _manageCacheData;
         private ApiClientGPT _apiClientGPT;
+        private CancellationTokenSource _globalCts = new();
 
         private bool _hasCleared = false;
+        private bool _isCancelled = false;
         public bool IsPrivateConversation { get; set; }
+        private bool _isUserCancelled = false;
 
         public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient, ApiClientGPT apiClientGPT, PaymentHistoryApiClient paymentHistoryApiClient, AppSettingsApiClient appSettingsApiClient)
         {
@@ -56,9 +59,39 @@ namespace PersonalAudioAssistant.Platforms
         {
         }
 
+        public void HardCancelAll()
+        {
+            try
+            {
+                _globalCts.Cancel();              
+                _globalCts.Dispose();             
+                _globalCts = new CancellationTokenSource();  
+            }
+            catch { }
+
+            try
+            {
+                StopRecording();   
+            }
+            catch { }
+
+            try
+            {
+                speechRecognizer?.Destroy();
+                speechRecognizer = null;
+            }
+            catch { }
+
+            isListening = false;
+            _isCancelled = true;
+        }
+
+
         public async Task<string> Listen(CultureInfo culture, IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, List<SubUserResponse> listUsers, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId)
         {
-                cancellationToken.Register(() => CancelListening());
+            _isUserCancelled = false;
+
+            cancellationToken.Register(() => CancelListening());
 
                 listener = new SpeechRecognitionListener
                 {
@@ -68,10 +101,11 @@ namespace PersonalAudioAssistant.Platforms
                         {
                             await Toast.Make("Помилка: " + ex).Show(cancellationToken);
                             PauseListening();
-                            if (culture != null)
+                            if (!_isUserCancelled && culture != null)
                             {
                                 RestartListening(culture);
                             }
+
                         }
                         catch (Exception innerEx)
                         {
@@ -86,6 +120,7 @@ namespace PersonalAudioAssistant.Platforms
                         recognitionResult?.Report(sentence);
                         SubUserResponse? matchedUser = null;
                         bool isPrivateConversation = false;
+                        var textToSpeech = new ElevenlabsApi();
 
                         string normalizedSentence = sentence.Trim().ToLowerInvariant();
                         isPrivateConversation = normalizedSentence.Contains("особиста розмова");
@@ -108,10 +143,10 @@ namespace PersonalAudioAssistant.Platforms
                             try
                             {
                                 PauseListening();
-                                var textToSpeech = new ElevenlabsApi();
+
 
                                 var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
-                                await audioPlayerHelper.PlayAudioFromUrlAsync($"https://audioassistantblob.blob.core.windows.net/first-message/{matchedUser.id}.wav", cancellationToken);
+                                await audioPlayerHelper.PlayAudioFromUrlAsync($"https://audioassistantblob.blob.core.windows.net/first-message/{matchedUser.id}.wav", _globalCts.Token);
 
                                 IsContinueConversation = true;
                                 IsFirstRequest = true;
@@ -129,23 +164,24 @@ namespace PersonalAudioAssistant.Platforms
                                     _prevResponseId = prevResponseId;
                                 }
 
-                                while (IsContinueConversation)
+                                while (IsContinueConversation && !_globalCts.Token.IsCancellationRequested)
                                 {
                                     try
                                     {
+                                        
                                         IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                                         var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
-                                        var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
+                                        var transcription = await transcriber.StreamAudioDataAsync(matchedUser, _globalCts.Token, IsFirstRequest, PreviousResponseId);
                                         response = transcription.Response;
 
                                         if (response.Request == "none" && IsFirstRequest)
                                         {
                                             var voiceNone = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
                                             var audioBytesNone = await textToSpeech.ConvertTextToSpeechAsync(voiceNone.voiceId, $"Вас не було розпізнано як користувача {matchedUser.userName}");
-                                            await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytesNone, cancellationToken);
+                                            await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytesNone, _globalCts.Token);
                                         }
-
-                                        if (response.Request == "none" || !response.IsContinuous)
+                                        
+                                        if ((response.Request == "none" || !response.IsContinuous) && _globalCts.Token.IsCancellationRequested)
                                         {
                                             _prevResponseId = null;
 
@@ -161,10 +197,9 @@ namespace PersonalAudioAssistant.Platforms
 
                                             IsPrivateConversation = false;
                                             _hasCleared = false;
-                                            //taskResult.TrySetResult(response.Request);
                                             return;
                                         }
-
+                                        
                                         await Task.WhenAll(conversationIdTask);
                                         var createUserCmd = new CreateMessageCommand
                                         {
@@ -194,10 +229,10 @@ namespace PersonalAudioAssistant.Platforms
                                         var task = CalculatePrice(response.AudioDuration, answer, matchedUser.id, matchedUser.userId);
                                         IsContinueConversation = response.IsContinuous;
                                         IsFirstRequest = false;
-
+                                        
                                         var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voice.voiceId, answer.text);
 
-                                        var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+                                        var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, _globalCts.Token);
 
                                         var careteMessageAI = new CreateMessageCommand()
                                         {
@@ -219,7 +254,7 @@ namespace PersonalAudioAssistant.Platforms
                                             DateTimeCreated = createdAItask.Result.dateTimeCreated,
                                             URL = createdAItask.Result.audioPath,
                                         });
-
+                                
                                         await Task.WhenAll(playAnswerTask);
                                         await Task.Delay(100);
                                     }
@@ -228,6 +263,10 @@ namespace PersonalAudioAssistant.Platforms
                                         StopRecording();
                                         return;
                                     }
+                                }
+                                if (_globalCts.Token.IsCancellationRequested)
+                                {
+                                    return;
                                 }
                             }
                             catch (Exception ex)
@@ -240,8 +279,7 @@ namespace PersonalAudioAssistant.Platforms
                             await Task.Delay(1000);
                             RestartListening(culture);
                         }
-                    }//,
-                     //Results = sentence => taskResult.TrySetResult(sentence),
+                    }
                 };
 
                 speechRecognizer = SpeechRecognizer.CreateSpeechRecognizer(Android.App.Application.Context);
@@ -273,6 +311,8 @@ namespace PersonalAudioAssistant.Platforms
 
         public async Task<string> ContinueListen(IProgress<string>? recognitionResult, IProgress<ChatMessage> chatMessageProgress, CancellationToken cancellationToken, Action clearChatMessagesAction, Func<Task> restoreChatMessagesAction, string prevResponseId, ContinueConversation continueConversation)
         {
+            _isUserCancelled = false;
+
             cancellationToken.Register(() => CancelListening());
 
             _clearChatMessagesAction = clearChatMessagesAction;
@@ -293,7 +333,7 @@ namespace PersonalAudioAssistant.Platforms
                 try
                 {
                     var audioPlayerHelper = new AudioPlayerHelper(new AudioManager());
-                    await audioPlayerHelper.PlayAudioFromUrlAsync($"https://audioassistantblob.blob.core.windows.net/first-message/{matchedUser.id}.wav", cancellationToken);
+                    await audioPlayerHelper.PlayAudioFromUrlAsync($"https://audioassistantblob.blob.core.windows.net/first-message/{matchedUser.id}.wav", _globalCts.Token);
 
                     IsContinueConversation = true;
                     IsFirstRequest = true;
@@ -312,14 +352,14 @@ namespace PersonalAudioAssistant.Platforms
                         _prevResponseId = prevResponseId;
                     }
 
-                    while (IsContinueConversation)
+                    while (IsContinueConversation&& !_globalCts.Token.IsCancellationRequested)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         try
                         {
                             IAudioDataProvider audioProvider = new AndroidAudioDataProvider();
                             var transcriber = new ApiClientAudio(audioProvider, new WebSocketService());
-                            var transcription = await transcriber.StreamAudioDataAsync(matchedUser, cancellationToken, IsFirstRequest, PreviousResponseId);
+                            var transcription = await transcriber.StreamAudioDataAsync(matchedUser, _globalCts.Token, IsFirstRequest, PreviousResponseId);
                             response = transcription.Response;
 
                             if ((response.Request == "none" || !response.IsContinuous) && !isPrivateConversation)
@@ -364,7 +404,7 @@ namespace PersonalAudioAssistant.Platforms
                             await Task.WhenAll(voiceTask);
 
                             var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
-                            var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, cancellationToken);
+                            var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, _globalCts.Token);
 
                             var careteMessageAI = new CreateMessageCommand()
                             {
@@ -413,15 +453,13 @@ namespace PersonalAudioAssistant.Platforms
 
         public void CancelListening()
         {
-            if (isListening)
-            {
-                speechRecognizer?.Cancel();    
-                speechRecognizer?.StopListening();
-                isListening = false;
-            }
+            _isUserCancelled = true;
+            StopRecording();
             speechRecognizer?.Destroy();
             speechRecognizer = null;
         }
+
+
         public async Task CalculatePrice(double audioDurationRequest, ApiClientGptResponse gptResponse, string subUserId, string mainUserId)
         {
             var transcriptionCost = (audioDurationRequest / 60.0) * 0.006;

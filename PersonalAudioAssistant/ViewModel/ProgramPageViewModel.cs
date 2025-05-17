@@ -105,8 +105,6 @@ namespace PersonalAudioAssistant.ViewModel
 
             Locales = new();
             SetLocalesCommand.Execute(null);
-
-
         }
 
         [RelayCommand]
@@ -119,7 +117,6 @@ namespace PersonalAudioAssistant.ViewModel
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task Listen(CancellationToken cancellationToken)
         {
-
                 _listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 var isAuthorized = await _speechToText.RequestPermissions();
                 var usersList = await _manageCacheData.GetUsersAsync();
@@ -221,7 +218,8 @@ namespace PersonalAudioAssistant.ViewModel
         {
             if (IsListening)
             {
-                _speechToText.CancelListening();
+                _speechToText.HardCancelAll();
+                //_speechToText.CancelListening();
                 IsListening = false;
             }
             else
@@ -470,7 +468,6 @@ namespace PersonalAudioAssistant.ViewModel
             // Скасування слухання
             _listenCts?.Cancel();
 
-
             // Очищення полів
             _conversationId = null;
             _subUserId = null;
@@ -490,7 +487,7 @@ namespace PersonalAudioAssistant.ViewModel
             AllMessagesLoaded = false;
             InitialLoadDone = false;
             IsCancelContinueAvailable = false;
-
+            
             // Очищення колекцій
             ChatMessages.Clear();
             Locales?.Clear();

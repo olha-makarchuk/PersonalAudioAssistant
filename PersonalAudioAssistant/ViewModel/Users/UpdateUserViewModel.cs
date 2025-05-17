@@ -858,6 +858,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
             _recordedAudioStream = null;
             IsAudioRecorded = false;
             _selectedAudioFilePath = null;
+            SelectedAudioFilePath = null;
             IsBaseVoiceSelected = true;
             CloneVoiceModel.Reset();
             SubUser.Reset();

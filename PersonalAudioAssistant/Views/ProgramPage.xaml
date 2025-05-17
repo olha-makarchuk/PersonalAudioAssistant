@@ -151,6 +151,7 @@
         <VerticalStackLayout Grid.Row="1" BackgroundColor="#f4f0f5">
             <Grid ColumnDefinitions="Auto,Auto,Auto,*"
       VerticalOptions="Center"
+                  Margin="0,0,0,-30"
       HorizontalOptions="Center">
                 <Frame CornerRadius="25"
            Padding="0"
@@ -217,11 +218,11 @@
                     <Label Text="Автовідтворення:"
                            VerticalOptions="Center"
                            FontSize="12"
-                           Margin="0,-30,0,-10"
                            HorizontalOptions="End" />
                     <!-- Перемикач для автозапуску -->
                     <Switch IsToggled="{Binding IsAutoPlay}"
                             VerticalOptions="Center"
+                            Margin="0,-10,10,10"
                             HorizontalOptions="End" />
                 </VerticalStackLayout>
             </HorizontalStackLayout>

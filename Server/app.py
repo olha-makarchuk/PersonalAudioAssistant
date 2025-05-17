@@ -6,7 +6,6 @@ app = FastAPI(title="Audio Processing Server")
 
 app.include_router(audio.router, prefix="/ws", tags=["Audio"])
 app.include_router(embendding.router, prefix="/embendding", tags=["Embendding"])
-app.include_router(test.router, prefix="/test", tags=["test"])
 app.include_router(tokenizer.router, prefix="/tokenizer", tags=["tokenizer"])
 
 if __name__ == "__main__":

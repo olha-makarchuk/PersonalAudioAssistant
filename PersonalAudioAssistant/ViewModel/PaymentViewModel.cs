@@ -335,18 +335,34 @@ namespace PersonalAudioAssistant.ViewModel
             TextInput = example.textRequest;
 
             var totalCost = example.transcriptionCost + example.inputCost + example.outputCost + example.ttsCost;
-            var howManyRequestsFiveDollars = (5 / totalCost);  
+            var howManyRequestsFiveDollars = (5 / totalCost);
 
             var summary = $"""
-                🧠 Відповідь: "{example.textAnswer}"
-                🎙️ Тривалість транскрипції: {example.audioRequestDuration:F1} сек → ${example.transcriptionCost:F5}
-                🤖 Вартість обробки запиту GPT: {example.inputTokens} токенів → ${example.inputCost:F5}
-                📤 Вартість відповіді GPT: {example.outputTokens} токенів → ${example.outputCost:F5}
-                🗣️ Вартість озвучення тексту: {example.charCount} символів → ${example.ttsCost:F5}
-                💰 Загальна вартість: ${totalCost:F5}
-                💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} подібних запитів
+                🧠 Відповідь:
+                   "{example.textAnswer}"
+
+                🎙️ Тривалість транскрипції:
+                   {example.audioRequestDuration:F1} сек → ${example.transcriptionCost:F5}
+
+                🤖 Вартість обробки запиту GPT:
+                   {example.inputTokens} токенів → ${example.inputCost:F5}
+
+                📤 Вартість відповіді GPT:
+                   {example.outputTokens} токенів → ${example.outputCost:F5}
+
+                🗣️ Вартість озвучення тексту:
+                   {example.charCount} символів → ${example.ttsCost:F5}
+
+                💰 Загальна вартість:
+                   ${totalCost:F5}
+
+                💸 За $5 можна зробити приблизно:
+                   {howManyRequestsFiveDollars:F0} подібних запитів
                 """;
-            
+
+            TokenCalculationResult = summary;
+
+
             IsResultExist = true;
             IsAudioVisible = true;
             IsAnswerPathAvailable = true;
@@ -387,7 +403,6 @@ namespace PersonalAudioAssistant.ViewModel
         private async Task CalculatePrice()
         {
             var answer = "Привіт, чим я можу вам допомогти?";
-            const double DollarPerSystemToken = 0.0003;
 
             var inputTokenCount = await _apiClientTokens.GetTokenCountAsync(TextInput);
             var outputTokenCount = await _apiClientTokens.GetTokenCountAsync(answer);
@@ -405,20 +420,33 @@ namespace PersonalAudioAssistant.ViewModel
             var ttsCost = (charCount / 1000.0) * 0.0833;
 
             var totalCost = transcriptionCost + transcribionOut + gptInCost + gptOutCost + ttsCost;
-            var tokenCost = totalCost / DollarPerSystemToken;
 
             // Розрахунок скільки запитів можна здійснити за $5
             var howManyRequestsFiveDollars = (5 / totalCost);  // Кількість запитів за $5
 
             var summary = $"""
-            🧠 Відповідь: "{answer}"
-            🎙️ Тривалість транскрипції: {durationInSeconds:F1} сек → ${transcriptionCost:F5}
-            🤖 Вартість обробки запиту GPT: {inputTokenCount} токенів → ${gptInCost:F5}
-            📤 Вартість відповіді GPT: {outputTokenCount} токенів → ${gptOutCost:F5}
-            🗣️ Вартість озвучення тексту: {charCount} символів → ${ttsCost:F5}
-            💰 Загальна вартість: ${totalCost:F5}
-            💸 За $5 можна зробити приблизно: {howManyRequestsFiveDollars:F0} подібних запитів
-            """;
+                🧠 Відповідь:
+                   "{answer}"
+
+                🎙️ Тривалість транскрипції:
+                   {durationInSeconds:F1} сек → ${transcriptionCost:F5}
+
+                🤖 Вартість обробки запиту GPT:
+                   {inputTokenCount} токенів → ${gptInCost:F5}
+
+                📤 Вартість відповіді GPT:
+                   {outputTokenCount} токенів → ${gptOutCost:F5}
+
+                🗣️ Вартість озвучення тексту:
+                   {charCount} символів → ${ttsCost:F5}
+
+                💰 Загальна вартість:
+                   ${totalCost:F5}
+
+                💸 За $5 можна зробити приблизно:
+                   {howManyRequestsFiveDollars:F0} подібних запитів
+                """;
+
             AudioRequestPath = null;
             AudioAnswerPath = null;
             IsAnswerPathAvailable = false;

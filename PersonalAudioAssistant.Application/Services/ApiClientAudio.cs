@@ -17,12 +17,19 @@ namespace PersonalAudioAssistant.Application.Services
             this.audioDataProvider = audioDataProvider;
         }
 
-        public async Task<(TranscriptionResponse Response, byte[] Audio)> StreamAudioDataAsync(SubUserResponse subUser, CancellationToken cancellationToken, bool IsFirstRequest, string PreviousResponseId)
+        public async Task<(TranscriptionResponse Response, byte[] Audio)> StreamAudioDataAsync(
+            SubUserResponse subUser,
+            CancellationToken cancellationToken,
+            bool IsFirstRequest,
+            string PreviousResponseId)
         {
             using var audioBuffer = new MemoryStream();
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var stopSignal = new TaskCompletionSource<string>();
+
             try
             {
-                await webSocketService.ConnectAsync(cancellationToken);
+                await webSocketService.ConnectAsync(linkedCts.Token);
 
                 var dataPayload = System.Text.Json.JsonSerializer.Serialize(new
                 {
@@ -34,66 +41,91 @@ namespace PersonalAudioAssistant.Application.Services
                 });
 
                 var idBytes = Encoding.UTF8.GetBytes(dataPayload);
-                await webSocketService.SendDataAsync(idBytes, idBytes.Length, cancellationToken);
+                await webSocketService.SendDataAsync(idBytes, idBytes.Length, linkedCts.Token);
 
-                string response = await webSocketService.ReceiveMessagesAsync(cancellationToken);
-
+                string response = await webSocketService.ReceiveMessagesAsync(linkedCts.Token);
                 if (response != "OK")
                 {
                     await webSocketService.CloseConnectionAsync();
                     throw new Exception($"Помилка: сервер відхилив запит. Отримано відповідь: {response}");
                 }
 
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                var stopSignal = new TaskCompletionSource<string>();
-
-                //  Task для прийому повідомлень і перевірки STOP
+                // 🟢 Task для прийому STOP
                 var receiveTask = Task.Run(async () =>
                 {
-                    while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
+                    try
                     {
-                        string message = await webSocketService.ReceiveMessagesAsync(linkedCts.Token);
-                        if (message == "STOP")
+                        while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
                         {
-                            stopSignal.TrySetResult(message);
-                            break;
+                            linkedCts.Token.ThrowIfCancellationRequested();
+
+                            var receive = webSocketService.ReceiveMessagesAsync(linkedCts.Token);
+                            var completed = await Task.WhenAny(receive, Task.Delay(10000, linkedCts.Token));
+
+                            if (completed == receive)
+                            {
+                                string message = await receive;
+                                if (message == "STOP")
+                                {
+                                    stopSignal.TrySetResult(message);
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                // таймаут очікування
+                                throw new TimeoutException("ReceiveMessagesAsync timed out.");
+                            }
                         }
+                    }
+                    catch (OperationCanceledException) { }
+                    catch (Exception ex)
+                    {
+                        stopSignal.TrySetException(ex);
                     }
                 }, linkedCts.Token);
 
-                //  Task для відправлення аудіо
+                // 🟢 Task для надсилання аудіо
                 var sendTask = Task.Run(async () =>
                 {
-                    while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
+                    try
                     {
-                        byte[] buffer = await audioDataProvider.GetAudioDataAsync(linkedCts.Token);
-                        if (buffer?.Length > 0)
+                        while (!linkedCts.Token.IsCancellationRequested && webSocketService.IsConnected)
                         {
-                            audioBuffer.Write(buffer, 0, buffer.Length);
-                            await webSocketService.SendDataAsync(buffer, buffer.Length, linkedCts.Token);
+                            linkedCts.Token.ThrowIfCancellationRequested();
+
+                            byte[] buffer = await audioDataProvider.GetAudioDataAsync(linkedCts.Token);
+                            if (buffer?.Length > 0)
+                            {
+                                audioBuffer.Write(buffer, 0, buffer.Length);
+                                await webSocketService.SendDataAsync(buffer, buffer.Length, linkedCts.Token);
+                            }
+
+                            await Task.Delay(50, linkedCts.Token);
                         }
-                        await Task.Delay(50, linkedCts.Token);
                     }
+                    catch (OperationCanceledException) { }
                 }, linkedCts.Token);
 
-                // Чекаємо на STOP сигнал
+                // 🟢 Очікуємо STOP або скасування
                 await stopSignal.Task;
-                linkedCts.Cancel();
+                linkedCts.Cancel(); // Зупиняємо все
 
-                // Отримуємо фінальний JSON-відповідь після STOP
+                // 🟢 Отримуємо фінальну відповідь
                 string finalResponseJson = await webSocketService.ReceiveMessagesAsync(cancellationToken);
                 await webSocketService.CloseConnectionAsync();
+
                 var finalResponse = JsonConvert.DeserializeObject<TranscriptionResponse>(finalResponseJson);
                 byte[] originalAudio = audioBuffer.ToArray();
 
+                // 🔧 Обрізання аудіо
                 int sampleRate = 44100;
                 short bitsPerSample = 16;
                 short channels = 1;
-                int bytesPerSample = bitsPerSample / 8;             // 2
-                int blockAlign = bytesPerSample * channels;     // 2
-                int bytesPerSecond = sampleRate * blockAlign;       // 88200
+                int bytesPerSample = bitsPerSample / 8;
+                int blockAlign = bytesPerSample * channels;
+                int bytesPerSecond = sampleRate * blockAlign;
 
-                // 2. Розрахунок вирівняних обрізок з початку
                 double rawStartSec = Math.Max(0.0, finalResponse.First_detected_time - 1.0);
                 int trimStartBytes = (int)(rawStartSec * bytesPerSecond);
                 trimStartBytes = (trimStartBytes / blockAlign) * blockAlign;
@@ -107,11 +139,10 @@ namespace PersonalAudioAssistant.Application.Services
                 }
                 else
                 {
-                    int trimEndDurationSec = 2;
-                    trimEndBytes = trimEndDurationSec * bytesPerSecond;
+                    trimEndBytes = 2 * bytesPerSecond;
                     trimEndBytes = (trimEndBytes / blockAlign) * blockAlign;
                 }
-                // 3. Обрізка
+
                 int availableBytes = originalAudio.Length - trimStartBytes - trimEndBytes;
                 if (availableBytes <= 0)
                     return (finalResponse, Array.Empty<byte>());
@@ -121,21 +152,23 @@ namespace PersonalAudioAssistant.Application.Services
 
                 return (finalResponse, trimmedAudio);
             }
+            catch (OperationCanceledException)
+            {
+                await webSocketService.CloseConnectionAsync();
+                return (new TranscriptionResponse { }, Array.Empty<byte>());
+            }
             catch (Exception ex)
             {
                 await webSocketService.CloseConnectionAsync();
-                return (new TranscriptionResponse
-                {
-                }, Array.Empty<byte>());
+                return (new TranscriptionResponse { }, Array.Empty<byte>());
             }
             finally
             {
                 if (audioDataProvider is IDisposable disposable)
-                {
                     disposable.Dispose();
-                }
             }
         }
+
     }
 
     public class TranscriptionResponse
