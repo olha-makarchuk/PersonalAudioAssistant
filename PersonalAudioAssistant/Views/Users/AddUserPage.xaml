@@ -152,7 +152,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Picker Title="Тон/Настрій"
-                                    ItemsSource="{Binding DescriptionOptions}"
+                                    ItemsSource="{Binding Filter.DescriptionOptions}"
                                     SelectedItem="{Binding Filter.Description, Mode=TwoWay}"
                                     Grid.Column="0"
                                     BackgroundColor="#F0F0F0"
