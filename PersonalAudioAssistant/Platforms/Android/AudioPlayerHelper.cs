@@ -27,7 +27,6 @@ namespace PersonalAudioAssistant.Platforms
             }
         }
 
-        // Метод для відтворення аудіо з вбудованого ресурсу (залишаємо)
         public async Task PlayAudio(CancellationToken cancellationToken)
         {
             try
@@ -58,10 +57,8 @@ namespace PersonalAudioAssistant.Platforms
 
         public async Task PlayAudioFromBytesAsync(byte[] audioData, CancellationToken cancellationToken)
         {
-            // Створюємо тимчасовий шлях до файлу
             var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"temp_audio_{Guid.NewGuid()}.mp3");
 
-            // Записуємо байти в тимчасовий файл
             await File.WriteAllBytesAsync(tempFilePath, audioData, cancellationToken);
 
             var stream = File.OpenRead(tempFilePath);
@@ -87,7 +84,6 @@ namespace PersonalAudioAssistant.Platforms
                 }
                 finally
                 {
-                    // Завжди очищаємо тимчасовий файл
                     audioPlayer.Dispose();
                     stream.Dispose();
 
