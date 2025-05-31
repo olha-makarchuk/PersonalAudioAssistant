@@ -7,7 +7,7 @@ namespace PersonalAudioAssistant.Application.Services
     public class ApiClientGPT
     {
         private static readonly HttpClient client = new HttpClient();
-        private readonly string apiKey = "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"; 
+        private readonly string apiKey = ""; 
         private readonly string endpoint = "https://api.openai.com/v1/responses";
 
         public async Task<ApiClientGptResponse> ContinueChatAsync(string userMessage, string prevResponseId = null)
