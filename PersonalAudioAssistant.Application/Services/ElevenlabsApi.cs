@@ -6,7 +6,7 @@ namespace PersonalAudioAssistant.Application.Services
 {
     public class ElevenlabsApi
     {
-        private string _apiKey = "sk_b76dddc4f56ebe8383b50692c9120c637a2243fed76b371f";
+        private string _apiKey = "";
         private string _baseUrl = "https://api.elevenlabs.io";
         private string _model = "eleven_flash_v2_5";
 
