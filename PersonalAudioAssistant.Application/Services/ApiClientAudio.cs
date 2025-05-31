@@ -50,7 +50,6 @@ namespace PersonalAudioAssistant.Application.Services
                     throw new Exception($"Помилка: сервер відхилив запит. Отримано відповідь: {response}");
                 }
 
-                // 🟢 Task для прийому STOP
                 var receiveTask = Task.Run(async () =>
                 {
                     try
@@ -73,7 +72,6 @@ namespace PersonalAudioAssistant.Application.Services
                             }
                             else
                             {
-                                // таймаут очікування
                                 throw new TimeoutException("ReceiveMessagesAsync timed out.");
                             }
                         }
@@ -85,7 +83,6 @@ namespace PersonalAudioAssistant.Application.Services
                     }
                 }, linkedCts.Token);
 
-                // 🟢 Task для надсилання аудіо
                 var sendTask = Task.Run(async () =>
                 {
                     try
@@ -107,18 +104,15 @@ namespace PersonalAudioAssistant.Application.Services
                     catch (OperationCanceledException) { }
                 }, linkedCts.Token);
 
-                // 🟢 Очікуємо STOP або скасування
                 await stopSignal.Task;
-                linkedCts.Cancel(); // Зупиняємо все
+                linkedCts.Cancel(); 
 
-                // 🟢 Отримуємо фінальну відповідь
                 string finalResponseJson = await webSocketService.ReceiveMessagesAsync(cancellationToken);
                 await webSocketService.CloseConnectionAsync();
 
                 var finalResponse = JsonConvert.DeserializeObject<TranscriptionResponse>(finalResponseJson);
                 byte[] originalAudio = audioBuffer.ToArray();
 
-                // 🔧 Обрізання аудіо
                 int sampleRate = 44100;
                 short bitsPerSample = 16;
                 short channels = 1;
