@@ -8,3 +8,13 @@ Audio Server:
 Built with Python and FastAPI, the audio server processes voice data, performs speech recognition, voice identification, synthesis, and voice cloning using integrated AI models. This server handles audio-specific tasks separately to optimize system performance and scalability.
 
 Both components interact with the main backend server to ensure a smooth, secure, and personalized voice interaction experience for users.
+
+Quick Start
+1️⃣ Client Application (.NET MAUI)
+Install .NET SDK (version compatible with MAUI)
+Build and run the application:
+
+2️⃣ Audio Server (Python + FastAPI)
+Make sure you have Python 3.10+ installed.
+Install required packages
+Run the server
