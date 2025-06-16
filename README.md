@@ -9,7 +9,8 @@ Built with Python and FastAPI, the audio server processes voice data, performs s
 
 Both components interact with the main backend server to ensure a smooth, secure, and personalized voice interaction experience for users.
 
-Quick Start
+**Quick Start**
+
 1️⃣ Client Application (.NET MAUI)
 
 Install .NET SDK (version compatible with MAUI)
