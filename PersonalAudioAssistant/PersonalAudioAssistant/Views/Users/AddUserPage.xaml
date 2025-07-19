@@ -1,0 +1,384 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="PersonalAudioAssistant.Views.Users.AddUserPage"
+             Title="Додати користувача"
+             Shell.TitleView="{x:Null}"
+             BackgroundColor="White">
+
+    <ContentPage.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#FFFFFF" Offset="0.0" />
+            <GradientStop Color="#F5F5F5" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
+
+    <Grid>
+        <ScrollView IsEnabled="{Binding IsNotBusy}">
+            <VerticalStackLayout Padding="25" Spacing="25">
+                <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Введіть ім'я користувача:" 
+                           FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+                        <Entry Text="{Binding SubUser.UserName}" 
+                           Placeholder="Ім'я користувача"
+                           BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                        <Label Text="Введіть ім’я користувача" TextColor="Red" IsVisible="{Binding IsNotValid.IsUserNameNotValid}"/>
+
+                        <Label Text="Додайте основну світлину:" 
+                               FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                        <Button Text="Вибрати файл" 
+                                Command="{Binding PickPhotoCommand}"
+                                TextColor="White"/>
+
+                        <Frame HeightRequest="100" WidthRequest="100"
+                               Padding="0"
+                               CornerRadius="100"
+                               IsVisible="{Binding IsPhotoSelected}"
+                               HasShadow="False"
+                               BorderColor="#CCCCCC">
+                            <Image Source="{Binding SubUser.PhotoPath}" 
+                                   Aspect="AspectFill"
+                                   HeightRequest="100" WidthRequest="100"/>
+                        </Frame>
+                        <Label Text="Додайте основну світлину" TextColor="Red" IsVisible="{Binding IsNotValid.IsPhotoPathNotValid}"/>
+
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Параметри користувача -->
+                <Frame CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Індивідуальні параметри:" 
+                           FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                        <StackLayout>
+                            <Label Text="Початкова фраза:" TextColor="#555555"/>
+                            <Entry Text="{Binding SubUser.StartPhrase}"
+                                   Placeholder="Початкова фраза" 
+                                   BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                            <Label Text="Початкова фраза повинна мати 1–3 слова, містити тільки літери та пробіли" TextColor="Red" IsVisible="{Binding IsNotValid.IsStartPhraseNotValid}"/>
+                        </StackLayout>
+                        
+                        <Label Text="Оберіть спосіб завершення:" FontSize="16" FontAttributes="Bold" TextColor="#333333"/>
+                        <StackLayout Orientation="Horizontal" Spacing="10">
+                            <RadioButton Content="Кінцева фраза" GroupName="CompletionOption" 
+                                     IsChecked="{Binding EndOptionsModel.IsEndPhraseSelected}" />
+                            <RadioButton Content="Час завершення" GroupName="CompletionOption"
+                                     IsChecked="{Binding EndOptionsModel.IsEndTimeSelected}" />
+                        </StackLayout>
+
+                        <StackLayout IsVisible="{Binding EndOptionsModel.IsEndPhraseSelected}">
+                            <Label Text="Кінцева фраза:" TextColor="#555555"/>
+                            <Entry Text="{Binding SubUser.EndPhrase}"
+                               Placeholder="Кінцева фраза" 
+                               BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                            <Label Text="Кінцева фраза повинна мати 1–3 слова, містити тільки літери та пробіли" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid}"/>
+
+                        </StackLayout>
+
+                        <StackLayout IsVisible="{Binding EndOptionsModel.IsEndTimeSelected}">
+                            <Label Text="Час завершення (сек):" TextColor="#555555"/>
+                            <Picker ItemsSource="{Binding EndOptionsModel.EndTimeOptions}"
+                                SelectedItem="{Binding EndOptionsModel.SelectedEndTime}"
+                                Title="Оберіть час"
+                                BackgroundColor="#F0F0F0"
+                                TextColor="#333333" />
+                        </StackLayout>
+
+                        <StackLayout Orientation="Horizontal" VerticalOptions="Center">
+                            <CheckBox IsChecked="{Binding SubUser.IsPasswordEnabled}" />
+                            <Label 
+                                Text="Додати пароль до історії особистих розмов:" 
+                                VerticalOptions="Center"
+                                TextColor="#333333"
+                                LineBreakMode="WordWrap"
+                                WidthRequest="200" />
+                        </StackLayout>
+
+
+                        <!-- Відображення поля пароля лише коли користувач обрав його додавання -->
+                        <StackLayout IsVisible="{Binding SubUser.IsPasswordEnabled}">
+                            <Label Text="Пароль до історії розмов:" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 10"/>
+                            <Entry Text="{Binding SubUser.Password}"
+                               Placeholder="Пароль"
+                               BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333" IsPassword="True"/>
+                            <Label Text="Введіть коректний пароль" TextColor="Red" IsVisible="{Binding IsNotValid.IsPasswordNotValid}"/>                         <!--пароль -->
+                        </StackLayout>
+
+                        <StackLayout>
+                            <Label Text="Зразок вашого голосу (10 секунд):" FontSize="16" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, 20"/>
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="Розпочати запис:" TextColor="#555555" VerticalOptions="Center"/>
+                                <Button
+                                        Command="{Binding RecordReferenceVoiceCommand}"
+                                        HeightRequest="50"
+                                        WidthRequest="50"
+                                        CornerRadius="25"
+                                        ImageSource="microphone.png"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center"/>
+
+                                <Image Source="checkmark.png"
+                                       WidthRequest="30"
+                                       HeightRequest="30"
+                                       Margin="10, 0, 0, 0"
+                                       IsVisible="{Binding IsAudioRecorded}" />
+                            </HorizontalStackLayout>
+                            <Label Text="Запишіть зразок вашого голосу" TextColor="Red" IsVisible="{Binding IsNotValid.IsUserVoiceNotValid}"/>
+                        </StackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Label Text="Виберіть голос озвучування:"
+                               FontSize="18" FontAttributes="Bold" TextColor="#333333" Margin="0, 20, 0, -20"/>
+                <StackLayout Orientation="Horizontal" Spacing="10">
+                    <RadioButton Content="Базовий голос" GroupName="VoiceOption"
+                                         IsChecked="{Binding IsBaseVoiceSelected}" />
+                    <RadioButton Content="Клонувати голос" GroupName="VoiceOption"
+                                         IsChecked="{Binding CloneVoiceModel.IsCloneVoiceSelected}" />
+                </StackLayout>
+
+                <Frame IsVisible="{Binding IsBaseVoiceSelected}" CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Фільтрація голосів:" 
+                               FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                        <!-- Опис / Настрій -->
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Picker Title="Тон/Настрій"
+                                    ItemsSource="{Binding Filter.DescriptionOptions}"
+                                    SelectedItem="{Binding Filter.Description, Mode=TwoWay}"
+                                    Grid.Column="0"
+                                    BackgroundColor="#F0F0F0"
+                                    TextColor="#333333" />
+                            <Button Grid.Column="1"
+                                    Text="X"
+                                    WidthRequest="40" HeightRequest="40"
+                                    FontSize="16"
+                                    BackgroundColor="Grey"
+                                    Command="{Binding ResetDescriptionFilterCommand}" />
+                        </Grid>
+
+                        <!-- Вік -->
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Picker Title="Вік"
+                                    ItemsSource="{Binding Filter.AgeOptions}"
+                                    SelectedItem="{Binding Filter.Age, Mode=TwoWay}"
+                                    Grid.Column="0"
+                                    BackgroundColor="#F0F0F0"
+                                    TextColor="#333333" />
+                            <Button Grid.Column="1"
+                                    Text="X"
+                                    WidthRequest="40" HeightRequest="40"
+                                    FontSize="16"
+                                    BackgroundColor="Grey"
+                                    Command="{Binding ResetAgeFilterCommand}" />
+                        </Grid>
+
+                        <!-- Стать -->
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Picker Title="Стать"
+                                    ItemsSource="{Binding Filter.GenderOptions}"
+                                    SelectedItem="{Binding Filter.Gender, Mode=TwoWay}"
+                                    Grid.Column="0"
+                                    BackgroundColor="#F0F0F0"
+                                    TextColor="#333333" />
+                            <Button Grid.Column="1"
+                                    Text="X"
+                                    WidthRequest="40" HeightRequest="40"
+                                    FontSize="16"
+                                    BackgroundColor="Grey"
+                                    Command="{Binding ResetGenderFilterCommand}" />
+                        </Grid>
+
+                        <!-- Використання -->
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Picker Title="Стиль"
+                                    ItemsSource="{Binding Filter.UseCaseOptions}"
+                                    SelectedItem="{Binding Filter.UseCase, Mode=TwoWay}"
+                                    Grid.Column="0"
+                                    BackgroundColor="#F0F0F0"
+                                    TextColor="#333333" />
+                            <Button Grid.Column="1"
+                                    Text="X"
+                                    WidthRequest="40" HeightRequest="40"
+                                    FontSize="16"
+                                    BackgroundColor="Grey"
+                                    Command="{Binding ResetUseCaseFilterCommand}" />
+                        </Grid>
+
+                        <!-- Список голосів -->
+                        <Label Text="Виберіть голос:" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#333333"
+                               Margin="10,20,0,10"/>
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Picker Grid.Column="0"
+                                    ItemsSource="{Binding Voices}"
+                                    ItemDisplayBinding="{Binding name}"
+                                    SelectedItem="{Binding SelectedVoice}"
+                                    BackgroundColor="#F0F0F0"
+                                    HeightRequest="50"
+                                    TextColor="#333333" />
+                            <Button Grid.Column="1"
+                                    Command="{Binding PlaySelectedVoiceCommand}"
+                                    FontSize="22"
+                                    WidthRequest="60"
+                                    HeightRequest="60"
+                                    BorderWidth="0"
+                                    CornerRadius="30"
+                                    Margin="10,0,0,0"
+                                    ImageSource="playaudio.png"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+                <!-- Секція клонування голосу -->
+                <Frame IsVisible="{Binding CloneVoiceModel.IsCloneVoiceSelected}" CornerRadius="20" Padding="20" BackgroundColor="White" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Клонування голосу" FontSize="18" FontAttributes="Bold" TextColor="#333333"/>
+
+                        <!-- Вибір способу надходження аудіо -->
+                        <StackLayout
+                            Spacing="20"
+                            IsVisible="True">
+
+                            <StackLayout>
+                                <Label Text="Введіть назву голосу:" 
+                                       FontAttributes="Bold" TextColor="#333333"/>
+                                <Entry Text="{Binding CloneVoiceModel.Name}" 
+                                        Placeholder="Назву голосу"
+                                        BackgroundColor="#F0F0F0" HeightRequest="50" TextColor="#333333"/>
+                            </StackLayout>
+                        </StackLayout>
+
+                        <!-- Блок завантаження файлу -->
+                        <StackLayout IsVisible="{Binding CloneVoiceModel.IsUploadSelected}" Spacing="10">
+
+                            <HorizontalStackLayout VerticalOptions="Center">
+                                <Label Text="Виберіть файл:" TextColor="#555555" VerticalOptions="Center"/>
+                                <Button BackgroundColor="Transparent" TextColor="White" FontAttributes="Bold"
+                                        HeightRequest="70" FontSize="16"
+                                        Command="{Binding PickAudioFileCommand}"
+                                        ImageSource="fileaudio.png"/>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding SelectedAudioFilePath}" TextColor="#555555" HorizontalOptions="Center" FontAttributes="Italic" Margin="0,-20,0,0"/>
+
+                            <StackLayout
+                                        IsVisible="{Binding CloneVoiceModel.IsFragmentSelectionVisible}"
+                                        Spacing="10"
+                                        Margin="0,20,0,0">
+                                <Label 
+                                        Text="{Binding CloneVoiceModel.TotalDuration, StringFormat='Аудіо триває {0}, що є більше 30 секунд, виберіть, будь ласка, діапазон:'}" 
+                                        TextColor="Red"/>
+
+                                <Label Text="Тривалість аудіо:" 
+                                       FontAttributes="Bold" 
+                                       TextColor="#333333"/>
+
+                                <Label Text="Початок фрагменту:" TextColor="#555555"/>
+                                <Label Text="Будь ласка, виберіть фрагмент аудіо тривалістю від 5 до 30 секунд" TextColor="Red" IsVisible="{Binding IsNotValid.IsEndPhraseNotValid!}"/>
+                            </StackLayout>
+                        </StackLayout>
+
+                        <!-- Блок запису голосу -->
+                        <StackLayout IsVisible="{Binding CloneVoiceModel.IsRecordSelected}" Spacing="10">
+                            <Label Text="Зразок голосу (30 секунд):" FontSize="16" FontAttributes="Bold" TextColor="#333333"/>
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="Розпочати запис:" TextColor="#555555" VerticalOptions="Center"/>
+                                <Button
+                                        Command="{Binding RecordCloneVoiceCommand}"
+                                        HeightRequest="50"
+                                        WidthRequest="50"
+                                        CornerRadius="25"
+                                        ImageSource="microphone.png"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center"/>
+
+                                <Image Source="checkmark.png"
+                                       WidthRequest="30" HeightRequest="30"
+                                       IsVisible="{Binding CloneVoiceModel.IsCloneAudioRecorded}"/>
+                            </HorizontalStackLayout>
+                        </StackLayout>
+
+                        <!-- Вибір способу надходження аудіо -->
+                        <StackLayout
+                                    Spacing="20"
+                                    IsVisible="True">
+
+                            <StackLayout Orientation="Horizontal" Spacing="20">
+                                <RadioButton Content="Завантажити файл" GroupName="CloneSourceOption"
+                                                IsChecked="{Binding CloneVoiceModel.IsUploadSelected}" />
+                                <RadioButton Content="Записати голос" GroupName="CloneSourceOption"
+                                                IsChecked="{Binding CloneVoiceModel.IsRecordSelected}" />
+                            </StackLayout>
+                        </StackLayout>
+                        
+                        <Button
+                            Text="Клонувати"
+                            Command="{Binding CreateCloneVoiceCommand}"
+                            FontSize="16"
+                            CornerRadius="20"
+                            HeightRequest="45"
+                            Margin="10,0" />
+
+                        <StackLayout
+                            Spacing="20"
+                            HorizontalOptions="Center"
+                            IsVisible="{Binding CloneVoiceModel.IsCloneGenerated}">
+
+                            <Label Text="Голос склоновано!" TextColor="Green" FontSize="16" FontAttributes="Bold"/>
+                        </StackLayout>
+
+                        <Label IsVisible="{Binding CloneVoiceModel.IsCloneVoiceNotValid}" Text="Заповніть усі поня та запишіть/завантажте аудіо" TextColor="Red"/>
+
+                    </VerticalStackLayout>
+                </Frame>
+                
+                <toolkit:MediaElement x:Name="mediaElement" 
+                                  Source="{Binding SelectedVoiceUrl}" 
+                                  IsVisible="False" />
+
+                <Button Text="Зберегти" 
+                    Command="{Binding CreateUserCommand}"
+                    FontSize="20" TextColor="White" BackgroundColor="#036700"
+                    CornerRadius="30" HeightRequest="55" WidthRequest="150" Margin="0,0,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <BoxView BackgroundColor="Black"
+                 Opacity="0.3"
+                 IsVisible="{Binding IsBusy}"
+                 InputTransparent="True" />
+
+        <ActivityIndicator
+                IsVisible="{Binding IsBusy}"
+                IsRunning="{Binding IsBusy}"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                WidthRequest="60"
+                HeightRequest="60" />
+    </Grid>
+</ContentPage>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PersonalAudioAssistant.Views.AuthorizationPage">
+ 
+    <Grid Padding="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackLayout Grid.Row="0" HorizontalOptions="Center" Spacing="10" Margin="0, 130, 0, 0">
+            <Label Text="Вітаємо!"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            <Label Text="Увійдіть у свій обліковий запис"
+                   FontSize="18"
+                   HorizontalOptions="Center"/>
+
+            <Frame Padding="20"
+                   CornerRadius="15"
+                    WidthRequest="350">
+                <VerticalStackLayout Spacing="20">
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Електронна пошта" />
+                        <Entry Placeholder="Введіть електронну пошту"
+                               Keyboard="Email"
+                               WidthRequest="300"
+                               Text="{Binding Email}"/>
+                        <Label Text="{Binding EmailValidationMessage}"
+                               IsVisible="{Binding IsEmailNotValid}"
+                               TextColor="Red"
+                               FontSize="12" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Пароль" />
+                        <Entry Placeholder="Введіть пароль"
+                               IsPassword="True"
+                               WidthRequest="300"
+                               Text="{Binding Password}"/>
+                        <Label Text="{Binding PasswordValidationMessage}"
+                               IsVisible="{Binding IsPasswordNotValid}"
+                               TextColor="Red"
+                               FontSize="12" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Увійти"
+                    Command="{Binding SignInCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    WidthRequest="300"
+                    HeightRequest="50"
+                    FontSize="18" />
+
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
+                <BoxView WidthRequest="50"
+                         HeightRequest="1"
+                         VerticalOptions="Center" />
+                <Label Text="Або"
+                       FontSize="16"
+                       FontAttributes="Bold"/>
+                <BoxView WidthRequest="50"
+                         HeightRequest="1"
+                         VerticalOptions="Center" />
+            </StackLayout>
+
+            <Button Text="Увійти через Google"
+                    Command="{Binding SignInGoogleCommand}"
+                    BackgroundColor="#FFFFFF"
+                    TextColor="Black"
+                    HeightRequest="50"
+                    FontSize="16"
+                    ImageSource="google_logo.png"
+                    ContentLayout="Left,15"
+                    BorderColor="#333333"
+                    WidthRequest="300"
+                    BorderWidth="0.5" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Color="{StaticResource Primary}" />
+        </StackLayout>
+
+        <Grid Grid.Row="2" HorizontalOptions="Center" ColumnSpacing="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Label Text="Не маєте облікового запису?"
+                   FontSize="14"
+                   Grid.Column="0" />
+            <Label Text="Зареєструватися"
+                   FontSize="14"
+                   TextColor="{StaticResource Primary}"
+                   FontAttributes="Bold"
+                   Grid.Column="1">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SignUpCommand}" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+    </Grid>
+</ContentPage>

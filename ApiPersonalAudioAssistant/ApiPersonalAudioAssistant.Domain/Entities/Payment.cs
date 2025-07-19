@@ -1,0 +1,13 @@
+﻿
+using ApiPersonalAudioAssistant.Domain.Common;
+
+namespace ApiPersonalAudioAssistant.Domain.Entities
+{
+    public class Payment: BaseEntity
+    {
+        public required string PaymentGatewayToken { get; set; }
+        public required string MaskedCardNumber { get; set; }
+        public required string UserId { get; set; }
+        public required string DataExpiredCard { get; set; }
+    }
+}

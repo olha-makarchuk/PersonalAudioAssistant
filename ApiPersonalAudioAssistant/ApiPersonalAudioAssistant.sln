@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPersonalAudioAssistant", "ApiPersonalAudioAssistant\ApiPersonalAudioAssistant.csproj", "{D1C4B666-6E19-4003-925B-7ED531959989}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPersonalAudioAssistant.Persistence", "ApiPersonalAudioAssistant.Persistence\ApiPersonalAudioAssistant.Persistence.csproj", "{7AC0F059-8335-494B-BC2F-FE68511DC036}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPersonalAudioAssistant.Domain", "ApiPersonalAudioAssistant.Domain\ApiPersonalAudioAssistant.Domain.csproj", "{190CD4A5-3E47-4E3E-9CD6-5916FE7367EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPersonalAudioAssistant.Contracts", "ApiPersonalAudioAssistant.Contracts\ApiPersonalAudioAssistant.Contracts.csproj", "{180C2687-7D9A-4342-B4F6-DFE64291326E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPersonalAudioAssistant.Application", "ApiPersonalAudioAssistant.Application\ApiPersonalAudioAssistant.Application.csproj", "{A7860771-6F57-4AC9-B8DE-57D848C65B4D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D1C4B666-6E19-4003-925B-7ED531959989}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1C4B666-6E19-4003-925B-7ED531959989}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1C4B666-6E19-4003-925B-7ED531959989}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1C4B666-6E19-4003-925B-7ED531959989}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AC0F059-8335-494B-BC2F-FE68511DC036}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AC0F059-8335-494B-BC2F-FE68511DC036}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AC0F059-8335-494B-BC2F-FE68511DC036}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AC0F059-8335-494B-BC2F-FE68511DC036}.Release|Any CPU.Build.0 = Release|Any CPU
+		{190CD4A5-3E47-4E3E-9CD6-5916FE7367EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{190CD4A5-3E47-4E3E-9CD6-5916FE7367EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{190CD4A5-3E47-4E3E-9CD6-5916FE7367EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{190CD4A5-3E47-4E3E-9CD6-5916FE7367EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{180C2687-7D9A-4342-B4F6-DFE64291326E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{180C2687-7D9A-4342-B4F6-DFE64291326E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{180C2687-7D9A-4342-B4F6-DFE64291326E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{180C2687-7D9A-4342-B4F6-DFE64291326E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7860771-6F57-4AC9-B8DE-57D848C65B4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7860771-6F57-4AC9-B8DE-57D848C65B4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7860771-6F57-4AC9-B8DE-57D848C65B4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7860771-6F57-4AC9-B8DE-57D848C65B4D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A1328225-73EE-4F96-B7F0-0C404F3FB3B7}
+	EndGlobalSection
+EndGlobal

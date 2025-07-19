@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PersonalAudioAssistant.Views.Users.UsersListPage"
+             Title="Список користувачів">
+    <Grid>
+        <Label 
+               Text="Користувачі" 
+               FontSize="22"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               TextColor="Black"/>
+
+        <!-- CollectionView з вбудованим прокручуванням -->
+        <CollectionView ItemsSource="{Binding Users}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
+                        Margin="20,60,20,20">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                                   ItemSpacing="10"/>
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BackgroundColor="White"
+                           CornerRadius="10"
+                           Padding="15"
+                           Background="#f5f1ff"
+                           HasShadow="True"
+                           Margin="0,0"
+                           InputTransparent="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Аватар користувача -->
+                            <Frame Grid.Column="0"
+                                   WidthRequest="70"
+                                   HeightRequest="70"
+                                   CornerRadius="40"
+                                   Margin="10,0,0,0"
+                                   HasShadow="False"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   BackgroundColor="Transparent">
+                                <Image
+                                    Aspect="AspectFill"
+                                    WidthRequest="80"
+                                    HeightRequest="80"
+                                    VerticalOptions="Center"
+                                    HorizontalOptions="Center">
+                                    <Image.Source>
+                                        <UriImageSource Uri="{Binding photoPath}" 
+                                                        CachingEnabled="False"/>
+                                    </Image.Source>
+                                </Image>
+                            </Frame>
+
+                            <!-- Ім'я користувача -->
+                            <Label Grid.Column="1"
+                                   Text="{Binding userName}" 
+                                   FontSize="18"
+                                   FontAttributes="None"
+                                   VerticalOptions="Center"
+                                   TextColor="#333333"
+                                   Margin="35,0"/>
+
+                            <!-- Додаткова інформація -->
+                            <Label Grid.Column="2"
+                                   Text="{Binding startPhrase}"
+                                   FontSize="12"
+                                   VerticalOptions="Center"
+                                   TextColor="Gray"
+                                   Margin="10,0"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.Footer>
+                <Grid HeightRequest="100"/>
+            </CollectionView.Footer>
+        </CollectionView>
+
+        <!-- Плаваюча кнопка додавання користувача -->
+        <Button Text="＋"
+                Command="{Binding AddUserCommand}"
+                TextColor="White"
+                CornerRadius="30"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                HeightRequest="60"
+                WidthRequest="60"
+                FontSize="32"
+                FontAttributes="Bold"
+                Margin="20,40,20,20"
+                Padding="0"/>
+    </Grid>
+</ContentPage>
