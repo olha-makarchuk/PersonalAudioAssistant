@@ -1,20 +1,29 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using RestSharp;
+using System.Net;
 using System.Text.Json;
 
 namespace ApiPersonalAudioAssistant.Application.Services
 {
     public class ElevenlabsApi
     {
-        private string _apiKey = "api-key";
-        private string _baseUrl = "https://api.elevenlabs.io";
+        private readonly string apiKey;
+        private readonly string baseUrl;
+
         private string _model = "eleven_flash_v2_5";
+
+        public ElevenlabsApi(IOptions<ElevenlabsSettings> settings)
+        {
+            apiKey = settings.Value.ApiKey;
+            baseUrl = settings.Value.BaseUrl;
+        }
 
         public async Task<byte[]> ConvertTextToSpeechAsync(string voiceId, string text)
         {
-            var client = new RestClient(_baseUrl);
+            var client = new RestClient(baseUrl);
             var request = new RestRequest($"/v1/text-to-speech/{voiceId}", Method.Post);
-            request.AddHeader("xi-api-key", _apiKey);
+            request.AddHeader("xi-api-key", apiKey);
             request.AddHeader("Content-Type", "application/json");
 
             var body = new
@@ -38,9 +47,9 @@ namespace ApiPersonalAudioAssistant.Application.Services
         public async Task<ElevenlabsApiResponse> CloneVoiceAsync(string voiceName, string filePath)
         {
             bool removeBackgroundNoise = true;
-            var client = new RestClient(_baseUrl);
+            var client = new RestClient(baseUrl);
             var request = new RestRequest("/v1/voices/add", Method.Post);
-            request.AddHeader("xi-api-key", _apiKey);
+            request.AddHeader("xi-api-key", apiKey);
 
             request.AlwaysMultipartFormData = true;
             request.AddParameter("name", voiceName);
@@ -73,11 +82,11 @@ namespace ApiPersonalAudioAssistant.Application.Services
 
         public async Task DeleteVoiceAsync(string voiceId)
         {
-            var client = new RestClient($"{_baseUrl}/v1/voices/{voiceId}");
+            var client = new RestClient($"{baseUrl}/v1/voices/{voiceId}");
             var request = new RestRequest();
             request.Method = Method.Delete;
 
-            request.AddHeader("xi-api-key", _apiKey);
+            request.AddHeader("xi-api-key", apiKey);
 
             var response = await client.ExecuteAsync(request);
 
@@ -86,6 +95,12 @@ namespace ApiPersonalAudioAssistant.Application.Services
                 throw new Exception($"Failed to delete voice: {response.StatusCode} - {response.Content}");
             }
         }
+    }
+
+    public class ElevenlabsSettings
+    {
+        public string ApiKey { get; set; }
+        public string BaseUrl { get; set; }
     }
 
     public class ElevenlabsApiResponse

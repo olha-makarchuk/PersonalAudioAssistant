@@ -12,6 +12,7 @@ namespace ApiPersonalAudioAssistant.Controllers.v1
     {
         public SubUserController(IMediator mediator) : base(mediator) { }
 
+        /*
         [HttpPost("create")]
         public async Task<IActionResult> AddSubUser([FromForm] IFormFile file, [FromForm] string command)
         {
@@ -26,7 +27,7 @@ namespace ApiPersonalAudioAssistant.Controllers.v1
             deserializedCommand.Photo = file;
 
             return Ok(await Mediator.Send(deserializedCommand));
-        }
+        }*/
 
         [HttpDelete("password")]
         public async Task<IActionResult> DeletePasswordSubUser(DeletePasswordSubUserCommand command)

@@ -27,14 +27,16 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUse
         private readonly IConfiguration _configuration;
         private readonly IBlobStorage _blobStorage;
         private readonly PasswordManager _passwordManager;
+        private readonly ElevenlabsApi _elevenlabsApi;
 
-        public AddSubUserCommandHandler(ISubUserRepository subUserRepository, IConfiguration configuration, PasswordManager passwordManager, IBlobStorage blobStorage, IVoiceRepository voiceRepository)
+        public AddSubUserCommandHandler(ISubUserRepository subUserRepository, IConfiguration configuration, PasswordManager passwordManager, IBlobStorage blobStorage, IVoiceRepository voiceRepository, ElevenlabsApi elevenlabsApi)
         {
             _subUserRepository = subUserRepository;
             _configuration = configuration;
             _passwordManager = passwordManager;
             _blobStorage = blobStorage;
             _voiceRepository = voiceRepository;
+            _elevenlabsApi = elevenlabsApi;
         }
 
         public async Task<string> Handle(AddSubUserCommand request, CancellationToken cancellationToken = default)
@@ -58,8 +60,7 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUse
             };
 
             var voiceId = await _voiceRepository.GetVoiceByIdAsync(request.VoiceId, cancellationToken);
-            var textToSpeech = new ElevenlabsApi();
-            var audioBytesTask = textToSpeech.ConvertTextToSpeechAsync(voiceId.VoiceId, $"Чим я можу вам допомогти, {newUser.UserName}");
+            var audioBytesTask = _elevenlabsApi.ConvertTextToSpeechAsync(voiceId.VoiceId, $"Чим я можу вам допомогти, {newUser.UserName}");
             string fileNameAudio = $"{newUser.Id}.wav";
 
             if (request.Password != null)

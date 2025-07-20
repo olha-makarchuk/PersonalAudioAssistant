@@ -22,6 +22,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private readonly IAudioRecorder _audioRecorder;
         private readonly ManageCacheData _manageCacheData;
         private readonly SubUserApiClient _subUserApiClient;
+        private readonly ElevenlabsApi _elevenLabsApi;
 
         private Stream _recordedAudioStream;
         private Stream _recordedCloneAudioStream;
@@ -62,13 +63,14 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
         VoiceApiClient _voiceApiClient;
 
-        public AddUserViewModel(IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient)
+        public AddUserViewModel(IAudioManager audioManager, ManageCacheData manageCacheData, IApiClient apiClient, VoiceApiClient voiceApiClient, SubUserApiClient subUserApiClient, ElevenlabsApi elevenLabsApi)
         {
             _audioManager = audioManager;
             _manageCacheData = manageCacheData;
             _apiClient = apiClient;
             _audioRecorder = _audioManager.CreateRecorder();
             _subUserApiClient = subUserApiClient;
+            _elevenLabsApi = elevenLabsApi;
 
             Filter = new VoiceFilterModel();
             EndOptionsModel = new EndOptionsModel();
@@ -196,7 +198,6 @@ namespace PersonalAudioAssistant.ViewModel.Users
             {
                 string audioPath;
                 IsNotValid.IsCloneVoiceNotValid = false;
-                var elevenLabsApi = new ElevenlabsApi();
 
                 if (CloneVoiceModel.IsUploadSelected)
                 {
@@ -229,11 +230,11 @@ namespace PersonalAudioAssistant.ViewModel.Users
 
                 if (CloneVoiceModel.IsCloneGenerated)
                 {
-                    await elevenLabsApi.DeleteVoiceAsync(_cloneVoiceId);
+                    await _elevenLabsApi.DeleteVoiceAsync(_cloneVoiceId);
                     CloneVoiceModel.IsCloneGenerated = false;
                 }
 
-                var clonedVoiceId = await elevenLabsApi.CloneVoiceAsync(
+                var clonedVoiceId = await _elevenLabsApi.CloneVoiceAsync(
                     CloneVoiceModel.Name,
                     audioPath
                 );

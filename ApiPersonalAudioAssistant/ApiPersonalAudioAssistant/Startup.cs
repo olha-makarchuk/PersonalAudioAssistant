@@ -38,7 +38,13 @@ namespace ApiPersonalAudioAssistant
                 t.ReportApiVersions = true;
             });
 
-              services.AddScoped<PasswordManager>();
+            services.AddScoped<PasswordManager>();
+
+            services.Configure<OpenAISettings>(_configuration.GetSection("OpenAI"));
+            services.AddSingleton<ApiClientGPT>();
+
+            services.Configure<ElevenlabsSettings>(_configuration.GetSection("ElevenLabs"));
+            services.AddSingleton<ElevenlabsApi>();
 
             services.AddScoped<TokenBase>();
             services.AddScoped<PasswordManager>();

@@ -13,7 +13,7 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Commands.VoiceC
     public class DeleteVoiceCommandHandler : IRequestHandler<DeleteVoiceCommand, Unit>
     {
         private readonly IVoiceRepository _voiceRepository;
-        private readonly ElevenlabsApi _elevenLabsApi = new ElevenlabsApi();
+        private readonly ElevenlabsApi _elevenLabsApi;
 
         public DeleteVoiceCommandHandler(IVoiceRepository voiceRepository)
         {

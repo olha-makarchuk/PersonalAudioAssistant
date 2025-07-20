@@ -1,5 +1,6 @@
 ﻿using ApiPersonalAudioAssistant.Application.PlatformFeatures.Commands.SettingsCommands;
 using ApiPersonalAudioAssistant.Application.PlatformFeatures.Queries.SettingsQuery;
+using ApiPersonalAudioAssistant.Application.Services;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace ApiPersonalAudioAssistant.Controllers.v1
     [ApiVersion("1.0")]
     public class AppSettingsController : BaseApiController
     {
-        public AppSettingsController(IMediator mediator) : base(mediator) { }
+        public AppSettingsController(IMediator mediator, ElevenlabsApi apiClient) : base(mediator) { }
 
         [HttpPost]
         public async Task<IActionResult> Create(CreateAppSettingsCommand command)

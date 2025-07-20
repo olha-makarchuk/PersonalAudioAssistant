@@ -20,6 +20,7 @@ using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Application.Interfaces;
 using Microcharts.Maui;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PersonalAudioAssistant;
 public static class MauiProgram
@@ -53,22 +54,22 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        // Services
         builder.Services.AddSingleton<IPopupNavigation>(MopupService.Instance);
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton(AudioManager.Current);
         builder.Services.AddSingleton<AuthTokenManager>();
         builder.Services.AddSingleton<GoogleUserService>();
         builder.Services.AddScoped<ManageCacheData>();
-        builder.Services.AddScoped<AuthApiClient>();
         builder.Services.AddScoped<TokenBase>();
         builder.Services.AddScoped<PasswordManager>();
         builder.Services.AddScoped<ApiClientTokens>();
-        builder.Services.AddScoped<ElevenlabsApi>();
-        builder.Services.AddScoped<ApiClientGPT>();
         builder.Services.AddScoped<IApiClient, ApiClientVoiceEmbedding>();
         builder.Services.AddMemoryCache();
 
+        builder.Services.Configure<OpenAISettings>(_configuration.GetSection("OpenAI"));
+        builder.Services.Configure<ElevenlabsApi>(_configuration.GetSection("ElevenLabs"));
+
+        //Clients
         builder.Services.AddSingleton<VoiceApiClient>();
         builder.Services.AddSingleton<PaymentHistoryApiClient>();
         builder.Services.AddSingleton<PaymentApiClient>();
@@ -80,6 +81,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<MessagesApiClient>();
         builder.Services.AddSingleton<MoneyUsedApiClient>();
         builder.Services.AddSingleton<MoneyUsersUsedApiClient>();
+        builder.Services.AddScoped<AuthApiClient>();
+        builder.Services.AddScoped<ElevenlabsApi>();
+        builder.Services.AddScoped<ApiClientGPT>();
 
         // Pages
         builder.Services.AddSingleton<MainPage>();

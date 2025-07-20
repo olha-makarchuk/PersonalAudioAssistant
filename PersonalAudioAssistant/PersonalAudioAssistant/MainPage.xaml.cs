@@ -31,7 +31,6 @@ namespace PersonalAudioAssistant
             }
             catch (Exception ex)
             {
-                // У Release можна вивести у консоль або краще — логнути до App Center / Sentry
                 Console.WriteLine($"InitializeApp failed: {ex}");
                 LoadingLabel.Text = "Сталася помилка. Спробуйте ще раз.";
             }

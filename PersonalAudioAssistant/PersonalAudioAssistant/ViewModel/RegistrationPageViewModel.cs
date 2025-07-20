@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
+using PersonalAudioAssistant.Application.Services;
 using PersonalAudioAssistant.Services;
 using PersonalAudioAssistant.Services.Api;
 using System.ComponentModel.DataAnnotations;

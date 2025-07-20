@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -7,8 +8,14 @@ namespace ApiPersonalAudioAssistant.Application.Services
     public class ApiClientGPT
     {
         private static readonly HttpClient client = new HttpClient();
-        private readonly string apiKey = "api-key"; 
-        private readonly string endpoint = "https://api.openai.com/v1/responses";
+        private readonly string apiKey; 
+        private readonly string endpoint;
+
+        public ApiClientGPT(IOptions<OpenAISettings> settings)
+        {
+            apiKey = settings.Value.ApiKey;
+            endpoint = settings.Value.Endpoint;
+        }
 
         public async Task<ApiClientGptResponse> ContinueChatAsync(string userMessage, string prevResponseId = null)
         {
@@ -46,7 +53,13 @@ namespace ApiPersonalAudioAssistant.Application.Services
             return response;
         }
     }
-     
+
+    public class OpenAISettings
+    {
+        public string ApiKey { get; set; }
+        public string Endpoint { get; set; }
+    }
+
     public class ApiClientGptResponse
     {
         public string responseId { get; set; }

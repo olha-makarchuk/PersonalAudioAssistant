@@ -99,8 +99,6 @@ namespace ApiPersonalAudioAssistant.Application.Services
             }
         }
 
-
-
         public class TranscriptionResponse
         {
             public string Request { get; set; }

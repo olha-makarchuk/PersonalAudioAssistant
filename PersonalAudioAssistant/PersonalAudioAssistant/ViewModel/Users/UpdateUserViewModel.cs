@@ -27,7 +27,7 @@ namespace PersonalAudioAssistant.ViewModel.Users
         private string _selectedAudioFilePath;
         private string UserIdQueryAttribute;
         private string _photoUrl;
-        private readonly ElevenlabsApi _elevenLabsApi = new ElevenlabsApi();
+        private readonly ElevenlabsApi _elevenLabsApi;
 
         [ObservableProperty]
         private ObservableCollection<VoiceResponse> voices = new ObservableCollection<VoiceResponse>();

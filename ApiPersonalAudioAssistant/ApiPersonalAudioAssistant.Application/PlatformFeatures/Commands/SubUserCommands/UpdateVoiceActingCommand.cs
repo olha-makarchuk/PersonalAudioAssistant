@@ -15,12 +15,14 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUse
         private readonly ISubUserRepository _subUserRepository;
         private readonly IVoiceRepository _voiceRepository;
         private readonly IBlobStorage _blobStorage;
+        private readonly ElevenlabsApi _elevenlabsApi;
 
-        public UpdateVoiceActingCommandHandler(ISubUserRepository subUserRepository, IBlobStorage blobStorage, IVoiceRepository voiceRepository)
+        public UpdateVoiceActingCommandHandler(ISubUserRepository subUserRepository, IBlobStorage blobStorage, IVoiceRepository voiceRepository, ElevenlabsApi elevenlabsApi)
         {
             _subUserRepository = subUserRepository;
             _blobStorage = blobStorage;
             _voiceRepository = voiceRepository;
+            _elevenlabsApi = elevenlabsApi;
         }
 
         public async Task<Unit> Handle(UpdateVoiceActingCommand request, CancellationToken cancellationToken = default)
@@ -34,8 +36,7 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Commands.SubUse
             userExist.VoiceId = request.VoiceId;
 
             var voiceId = await _voiceRepository.GetVoiceByIdAsync(request.VoiceId, cancellationToken);
-            var textToSpeech = new ElevenlabsApi();
-            var audioBytesTask = await textToSpeech.ConvertTextToSpeechAsync(voiceId.VoiceId, $"Чим я можу вам допомогти, {userExist.UserName}");
+            var audioBytesTask = await _elevenlabsApi.ConvertTextToSpeechAsync(voiceId.VoiceId, $"Чим я можу вам допомогти, {userExist.UserName}");
             string fileNameAudio = $"{userExist.Id}.wav";
 
             var exists = await _blobStorage.FileExistsAsync(fileNameAudio, BlobContainerType.FirstMessage);

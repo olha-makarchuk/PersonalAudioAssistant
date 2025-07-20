@@ -34,6 +34,7 @@ namespace PersonalAudioAssistant.Platforms
         private readonly VoiceApiClient _voiceApiClient;
         private readonly ManageCacheData _manageCacheData;
         private ApiClientGPT _apiClientGPT;
+        private ElevenlabsApi _elevenlabsApi;
         private CancellationTokenSource _globalCts = new();
 
         private bool _hasCleared = false;
@@ -41,7 +42,7 @@ namespace PersonalAudioAssistant.Platforms
         public bool IsPrivateConversation { get; set; }
         private bool _isUserCancelled = false;
 
-        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient, ApiClientGPT apiClientGPT, PaymentHistoryApiClient paymentHistoryApiClient, AppSettingsApiClient appSettingsApiClient)
+        public SpeechToTextImplementation(IMediator mediatr, ConversationApiClient conversationApiClient, MessagesApiClient messagesApiClient, ManageCacheData manageCacheData, MoneyUsedApiClient moneyUsedApiClient, MoneyUsersUsedApiClient moneyUsersUsedApiClient, VoiceApiClient voiceApiClient, ApiClientGPT apiClientGPT, PaymentHistoryApiClient paymentHistoryApiClient, AppSettingsApiClient appSettingsApiClient, ElevenlabsApi elevenlabsApi)
         {
             _mediatr = mediatr;
             _conversationApiClient = conversationApiClient;
@@ -53,9 +54,11 @@ namespace PersonalAudioAssistant.Platforms
             _apiClientGPT = apiClientGPT;
             _paymentHistoryApiClient = paymentHistoryApiClient;
             _appSettingsApiClient = appSettingsApiClient;
+            _elevenlabsApi = elevenlabsApi;
         }
+
         public SpeechToTextImplementation() : this(DataProvider.Mediator, DataProvider.ConversationApiClient
-                , DataProvider.MessagesApiClient, DataProvider.ManageCacheData, DataProvider.MoneyUsedApiClient, DataProvider.MoneyUsersUsedApiClient, DataProvider.VoiceApiClient, DataProvider.ApiClientGPT, DataProvider.PaymentHistoryApiClient, DataProvider.AppSettingsApiClient)
+                , DataProvider.MessagesApiClient, DataProvider.ManageCacheData, DataProvider.MoneyUsedApiClient, DataProvider.MoneyUsersUsedApiClient, DataProvider.VoiceApiClient, DataProvider.ApiClientGPT, DataProvider.PaymentHistoryApiClient, DataProvider.AppSettingsApiClient, DataProvider.ElevenlabsApi)
         {
         }
 
@@ -120,7 +123,6 @@ namespace PersonalAudioAssistant.Platforms
                         recognitionResult?.Report(sentence);
                         SubUserResponse? matchedUser = null;
                         bool isPrivateConversation = false;
-                        var textToSpeech = new ElevenlabsApi();
 
                         string normalizedSentence = sentence.Trim().ToLowerInvariant();
                         isPrivateConversation = normalizedSentence.Contains("особиста розмова");
@@ -177,7 +179,7 @@ namespace PersonalAudioAssistant.Platforms
                                         if (response.Request == "none" && IsFirstRequest)
                                         {
                                             var voiceNone = await _voiceApiClient.GetVoiceByIdAsync(matchedUser.voiceId);
-                                            var audioBytesNone = await textToSpeech.ConvertTextToSpeechAsync(voiceNone.voiceId, $"Вас не було розпізнано як користувача {matchedUser.userName}");
+                                            var audioBytesNone = await _elevenlabsApi.ConvertTextToSpeechAsync(voiceNone.voiceId, $"Вас не було розпізнано як користувача {matchedUser.userName}");
                                             await audioPlayerHelper.PlayAudioFromBytesAsync(audioBytesNone, _globalCts.Token);
                                         }
                                         
@@ -230,7 +232,7 @@ namespace PersonalAudioAssistant.Platforms
                                         IsContinueConversation = response.IsContinuous;
                                         IsFirstRequest = false;
                                         
-                                        var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voice.voiceId, answer.text);
+                                        var audioBytes = await _elevenlabsApi.ConvertTextToSpeechAsync(voice.voiceId, answer.text);
 
                                         var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, _globalCts.Token);
 
@@ -338,7 +340,6 @@ namespace PersonalAudioAssistant.Platforms
                     IsContinueConversation = true;
                     IsFirstRequest = true;
                     TranscriptionResponse response = new();
-                    var textToSpeech = new ElevenlabsApi();
 
                     Task<string> conversationIdTask;
                     if (isPrivateConversation)
@@ -403,7 +404,7 @@ namespace PersonalAudioAssistant.Platforms
 
                             await Task.WhenAll(voiceTask);
 
-                            var audioBytes = await textToSpeech.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
+                            var audioBytes = await _elevenlabsApi.ConvertTextToSpeechAsync(voiceTask.Result.voiceId, answer.text);
                             var playAnswerTask = audioPlayerHelper.PlayAudioFromBytesAsync(audioBytes, _globalCts.Token);
 
                             var careteMessageAI = new CreateMessageCommand()
@@ -604,5 +605,8 @@ namespace PersonalAudioAssistant.Platforms
 
         public static AppSettingsApiClient AppSettingsApiClient =>
             Services!.GetRequiredService<AppSettingsApiClient>();
+
+        public static ElevenlabsApi ElevenlabsApi =>
+            Services!.GetRequiredService<ElevenlabsApi>();
     }
 }

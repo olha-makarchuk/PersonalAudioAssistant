@@ -17,17 +17,18 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Queries.Convers
             private readonly IConversationRepository _conversationRepository;
             private readonly IMessageRepository _messageRepository;
             private readonly IMediator _mediator;
+            private readonly ApiClientGPT _apiClient;
 
-            public GetConversationsBySubUserIdQueryHandler(IConversationRepository conversationRepository, IMessageRepository messageRepository, IMediator mediator)
+            public GetConversationsBySubUserIdQueryHandler(IConversationRepository conversationRepository, IMessageRepository messageRepository, IMediator mediator, ApiClientGPT apiClient)
             {
                 _conversationRepository = conversationRepository;
                 _messageRepository = messageRepository;
                 _mediator = mediator;
+                _apiClient = apiClient;
             }
 
             public async Task<List<AllConversationsResponse>> Handle(GetConversationsBySubUserIdQuery query, CancellationToken cancellationToken)
             {
-                var apiGPT = new ApiClientGPT();
                 var responseList = new List<AllConversationsResponse>();
 
                 int currentPage = query.PageNumber;
@@ -59,7 +60,7 @@ namespace ApiPersonalAudioAssistant.Application.PlatformFeatures.Queries.Convers
                         // Якщо опис порожній — генеруємо за допомогою GPT
                         if (string.IsNullOrWhiteSpace(conv.Description))
                         {
-                            ApiClientGptResponse descriptionGpt = await apiGPT.ContinueChatAsync(
+                            ApiClientGptResponse descriptionGpt = await _apiClient.ContinueChatAsync(
                                 "На основі розмови напиши короткий заголовок, який підсумовує основну тему",
                                 message.LastRequestId
                             );
