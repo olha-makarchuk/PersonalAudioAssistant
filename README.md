@@ -138,12 +138,15 @@ git clone https://github.com/your-username/personal-audio-assistant.git
 cd personal-audio-assistant
 ```
 
-2️⃣ Set Up API Keys
-Before starting, you must generate and configure the necessary API keys:
+## 2️⃣ Set Up API Keys
 
-🔐 OpenAI API Key – for transcription and NLP
-🗣️ ElevenLabs API Key – for text-to-speech and voice cloning
+Before starting, you must generate and configure the following API keys and credentials in your environment variables or secrets manager:
 
+- 🔐 **OpenAI API Key** – Used for automatic speech recognition (ASR), transcription, and natural language processing (NLP).
+- 🗣️ **ElevenLabs API Key** – Enables high-quality text-to-speech synthesis and voice cloning functionality.
+- ☁️ **Azure Blob Storage Connection String** – Required for storing audio files, metadata, and other binary assets in the cloud.
+- 🌌 **Azure Cosmos DB Key & Endpoint** – Enables secure access to scalable NoSQL database for storing user profiles, history, and session data.
+  
 3️⃣ Start the Python Microservice (FastAPI)
 Install dependencies (preferably in a virtual environment):
 ```
