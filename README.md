@@ -128,4 +128,48 @@ Handles real-time audio processing, diarization, transcription, and voiceprint g
 |-------|------|-------------|
 | 🔧 Python Microservice | `Server/requirements.txt` | All Python libraries for audio & AI |
 | 🔩 .NET Backend | `ApiResonalAudioAssistant/dependencies.txt` | All NuGet packages used in backend |
-| 📱 .NET MAUI Client | `PersonalAudioAssistant/dependencies.txt` | All UI/logic libraries for client |
+| 📱 .NET MAUI Client | `PersonalAudioAssistant/dependencies.txt` | All UI/logic libraries for client 
+
+## 🚀 Getting Started
+
+1️⃣ Clone the Repository
+```
+git clone https://github.com/your-username/personal-audio-assistant.git
+cd personal-audio-assistant
+```
+
+2️⃣ Set Up API Keys
+Before starting, you must generate and configure the necessary API keys:
+
+🔐 OpenAI API Key – for transcription and NLP
+🗣️ ElevenLabs API Key – for text-to-speech and voice cloning
+
+3️⃣ Start the Python Microservice (FastAPI)
+Install dependencies (preferably in a virtual environment):
+```
+cd Server
+pip install -r requirements.txt
+```
+
+Start the FastAPI server:
+```
+uvicorn main:app --reload
+```
+
+4️⃣ Start the .NET Backend API
+Restore dependencies and run:
+```
+cd ApiResonalAudioAssistant
+dotnet restore
+dotnet run
+```
+
+5️⃣ Run the .NET MAUI Client
+Make sure you have MAUI workload installed in your .NET environment.
+```
+cd PersonalAudioAssistant
+dotnet restore
+dotnet build
+dotnet run
+```
+📱 You can also deploy to Android emulator or physical device using Visual Studio.
